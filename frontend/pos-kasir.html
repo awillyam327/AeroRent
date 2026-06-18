@@ -100,10 +100,8 @@
 
 <body class="flex flex-col h-screen overflow-hidden">
 
-<!-- ===== TOP HEADER ===== -->
 <header class="flex items-center justify-between px-4 py-2.5 shrink-0 border-b border-white/10 z-30"
         style="background:#05050A;">
-  <!-- Logo -->
   <div class="flex items-center gap-2.5">
     <svg width="30" height="30" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -121,20 +119,16 @@
     </div>
   </div>
 
-  <!-- Info Sesi -->
   <div class="hidden md:flex items-center gap-5 text-xs text-gray-500">
     <span id="hdr-date">—</span>
     <span>Kasir: <strong class="text-gray-300" id="hdr-user">—</strong></span>
   </div>
 
-  <!-- Status + Logout -->
   <div class="flex items-center gap-2">
-    <!-- Indikator Koneksi -->
     <div id="conn-wrap" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-xs font-semibold">
       <span id="conn-dot" class="w-2 h-2 rounded-full" style="background:#10B981;"></span>
       <span id="conn-lbl">Online</span>
     </div>
-    <!-- Badge antrian offline -->
     <div id="queue-badge" class="hidden px-2 py-1 rounded-full text-xs font-bold"
          style="background:rgba(239,68,68,.15);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);">
       <span id="queue-n">0</span> pending
@@ -149,14 +143,11 @@
   </div>
 </header>
 
-<!-- ===== MAIN SPLIT LAYOUT ===== -->
 <main class="flex flex-1 overflow-hidden">
 
-  <!-- === PANEL KIRI === -->
   <div id="left-panel" class="w-full md:w-80 lg:w-96 flex flex-col shrink-0 border-r border-white/10"
        style="background:#07070F;">
 
-    <!-- Cari Booking -->
     <div class="p-3 border-b border-white/5">
       <div class="relative">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600"
@@ -175,7 +166,6 @@
       </div>
     </div>
 
-    <!-- Filter Tabs -->
     <div class="flex gap-1 px-3 py-2 border-b border-white/5 overflow-x-auto no-scrollbar">
       <button data-f="semua"        onclick="setFilter('semua')"        class="ftab active px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap">Semua</button>
       <button data-f="MENUNGGU"     onclick="setFilter('MENUNGGU')"     class="ftab px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap text-yellow-400">Menunggu</button>
@@ -183,7 +173,6 @@
       <button data-f="AKTIF"        onclick="setFilter('AKTIF')"        class="ftab px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap text-green-400">Aktif</button>
     </div>
 
-    <!-- List Transaksi -->
     <div id="trx-list" class="flex-1 overflow-y-auto">
       <div id="list-empty" class="flex flex-col items-center justify-center h-64 gap-3 text-gray-600">
         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
@@ -196,7 +185,6 @@
       </div>
     </div>
 
-    <!-- Reload Button -->
     <div class="p-3 border-t border-white/5">
       <button onclick="loadList()" class="w-full btn-o py-2 rounded-xl text-xs font-semibold">
         ↻ Muat Ulang
@@ -204,10 +192,8 @@
     </div>
   </div>
 
-  <!-- === PANEL KANAN === -->
   <div id="right-panel" class="flex-1 flex flex-col overflow-hidden">
 
-    <!-- Empty state -->
     <div id="det-empty" class="flex-1 flex flex-col items-center justify-center gap-4 text-gray-700">
       <div class="w-20 h-20 rounded-2xl glass flex items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
@@ -220,10 +206,8 @@
       </div>
     </div>
 
-    <!-- Detail view (hidden by default) -->
     <div id="det-content" class="hidden flex-1 flex flex-col overflow-hidden">
 
-      <!-- Detail header -->
       <div class="flex items-center justify-between px-5 py-3.5 shrink-0 border-b border-white/10" style="background:#05050A;">
         <div class="flex items-center gap-3">
           <button class="md:hidden p-1.5 rounded-lg hover:bg-white/5" onclick="closeDetail()">
@@ -240,10 +224,8 @@
         <button onclick="printReceipt()" class="btn-o px-3 py-1.5 rounded-lg text-xs">🖨 Kwitansi</button>
       </div>
 
-      <!-- Scrollable body -->
       <div id="det-body" class="flex-1 overflow-y-auto p-4 lg:p-5 space-y-3">
 
-        <!-- Kendaraan + Pelanggan -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <div class="glass rounded-2xl p-4">
             <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Kendaraan</div>
@@ -276,7 +258,6 @@
           </div>
         </div>
 
-        <!-- Jadwal -->
         <div class="glass rounded-2xl p-4">
           <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Jadwal Sewa</div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -295,7 +276,6 @@
           </div>
         </div>
 
-        <!-- Biaya -->
         <div class="glass rounded-2xl p-4">
           <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Rincian Biaya</div>
           <div class="space-y-1.5 text-sm">
@@ -311,7 +291,6 @@
           <div class="mt-2 text-xs text-gray-600" id="det-metode">—</div>
         </div>
 
-        <!-- Foto kondisi -->
         <div class="glass rounded-2xl p-4">
           <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Dokumentasi Kondisi</div>
           <div class="grid grid-cols-2 gap-3">
@@ -326,17 +305,11 @@
           </div>
         </div>
 
-      </div><!-- /det-body -->
-
-      <!-- ACTION BAR -->
-      <div id="action-bar" class="shrink-0 px-4 lg:px-5 py-3.5 border-t border-white/10 space-y-2"
+      </div><div id="action-bar" class="shrink-0 px-4 lg:px-5 py-3.5 border-t border-white/10 space-y-2"
            style="background:#05050A;"></div>
 
-    </div><!-- /det-content -->
-  </div><!-- /right-panel -->
-</main>
+    </div></div></main>
 
-<!-- ===== MODAL: UPLOAD FOTO KONDISI ===== -->
 <div id="modal-foto" class="overlay hidden">
   <div class="modal-box p-5">
     <div class="flex items-center justify-between mb-4">
@@ -347,7 +320,6 @@
       <button onclick="closeFotoModal()" class="text-gray-600 hover:text-white p-1.5 rounded-lg hover:bg-white/5">✕</button>
     </div>
 
-    <!-- Upload zones (3 kolom) -->
     <div class="grid grid-cols-3 gap-2 mb-4">
       <div id="zone-d" class="up-zone p-3 text-center" onclick="pickFile('inp-d')">
         <div id="zone-d-e" class="flex flex-col items-center gap-1 text-gray-600">
@@ -381,7 +353,6 @@
       </div>
     </div>
 
-    <!-- Catatan kerusakan (hanya sesudah) -->
     <div id="sect-catatan" class="hidden mb-4 space-y-2">
       <textarea id="inp-catatan" rows="2" placeholder="Catatan kerusakan (jika ada)..."
                 class="g-input w-full rounded-xl p-3 text-sm resize-none"></textarea>
@@ -402,7 +373,6 @@
   </div>
 </div>
 
-<!-- ===== MODAL: KONFIRMASI UMUM ===== -->
 <div id="modal-konfirm" class="overlay hidden">
   <div class="modal-box p-6 max-w-sm">
     <div class="text-center mb-5">
@@ -417,7 +387,6 @@
   </div>
 </div>
 
-<!-- ===== MODAL: SELESAIKAN (Denda) ===== -->
 <div id="modal-selesai" class="overlay hidden">
   <div class="modal-box p-5 max-w-sm">
     <div class="flex items-center gap-3 mb-4">
@@ -452,7 +421,6 @@
   </div>
 </div>
 
-<!-- ===== TOAST ===== -->
 <div id="toast" class="hidden fixed bottom-4 right-4 z-50 max-w-xs">
   <div class="glass rounded-xl p-3.5 flex items-start gap-3 shadow-2xl slide-in">
     <span id="toast-ic" class="text-lg shrink-0">✅</span>
@@ -469,8 +437,8 @@
 // ============================================================
 // KONFIGURASI & STATE
 // ============================================================
-const API  = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-             ? 'http://localhost:8000' : '';
+// Konfigurasi API diselaraskan dengan standar owner-dashboard (Localhost / Ngrok)
+const API = 'http://localhost:8000';
 const AUTH_KEY = 'aerorent_auth';
 const IDB_NAME = 'aerorent-pos-idb';
 
@@ -485,23 +453,28 @@ let S = {
 // INIT
 // ============================================================
 async function init() {
+  // Cek auth terlebih dahulu sebelum hal lain
+  const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+  if (!auth || !auth.access_token) { 
+    // Redirect otomatis ke halaman login jika token kosong
+    window.location.href = 'index.html'; 
+    return; 
+  }
+  S.token = auth.access_token; S.user = auth.user;
+
   // Register Service Worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').then(() => {
       navigator.serviceWorker.addEventListener('message', onSwMsg);
     });
   }
+  
   // Inject PWA manifest dynamically
   const manifest = { name:'AeroRent POS', short_name:'AeroPOS',
     start_url:'./', display:'standalone', background_color:'#0A0A14',
     theme_color:'#0A0A14', icons:[{src:'./icon-192.png',sizes:'192x192',type:'image/png'}] };
   const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
   document.getElementById('pwa-m').href = URL.createObjectURL(blob);
-
-  // Cek auth
-  const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
-  if (!auth) { alert('Sesi habis. Silakan login.'); return; }
-  S.token = auth.access_token; S.user = auth.user;
 
   document.getElementById('hdr-user').textContent = auth.user?.nama || '—';
   document.getElementById('hdr-date').textContent = new Date().toLocaleDateString('id-ID',
@@ -577,7 +550,11 @@ async function syncQueue() {
     try {
       const r = await fetch(API + item.endpoint, {
         method: item.method,
-        headers: {'Content-Type':'application/json','Authorization':'Bearer '+S.token},
+        headers: {
+          'Content-Type':'application/json',
+          'ngrok-skip-browser-warning': '69420',
+          'Authorization':'Bearer '+S.token
+        },
         body: JSON.stringify(item.body)
       });
       if (r.ok) {
@@ -598,14 +575,23 @@ function onSwMsg(ev) {
 }
 
 // ============================================================
-// API HELPER
+// API HELPER (DIPERBARUI DENGAN ANTI-LOOP)
 // ============================================================
 async function api(path, opts = {}) {
-  const headers = {'Content-Type':'application/json',
-                   'Authorization':'Bearer '+S.token, ...(opts.headers||{})};
+  const headers = {
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': '69420',
+    ...(S.token ? {'Authorization': 'Bearer ' + S.token} : {}),
+    ...(opts.headers||{})
+  };
+  
   try {
     const r = await fetch(API+path, {...opts, headers});
-    if (r.status === 401) { localStorage.removeItem(AUTH_KEY); location.reload(); return null; }
+    if (r.status === 401) { 
+      localStorage.removeItem(AUTH_KEY);
+      window.location.href = 'index.html'; // Tendang ke halaman login
+      return null; 
+    }
     return r;
   } catch(_) { return null; }
 }
@@ -956,9 +942,13 @@ async function submitFoto() {
     btn.disabled = false; el('up-status').classList.add('hidden'); return;
   }
   try {
+    // Tambahkan header ngrok khusus untuk multipart form data (JANGAN set Content-Type secara manual untuk FormData)
     const r = await fetch(`${API}/transaksi/${id}/foto-kondisi`, {
       method:'POST',
-      headers:{'Authorization':'Bearer '+S.token},
+      headers:{
+        'Authorization':'Bearer '+S.token,
+        'ngrok-skip-browser-warning': '69420'
+      },
       body: fd
     });
     if (r.ok) {
@@ -1050,7 +1040,7 @@ function printReceipt() {
   ${(t.denda_terlambat||0)>0?'Denda Terlambat: <span class="r">'+rp(t.denda_terlambat)+'</span><br>':''}
   <hr><b>TOTAL: <span class="r">${rp(t.total_biaya)}</span></b><br>
   <br>Status: ${t.status}<br><br>Terima kasih telah menggunakan AeroRent!
-  </body></html>`);
+  <\/body><\/html>`); // Menggunakan \/ agar peramban tidak salah paham
   w.print();
 }
 
@@ -1060,7 +1050,7 @@ function printReceipt() {
 function doLogout() {
   if (confirm('Yakin ingin keluar dari sesi kasir?')) {
     localStorage.removeItem(AUTH_KEY);
-    location.href = '/';
+    location.href = 'index.html'; // Tendang kembali ke halaman login
   }
 }
 

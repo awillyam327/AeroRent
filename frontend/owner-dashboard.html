@@ -124,14 +124,11 @@
 
 <body class="flex h-screen overflow-hidden">
 
-<!-- Mobile overlay -->
 <div id="mobile-overlay" onclick="closeMobileSidebar()"></div>
 
-<!-- ===== SIDEBAR ===== -->
 <aside id="sidebar" class="w-64 flex flex-col shrink-0 h-full overflow-y-auto"
        style="background:#0D0D1C;border-right:1px solid rgba(255,255,255,.07);">
 
-  <!-- Logo -->
   <div class="flex items-center gap-3 px-5 py-5 border-b border-white/5">
     <svg width="36" height="36" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -151,7 +148,6 @@
     </div>
   </div>
 
-  <!-- User info -->
   <div class="mx-4 my-3 p-3 rounded-2xl glass">
     <div class="text-xs text-gray-600 uppercase tracking-widest mb-2">Owner Panel</div>
     <div class="flex items-center gap-2.5">
@@ -164,7 +160,6 @@
     </div>
   </div>
 
-  <!-- Navigation -->
   <nav class="flex-1 px-3 py-2 space-y-1">
     <div class="nav-item active" data-section="dashboard" onclick="goSection('dashboard')">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
@@ -192,7 +187,6 @@
     </div>
   </nav>
 
-  <!-- Bottom -->
   <div class="px-3 pb-4 space-y-1 border-t border-white/5 pt-3">
     <a href="/" class="nav-item text-sm">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -200,15 +194,13 @@
     </a>
     <div class="nav-item" onclick="doLogout()" style="color:#EF4444;">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:#EF4444;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Selisai / Log Out
+      Selesai / Log Out
     </div>
   </div>
 </aside>
 
-<!-- ===== MAIN CONTENT ===== -->
 <div class="flex-1 flex flex-col overflow-hidden">
 
-  <!-- Mobile header -->
   <div class="md:hidden flex items-center gap-3 px-4 py-3 border-b border-white/10 shrink-0"
        style="background:#0D0D1C;">
     <button onclick="openMobileSidebar()" class="p-2 rounded-lg hover:bg-white/5">
@@ -217,10 +209,8 @@
     <span class="font-bebas text-xl tracking-widest">AERO<span style="color:#7C3AED;">RENT</span></span>
   </div>
 
-  <!-- Scrollable sections -->
   <div class="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
 
-    <!-- ======================== DASHBOARD (Ikhtisar Direktur) ======================== -->
     <div id="sec-dashboard" class="section active">
       <div class="mb-6">
         <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
@@ -229,7 +219,6 @@
         <p class="text-gray-500 text-sm mt-1">Performa ringkasan eksekutif armada Salatiga.</p>
       </div>
 
-      <!-- KPI Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="stat-card glass" style="border-left:3px solid #10B981;">
           <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Omset Keuangan</div>
@@ -248,7 +237,6 @@
         </div>
       </div>
 
-      <!-- Tabel Penyewaan Selesai Terbaru -->
       <div class="glass rounded-2xl overflow-hidden">
         <div class="px-6 py-4 border-b border-white/6">
           <div class="font-semibold text-white">Penyewaan Selesai Terbaru</div>
@@ -266,7 +254,6 @@
       </div>
     </div>
 
-    <!-- ======================== LAPORAN KEUANGAN ======================== -->
     <div id="sec-laporan" class="section">
       <div class="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
@@ -280,7 +267,6 @@
         </button>
       </div>
 
-      <!-- Filter Periode -->
       <div class="glass rounded-2xl p-4 mb-5 flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2">
           <label class="text-xs text-gray-500 uppercase tracking-widest whitespace-nowrap">Dari</label>
@@ -293,7 +279,6 @@
         <button onclick="loadLaporan()" class="btn-a px-5 py-2 text-sm">Tampilkan</button>
       </div>
 
-      <!-- KPI Laporan -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
         <div class="stat-card glass" style="border-left:3px solid #10B981;">
           <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Total Pendapatan Kotor</div>
@@ -312,7 +297,6 @@
         </div>
       </div>
 
-      <!-- Chart Revenue -->
       <div class="glass rounded-2xl p-5 mb-5">
         <div class="font-semibold text-white mb-4">Tren Pendapatan Bulanan</div>
         <div style="height:240px;">
@@ -320,7 +304,6 @@
         </div>
       </div>
 
-      <!-- Tren Riwayat Bulanan -->
       <div class="glass rounded-2xl overflow-hidden mb-5">
         <div class="px-6 py-4 border-b border-white/6">
           <div class="font-semibold text-white">Tren Riwayat Bulanan (Simulasi)</div>
@@ -340,7 +323,6 @@
         </div>
       </div>
 
-      <!-- Top Kendaraan -->
       <div class="glass rounded-2xl overflow-hidden">
         <div class="px-6 py-4 border-b border-white/6">
           <div class="font-semibold text-white">Top 5 Kendaraan — Pendapatan Tertinggi</div>
@@ -356,7 +338,6 @@
       </div>
     </div>
 
-    <!-- ======================== PENCATATAN OPERASIONAL ======================== -->
     <div id="sec-operasional" class="section">
       <div class="mb-6">
         <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
@@ -366,7 +347,6 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <!-- Form Tambah -->
         <div class="glass rounded-2xl p-5">
           <div class="font-semibold text-white mb-4 flex items-center gap-2">
             <span class="text-lg">💸</span> Tambah Pengeluaran
@@ -405,7 +385,6 @@
           </div>
         </div>
 
-        <!-- Riwayat -->
         <div class="glass rounded-2xl overflow-hidden flex flex-col">
           <div class="px-5 py-4 border-b border-white/6 flex items-center justify-between">
             <div class="font-semibold text-white">Riwayat Pengeluaran</div>
@@ -423,7 +402,6 @@
       </div>
     </div>
 
-    <!-- ======================== STATISTIK KENDARAAN ======================== -->
     <div id="sec-statistik" class="section">
       <div class="mb-6">
         <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
@@ -433,12 +411,10 @@
       </div>
 
       <div id="stat-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <!-- Diisi JS -->
         <div class="col-span-full text-center text-gray-600 py-12">Memuat data armada...</div>
       </div>
     </div>
 
-    <!-- ======================== MANAJEMEN KARYAWAN ======================== -->
     <div id="sec-karyawan" class="section">
       <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
@@ -469,7 +445,6 @@
       </div>
     </div>
 
-    <!-- ======================== SEMUA PESANAN ======================== -->
     <div id="sec-pesanan" class="section">
       <div class="mb-6">
         <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
@@ -478,7 +453,6 @@
         <p class="text-gray-500 text-sm mt-1">Lacak seluruh pemesanan armada secara transparan dan verifikasi tugas staf yang memberikan persetujuan (act.).</p>
       </div>
 
-      <!-- Search + Filter -->
       <div class="glass rounded-2xl p-4 mb-5 flex flex-wrap items-center gap-3">
         <input id="sp-search" type="text" placeholder="Cari ID transaksi, nama pelanggan, atau mobil..."
                class="g-input flex-1 min-w-48 px-3 py-2.5 text-sm" oninput="filterPesanan()">
@@ -491,17 +465,12 @@
         </div>
       </div>
 
-      <!-- Cards Grid -->
       <div id="sp-grid" class="space-y-3">
         <div class="text-center text-gray-600 py-12">Memuat semua pesanan...</div>
       </div>
     </div>
 
-  </div><!-- /scrollable -->
-</div><!-- /main content -->
-
-<!-- ===== MODAL: TAMBAH KARYAWAN ===== -->
-<div id="modal-kary" class="overlay hidden">
+  </div></div><div id="modal-kary" class="overlay hidden">
   <div class="modal-box p-6">
     <div class="flex items-center justify-between mb-5">
       <div class="font-semibold text-white text-lg" id="mk-title">Tambah Karyawan</div>
@@ -559,7 +528,6 @@
   </div>
 </div>
 
-<!-- ===== TOAST ===== -->
 <div id="toast" class="hidden fixed bottom-4 right-4 z-50 max-w-xs">
   <div class="glass rounded-xl p-3.5 flex items-start gap-3 shadow-2xl toast-anim">
     <span id="t-ic" class="text-lg shrink-0">✅</span>
@@ -574,41 +542,27 @@
 <script>
 'use strict';
 // ============================================================
-// KONFIGURASI
+// KONFIGURASI NGROK
 // ============================================================
-const API      = location.hostname === 'localhost' ? 'http://localhost:8000' : '';
+// Ganti URL ini dengan URL Ngrok milik Anda
+// Gunakan localhost untuk pengujian di laptop sendiri
+const API = 'http://localhost:8000'; 
 const AUTH_KEY = 'aerorent_auth';
 
 // ============================================================
 // DEMO DATA (fallback jika API tidak tersedia)
 // ============================================================
 const DEMO = {
-  karyawan: [
-    {id:'k-001',nama:'Admin AeroRent',email:'kasir@aerorent.id',telepon:'+62898',role:'KASIR',is_aktif:1,gaji:3000000,tanggal_masuk:'2026-01-15'},
-    {id:'k-002',nama:'Sopir Budi',    email:'sopir@aerorent.id', telepon:'+62877',role:'KASIR',is_aktif:1,gaji:2500000,tanggal_masuk:'2026-03-10'},
-  ],
-  transaksi: [
-    {id:'t1',booking:'AR-20261001',pelanggan:'Budi Santoso',kendaraan:'Toyota Innova Reborn 2023',mulai:'2026-06-08',selesai_rencana:'2026-06-11',durasi:3,total:2700000,status:'AKTIF',foto_kendaraan:''},
-    {id:'t2',booking:'AR-20261002',pelanggan:'Siti Aminah',  kendaraan:'Honda Brio RS 2023',    mulai:'2026-06-13',selesai_rencana:'2026-06-15',durasi:2,total:600000, status:'MENUNGGU',foto_kendaraan:''},
-  ],
+  karyawan: [],
+  transaksi: [],
   laporan: {
-    ringkasan: {total_pendapatan_kotor:2700000, total_biaya_operasional:0, profit_bersih:2700000, margin_persen:100, jumlah_transaksi_selesai:1},
-    tren_bulanan: [
-      {bulan:'2026-04',pendapatan:14200000},{bulan:'2026-05',pendapatan:28500000},{bulan:'2026-06',pendapatan:2700000}
-    ],
-    top_5_kendaraan: [
-      {nama:'Toyota Innova Reborn 2023',total:2700000,jumlah_sewa:1},
-      {nama:'Honda Brio RS 2023',       total:0,       jumlah_sewa:0},
-    ]
+    ringkasan: {total_pendapatan_kotor:0, total_biaya_operasional:0, profit_bersih:0, margin_persen:0, jumlah_transaksi_selesai:0},
+    tren_bulanan: [],
+    top_5_kendaraan: []
   },
   armada: {
-    status_armada: {TERSEDIA:6, DISEWA:1, PERAWATAN:0},
-    armada_detail: [
-      {id:'k1',nama:'Toyota Innova Reborn 2023',tipe:'7_SEATER',status:'DISEWA', harga_harian:750000,sewa_bulan_ini:1,pendapatan_bulan_ini:2700000},
-      {id:'k2',nama:'Honda Brio RS 2023',        tipe:'5_SEATER',status:'TERSEDIA',harga_harian:300000,sewa_bulan_ini:0,pendapatan_bulan_ini:0},
-      {id:'k3',nama:'Honda CR-V 2022',            tipe:'5_SEATER',status:'TERSEDIA',harga_harian:650000,sewa_bulan_ini:0,pendapatan_bulan_ini:0},
-      {id:'k4',nama:'Toyota Avanza 2022',         tipe:'7_SEATER',status:'TERSEDIA',harga_harian:350000,sewa_bulan_ini:0,pendapatan_bulan_ini:0},
-    ]
+    status_armada: {TERSEDIA:0, DISEWA:0, PERAWATAN:0},
+    armada_detail: []
   },
   pengeluaran: [],
 };
@@ -621,7 +575,7 @@ let S = {
   currentSection: 'dashboard',
   laporan: null, armada: null,
   transaksi: [], karyawan: [],
-  pengeluaran: DEMO.pengeluaran,
+  pengeluaran: [],
   pesananFilter: 'semua',
   chartRevenue: null,
   editKaryId: null,
@@ -650,16 +604,37 @@ async function init() {
 }
 
 // ============================================================
-// API HELPER
+// API HELPER (DIPERBARUI UNTUK NGROK)
 // ============================================================
 async function api(path, opts = {}) {
-  if (!S.token) return null;
-  const headers = {'Content-Type':'application/json','Authorization':'Bearer '+S.token,...(opts.headers||{})};
+  const headers = {
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': '69420',
+    ...(S.token ? {'Authorization': 'Bearer ' + S.token} : {}),
+    ...(opts.headers||{})
+  };
+  
   try {
     const r = await fetch(API+path, {...opts, headers});
-    if (r.status === 401) { localStorage.removeItem(AUTH_KEY); location.reload(); return null; }
+    
+    if (r.status === 401) { 
+      localStorage.removeItem(AUTH_KEY);
+      // Hanya lakukan reload jika sebelumnya token ada (berarti token kedaluwarsa)
+      if (S.token) {
+        S.token = null;
+        S.user = null;
+        location.reload();
+      } else {
+        // Jika memang dari awal tidak ada token, hentikan loop dan beri peringatan
+        toast('🔒', 'Mode Demo Aktif', 'Belum login. Data yang tampil adalah simulasi.');
+      }
+      return null; 
+    }
+    
     return r;
-  } catch(_) { return null; }
+  } catch(_) { 
+    return null; 
+  }
 }
 
 async function apiJson(path, opts = {}) {
@@ -693,7 +668,6 @@ function goSection(name) {
 async function loadDashboard() {
   // Stat cards
   const armData  = await apiJson('/laporan/armada')  || DEMO.armada;
-  // (lanjutan dari dalam fungsi init() → loadDashboard())
   const lapData  = await apiJson('/laporan/keuangan?dari=' + el('lk-dari').value + '&sampai=' + el('lk-sampai').value) || DEMO.laporan;
   S.laporan = lapData;
   S.armada  = armData;
@@ -891,23 +865,18 @@ async function savePengeluaran() {
   }
   if (nom <= 0) { toast('⚠️','Validasi','Nominal harus lebih dari 0.'); return; }
 
-  // Kirim ke API atau simpan lokal (demo)
   let saved = false;
-  const fd  = new FormData();
-  fd.append('deskripsi', ket);
-  fd.append('kategori',  kat);
-  fd.append('jumlah',    nom.toString());
-  fd.append('tanggal_pengeluaran', tgl);
+  // Diperbarui agar bisa menerima JSON atau form sesuai TiDB/FastAPI. Kita gunakan JSON
+  const payload = {
+    deskripsi: ket,
+    kategori: kat,
+    jumlah: nom,
+    tanggal_pengeluaran: tgl
+  };
 
   if (S.token) {
-    try {
-      const r = await fetch(API+'/pengeluaran', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer '+S.token },
-        body: fd
-      });
-      saved = r && r.ok;
-    } catch(_) {}
+    const r = await api('/pengeluaran', { method:'POST', body: JSON.stringify(payload) });
+    saved = r && r.ok;
   }
 
   // Simpan ke state lokal untuk tampilan
@@ -960,7 +929,6 @@ async function loadStatistik() {
                       k.status === 'DISEWA'     ? 'Sedang Disewa':'Perawatan';
     return `
       <div class="glass rounded-2xl overflow-hidden group hover:-translate-y-1 transition-transform duration-200">
-        <!-- Foto + Rank Badge -->
         <div class="relative h-36 overflow-hidden" style="background:rgba(255,255,255,.03);">
           <div class="absolute top-2 left-2 z-10 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
                style="background:${rankColor};color:#0A0A14;">
@@ -972,7 +940,6 @@ async function loadStatistik() {
             : `<div class="w-full h-full flex items-center justify-center text-4xl text-gray-700">🚗</div>`}
           <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(10,10,20,.7) 0%, transparent 60%);"></div>
         </div>
-        <!-- Info -->
         <div class="p-4">
           <div class="font-bebas text-lg tracking-wide text-white leading-tight">${k.nama}</div>
           <div class="text-xs text-gray-500 mb-3">${(k.tipe||'').replace('_',' ')}</div>
@@ -1192,7 +1159,6 @@ function renderPesanan() {
       <div class="glass rounded-2xl p-4 hover:border-purple-500/30 transition-colors group"
            style="border-color:rgba(255,255,255,0.06);">
         <div class="flex flex-col md:flex-row md:items-center gap-4">
-          <!-- Kendaraan foto + info -->
           <div class="w-full md:w-20 h-20 rounded-xl overflow-hidden bg-white/5 shrink-0 relative">
             ${t.foto_kendaraan
               ? `<img src="${t.foto_kendaraan}" alt="" class="w-full h-full object-cover">`
@@ -1202,7 +1168,6 @@ function renderPesanan() {
             </span>
           </div>
 
-          <!-- Info utama -->
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="font-mono font-bold text-white">${t.booking||t.id||'—'}</span>
@@ -1217,7 +1182,6 @@ function renderPesanan() {
             </div>
           </div>
 
-          <!-- Total + Aksi -->
           <div class="flex flex-col md:items-end gap-2 shrink-0">
             <div>
               <div class="text-xs text-gray-600">TOTAL PEMBAYARAN</div>
@@ -1372,4 +1336,3 @@ window.addEventListener('load', init);
 </script>
 </body>
 </html>
-  

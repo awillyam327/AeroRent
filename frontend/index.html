@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroRent — Login Sistem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        fontFamily: { bebas:['"Bebas Neue"','cursive'], dm:['"DM Sans"','sans-serif'] },
+        colors:{ dark:'#0A0A14', darker:'#05050A' }
+      }}
+    }
+  </script>
+  <style>
+    :root {
+      --amber:#F59E0B; --amber-d:#D97706; --purple:#7C3AED;
+      --glass-bg:rgba(255,255,255,.03); --glass-bd:rgba(255,255,255,.08);
+    }
+    body{background:#0A0A14;font-family:'DM Sans',sans-serif;color:white;overflow:hidden;}
+    
+    .glass{background:var(--glass-bg);border:1px solid var(--glass-bd);backdrop-filter:blur(16px);}
+    .g-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+             color:white;outline:none;border-radius:12px;transition:border-color .2s; width: 100%; padding: 12px 16px;}
+    .g-input:focus{border-color:var(--amber);}
+    .g-input::placeholder{color:rgba(255,255,255,.25);}
+
+    .btn-a{background:var(--amber);color:#0A0A14;font-weight:700;border:none;cursor:pointer;
+           border-radius:12px;transition:background .2s; width: 100%; padding: 14px;}
+    .btn-a:hover{background:var(--amber-d);}
+    .btn-a:disabled{opacity:0.7; cursor:not-allowed;}
+
+    .bg-glow{position:absolute; width:400px; height:400px; background:var(--purple); 
+             filter:blur(120px); border-radius:50%; opacity:0.15; z-index:-1;}
+    .bg-glow.amber{background:var(--amber); right:-100px; bottom:-100px; opacity:0.1;}
+
+    /* Toast */
+    #toast{transition: opacity 0.3s, transform 0.3s; opacity:0; transform:translateY(10px); pointer-events:none;}
+    #toast.show{opacity:1; transform:translateY(0); pointer-events:auto;}
+    
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .spin{display:inline-block;width:20px;height:20px;border:3px solid rgba(10,10,20,.2);
+          border-top-color:#0A0A14;border-radius:50%;animation:spin .7s linear infinite;}
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen relative">
+
+  <div class="bg-glow top-0 left-0"></div>
+  <div class="bg-glow amber"></div>
+
+  <div class="w-full max-w-md px-6 relative z-10">
+    <div class="flex flex-col items-center justify-center mb-8">
+      <svg width="48" height="48" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" class="mb-3">
+        <defs>
+          <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#F59E0B"/>
+          </linearGradient>
+        </defs>
+        <polygon points="20,3 37,34 3,34" fill="url(#lg)"/>
+        <line x1="20" y1="3" x2="9" y2="24" stroke="white" stroke-width="1.5" opacity=".7"/>
+        <line x1="20" y1="3" x2="14" y2="30" stroke="white" stroke-width="1" opacity=".4"/>
+      </svg>
+      <div class="font-bebas text-4xl tracking-widest leading-none">
+        AERO<span style="color:#7C3AED;">RENT</span>
+      </div>
+      <div class="text-gray-500 text-sm mt-1 tracking-widest uppercase">Fleet & POS System</div>
+    </div>
+
+    <form id="loginForm" class="glass rounded-3xl p-8 shadow-2xl" onsubmit="handleLogin(event)">
+      <div class="mb-6">
+        <h2 class="text-xl font-bold text-white mb-1">Selamat Datang</h2>
+        <p class="text-sm text-gray-400">Masuk untuk mengakses dasbor Anda.</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs text-gray-500 uppercase tracking-widest block mb-2">Email Pegawai</label>
+          <input type="email" id="email" required placeholder="admin@aerorent.id" class="g-input">
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 uppercase tracking-widest block mb-2">Kata Sandi</label>
+          <input type="password" id="password" required placeholder="••••••••" class="g-input">
+        </div>
+      </div>
+
+      <button type="submit" id="btnSubmit" class="btn-a mt-8 flex items-center justify-center gap-2">
+        <span>Masuk ke Sistem</span>
+      </button>
+    </form>
+    
+    <div class="text-center text-xs text-gray-600 mt-6">
+      &copy; 2026 AeroRent Salatiga. All rights reserved.
+    </div>
+  </div>
+
+  <div id="toast" class="fixed top-6 right-6 z-50 glass rounded-xl p-4 flex items-center gap-3 border-red-500/30">
+    <span class="text-xl">⚠️</span>
+    <div class="text-sm font-semibold text-red-200" id="toastMsg">Kredensial tidak valid</div>
+  </div>
+
+<script>
+  // Sesuaikan dengan port API lokal Anda
+  const API = 'http://localhost:8000';
+  const AUTH_KEY = 'aerorent_auth';
+
+  // Periksa jika sudah login, langsung arahkan ke dasbor
+  window.onload = () => {
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+    if (auth && auth.access_token) {
+      redirectByRole(auth.user.role);
+    }
+  };
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('btnSubmit');
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spin"></div>';
+
+    try {
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'ngrok-skip-browser-warning': '69420'
+        },
+        body: formData
+      });
+
+      if (!res.ok) throw new Error('Email atau kata sandi salah.');
+
+      const data = await res.json();
+      
+      // MEMBEDAH TOKEN JWT UNTUK MENCARI JABATAN
+      let userRole = 'KASIR'; // Bawaan
+      try {
+        // Membaca payload rahasia di dalam token (Base64 Decode)
+        const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+        userRole = data.role || payload.role || (email.includes('owner') ? 'OWNER' : 'KASIR');
+      } catch (err) {
+        console.warn("Gagal membaca token, menggunakan fallback.");
+        userRole = email.includes('owner') ? 'OWNER' : 'KASIR'; // Fallback cerdas berdasarkan email
+      }
+      
+      // Simpan ke Local Storage
+      localStorage.setItem(AUTH_KEY, JSON.stringify({
+        access_token: data.access_token,
+        user: {
+          nama: email.split('@')[0], 
+          role: userRole
+        }
+      }));
+
+      // Lempar ke halaman yang BENAR
+      redirectByRole(userRole);
+
+    } catch (err) {
+      showToast(err.message);
+      btn.disabled = false;
+      btn.innerHTML = '<span>Masuk ke Sistem</span>';
+    }
+  }
+
+  function redirectByRole(role) {
+    // Jika Owner, arahkan ke dasbor direktur. Jika Kasir, arahkan ke POS.
+    if (role === 'OWNER') {
+      window.location.href = 'owner-dashboard.html';
+    } else {
+      window.location.href = 'pos-kasir.html';
+    }
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+</script>
+</body>
+</html>
