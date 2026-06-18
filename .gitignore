@@ -1,0 +1,11 @@
+# Menyembunyikan semua ruang isolasi Python di mana pun letaknya
+venv/
+.venv/
+backend/venv/
+
+# Menyembunyikan file rahasia
+backend/.env
+
+# Menyembunyikan cache
+__pycache__/
+*.pyc

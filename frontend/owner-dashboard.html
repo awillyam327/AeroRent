@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroRent — Owner Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        fontFamily: { bebas:['"Bebas Neue"','cursive'], dm:['"DM Sans"','sans-serif'] },
+        colors:{ dark:'#0A0A14', darker:'#05050A' }
+      }}
+    }
+  </script>
+  <style>
+    :root {
+      --purple:#7C3AED; --purple-d:#6D28D9; --purple-l:#C084FC;
+      --amber:#F59E0B;  --amber-d:#D97706;
+      --green:#10B981;  --red:#EF4444; --blue:#3B82F6;
+      --glass-bg:rgba(255,255,255,.03); --glass-bd:rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box;margin:0;}
+    html,body{height:100%;overflow:hidden;}
+    body{background:#0A0A14;font-family:'DM Sans',sans-serif;color:white;}
+    ::-webkit-scrollbar{width:4px;height:4px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px;}
+    ::-webkit-scrollbar-thumb:hover{background:var(--purple);}
+
+    .glass{background:var(--glass-bg);border:1px solid var(--glass-bd);backdrop-filter:blur(12px);}
+    .g-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+             color:white;outline:none;border-radius:10px;transition:border-color .2s;}
+    .g-input:focus{border-color:var(--amber);}
+    .g-input::placeholder{color:rgba(255,255,255,.25);}
+
+    /* Sidebar nav item */
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;
+              cursor:pointer;transition:all .2s;color:rgba(255,255,255,.5);font-size:14px;font-weight:500;}
+    .nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.85);}
+    .nav-item.active{background:rgba(245,158,11,.1);color:#F59E0B;border:1px solid rgba(245,158,11,.2);}
+    .nav-item.active svg{color:#F59E0B;}
+    .nav-item svg{width:18px;height:18px;color:rgba(255,255,255,.4);}
+
+    /* Stat card */
+    .stat-card{padding:20px 24px;border-radius:20px;}
+
+    /* Badge */
+    .badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;
+           font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+    .b-tersedia{background:rgba(16,185,129,.15);color:#34D399;border:1px solid rgba(16,185,129,.3);}
+    .b-disewa   {background:rgba(239,68,68,.15);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);}
+    .b-perawatan{background:rgba(234,179,8,.15);color:#FCD34D;border:1px solid rgba(234,179,8,.3);}
+    .b-menunggu {background:rgba(234,179,8,.15);color:#FCD34D;border:1px solid rgba(234,179,8,.3);}
+    .b-aktif    {background:rgba(16,185,129,.15);color:#34D399;border:1px solid rgba(16,185,129,.3);}
+    .b-selesai  {background:rgba(107,114,128,.15);color:#9CA3AF;border:1px solid rgba(107,114,128,.3);}
+    .b-aktif-kary{background:rgba(59,130,246,.15);color:#60A5FA;border:1px solid rgba(59,130,246,.3);}
+
+    /* Buttons */
+    .btn-a{background:var(--amber);color:#0A0A14;font-weight:700;border:none;cursor:pointer;
+           border-radius:12px;transition:background .2s;}
+    .btn-a:hover{background:var(--amber-d);}
+    .btn-p{background:var(--purple);color:white;border:none;cursor:pointer;
+           border-radius:12px;transition:all .2s;}
+    .btn-p:hover{background:var(--purple-d);}
+    .btn-o{background:transparent;color:rgba(255,255,255,.6);
+           border:1px solid rgba(255,255,255,.15);cursor:pointer;border-radius:12px;transition:all .2s;}
+    .btn-o:hover{color:white;border-color:rgba(255,255,255,.4);}
+    .btn-g{background:rgba(16,185,129,.15);color:#34D399;border:1px solid rgba(16,185,129,.3);
+           cursor:pointer;border-radius:12px;transition:background .2s;}
+    .btn-g:hover{background:rgba(16,185,129,.25);}
+    .btn-r{background:rgba(239,68,68,.12);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);
+           cursor:pointer;border-radius:12px;transition:background .2s;}
+    .btn-r:hover{background:rgba(239,68,68,.22);}
+
+    /* Section */
+    .section{display:none;}
+    .section.active{display:block;}
+
+    /* Table */
+    .tbl th{padding:10px 16px;text-align:left;font-size:11px;color:rgba(255,255,255,.4);
+            text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid rgba(255,255,255,.06);}
+    .tbl td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);}
+    .tbl tr:hover td{background:rgba(255,255,255,.025);}
+    .tbl tr:last-child td{border-bottom:none;}
+
+    /* Modal */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(4px);
+             z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;}
+    .modal-box{background:#0A0A14;border:1px solid rgba(255,255,255,.1);
+               border-radius:20px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;}
+
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.12);
+          border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;}
+
+    /* Toggle switch */
+    .toggle{position:relative;display:inline-flex;width:44px;height:24px;cursor:pointer;}
+    .toggle input{opacity:0;width:0;height:0;}
+    .toggle-track{position:absolute;inset:0;border-radius:999px;background:rgba(255,255,255,.1);
+                  transition:background .25s;}
+    .toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+                  background:white;transition:transform .25s;}
+    .toggle input:checked ~ .toggle-track{background:var(--amber);}
+    .toggle input:checked ~ .toggle-thumb{transform:translateX(20px);}
+    .toggle.red input:checked ~ .toggle-track{background:var(--red);}
+
+    /* Toast */
+    @keyframes slideUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+    .toast-anim{animation:slideUp .25s ease-out;}
+
+    @media(max-width:767px){
+      #sidebar{position:fixed;left:-100%;top:0;height:100%;z-index:40;transition:left .3s;}
+      #sidebar.open{left:0;}
+      #mobile-overlay{display:block;}
+    }
+    #mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:39;}
+  </style>
+</head>
+
+<body class="flex h-screen overflow-hidden">
+
+<!-- Mobile overlay -->
+<div id="mobile-overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- ===== SIDEBAR ===== -->
+<aside id="sidebar" class="w-64 flex flex-col shrink-0 h-full overflow-y-auto"
+       style="background:#0D0D1C;border-right:1px solid rgba(255,255,255,.07);">
+
+  <!-- Logo -->
+  <div class="flex items-center gap-3 px-5 py-5 border-b border-white/5">
+    <svg width="36" height="36" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#F59E0B"/>
+        </linearGradient>
+      </defs>
+      <polygon points="20,3 37,34 3,34" fill="url(#lg)"/>
+      <line x1="20" y1="3" x2="9" y2="24" stroke="white" stroke-width="1.5" opacity=".7"/>
+      <line x1="20" y1="3" x2="14" y2="30" stroke="white" stroke-width="1" opacity=".4"/>
+    </svg>
+    <div>
+      <div class="font-bebas text-2xl tracking-widest leading-none">
+        AERO<span style="color:#7C3AED;">RENT</span>
+      </div>
+      <div class="text-xs text-gray-600 leading-none mt-1">Owner Panel</div>
+    </div>
+  </div>
+
+  <!-- User info -->
+  <div class="mx-4 my-3 p-3 rounded-2xl glass">
+    <div class="text-xs text-gray-600 uppercase tracking-widest mb-2">Owner Panel</div>
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold shrink-0"
+           style="background:rgba(245,158,11,.15);color:#F59E0B;" id="sb-avatar">B</div>
+      <div class="flex-1 min-w-0">
+        <div class="font-semibold text-white text-sm truncate" id="sb-nama">Bapak Owner</div>
+        <div class="badge b-aktif-kary mt-0.5">Status Aktif</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 px-3 py-2 space-y-1">
+    <div class="nav-item active" data-section="dashboard" onclick="goSection('dashboard')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" data-section="karyawan" onclick="goSection('karyawan')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Manajemen Karyawan
+    </div>
+    <div class="nav-item" data-section="laporan" onclick="goSection('laporan')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Laporan Keuangan
+    </div>
+    <div class="nav-item" data-section="operasional" onclick="goSection('operasional')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Pencatatan Operasional
+    </div>
+    <div class="nav-item" data-section="statistik" onclick="goSection('statistik')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Statistik Kendaraan
+    </div>
+    <div class="nav-item" data-section="pesanan" onclick="goSection('pesanan')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Semua Pesanan
+    </div>
+  </nav>
+
+  <!-- Bottom -->
+  <div class="px-3 pb-4 space-y-1 border-t border-white/5 pt-3">
+    <a href="/" class="nav-item text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Kembali ke Beranda
+    </a>
+    <div class="nav-item" onclick="doLogout()" style="color:#EF4444;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:#EF4444;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Selisai / Log Out
+    </div>
+  </div>
+</aside>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="flex-1 flex flex-col overflow-hidden">
+
+  <!-- Mobile header -->
+  <div class="md:hidden flex items-center gap-3 px-4 py-3 border-b border-white/10 shrink-0"
+       style="background:#0D0D1C;">
+    <button onclick="openMobileSidebar()" class="p-2 rounded-lg hover:bg-white/5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <span class="font-bebas text-xl tracking-widest">AERO<span style="color:#7C3AED;">RENT</span></span>
+  </div>
+
+  <!-- Scrollable sections -->
+  <div class="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
+
+    <!-- ======================== DASHBOARD (Ikhtisar Direktur) ======================== -->
+    <div id="sec-dashboard" class="section active">
+      <div class="mb-6">
+        <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+          IKHTISAR <span style="color:#F59E0B;">DIREKTUR</span>
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">Performa ringkasan eksekutif armada Salatiga.</p>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="stat-card glass" style="border-left:3px solid #10B981;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Omset Keuangan</div>
+          <div class="text-2xl font-bold" style="color:#10B981;" id="dk-omset">Rp 0</div>
+          <div class="text-xs text-gray-600 mt-1">↑ Akumulasi semua sewa lunas</div>
+        </div>
+        <div class="stat-card glass" style="border-left:3px solid #F59E0B;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Okupansi Mobil</div>
+          <div class="text-2xl font-bold" style="color:#F59E0B;" id="dk-okupansi">0%</div>
+          <div class="text-xs text-gray-600 mt-1">% unit sedang disewa saat ini</div>
+        </div>
+        <div class="stat-card glass" style="border-left:3px solid #7C3AED;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Rental Sukses</div>
+          <div class="text-2xl font-bold" style="color:#C084FC;" id="dk-sukses">0 Sewa</div>
+          <div class="text-xs text-gray-600 mt-1">Total transaksi selesai bulan ini</div>
+        </div>
+      </div>
+
+      <!-- Tabel Penyewaan Selesai Terbaru -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/6">
+          <div class="font-semibold text-white">Penyewaan Selesai Terbaru</div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead>
+              <tr><th>ID</th><th>Pelanggan</th><th>Kendaraan</th><th>Total</th><th>Tanggal</th></tr>
+            </thead>
+            <tbody id="dk-table">
+              <tr><td colspan="5" class="text-center text-gray-600 py-8">Memuat data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== LAPORAN KEUANGAN ======================== -->
+    <div id="sec-laporan" class="section">
+      <div class="flex items-start justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+            LAPORAN REKAPITULASI <span style="color:#F59E0B;">KEUANGAN</span>
+          </h1>
+          <p class="text-gray-500 text-sm mt-1">Struktur pemasukan kotor, biaya operasional staf, dan profit bersih.</p>
+        </div>
+        <button onclick="exportExcel()" class="btn-a px-5 py-2.5 flex items-center gap-2 text-sm">
+          📊 Download Excel
+        </button>
+      </div>
+
+      <!-- Filter Periode -->
+      <div class="glass rounded-2xl p-4 mb-5 flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-gray-500 uppercase tracking-widest whitespace-nowrap">Dari</label>
+          <input type="date" id="lk-dari" class="g-input px-3 py-2 text-sm">
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-gray-500 uppercase tracking-widest whitespace-nowrap">Sampai</label>
+          <input type="date" id="lk-sampai" class="g-input px-3 py-2 text-sm">
+        </div>
+        <button onclick="loadLaporan()" class="btn-a px-5 py-2 text-sm">Tampilkan</button>
+      </div>
+
+      <!-- KPI Laporan -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <div class="stat-card glass" style="border-left:3px solid #10B981;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Total Pendapatan Kotor</div>
+          <div class="text-2xl font-bold" style="color:#10B981;" id="lk-pend">Rp 0</div>
+          <div class="text-xs text-gray-600 mt-1">↑ Akumulasi sewa selesai</div>
+        </div>
+        <div class="stat-card glass" style="border-left:3px solid #EF4444;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Total Biaya Operasional</div>
+          <div class="text-2xl font-bold" style="color:#FCA5A5;" id="lk-peng">Rp 0</div>
+          <div class="text-xs text-gray-600 mt-1" id="lk-peng-sub">Pengeluaran tercatat</div>
+        </div>
+        <div class="stat-card glass" style="border-left:3px solid #7C3AED;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Profit Bersih (Net Profit)</div>
+          <div class="text-2xl font-bold" style="color:#C084FC;" id="lk-profit">Rp 0</div>
+          <div class="text-xs text-gray-600 mt-1" id="lk-margin">—</div>
+        </div>
+      </div>
+
+      <!-- Chart Revenue -->
+      <div class="glass rounded-2xl p-5 mb-5">
+        <div class="font-semibold text-white mb-4">Tren Pendapatan Bulanan</div>
+        <div style="height:240px;">
+          <canvas id="chart-revenue"></canvas>
+        </div>
+      </div>
+
+      <!-- Tren Riwayat Bulanan -->
+      <div class="glass rounded-2xl overflow-hidden mb-5">
+        <div class="px-6 py-4 border-b border-white/6">
+          <div class="font-semibold text-white">Tren Riwayat Bulanan (Simulasi)</div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead>
+              <tr>
+                <th>Bulan Operasi</th><th>Target Finansial</th>
+                <th>Pemasukan Kotor</th><th>Biaya Pengeluaran</th><th>Profit Bersih</th>
+              </tr>
+            </thead>
+            <tbody id="lk-table">
+              <tr><td colspan="5" class="text-center text-gray-600 py-8">Klik "Tampilkan" untuk memuat data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Kendaraan -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/6">
+          <div class="font-semibold text-white">Top 5 Kendaraan — Pendapatan Tertinggi</div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead><tr><th>#</th><th>Nama Kendaraan</th><th>Total Sewa</th><th>Pendapatan</th></tr></thead>
+            <tbody id="lk-top-kend">
+              <tr><td colspan="4" class="text-center text-gray-600 py-6">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== PENCATATAN OPERASIONAL ======================== -->
+    <div id="sec-operasional" class="section">
+      <div class="mb-6">
+        <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+          PENCATATAN <span style="color:#F59E0B;">OPERASIONAL</span>
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">Catat biaya bahan bakar, servis mobil, cuci mobil, dan pengeluaran lainnya. Akumulasi otomatis masuk ke laporan keuangan.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Form Tambah -->
+        <div class="glass rounded-2xl p-5">
+          <div class="font-semibold text-white mb-4 flex items-center gap-2">
+            <span class="text-lg">💸</span> Tambah Pengeluaran
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Tanggal</label>
+              <input type="date" id="po-tanggal" class="g-input w-full px-3 py-2.5 text-sm">
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Kategori</label>
+              <select id="po-kategori" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+                <option value="BBM">BBM (Bahan Bakar)</option>
+                <option value="SERVIS">Servis / Perbaikan</option>
+                <option value="PERAWATAN">Perawatan Rutin</option>
+                <option value="GAJI">Gaji Karyawan</option>
+                <option value="ASURANSI">Asuransi</option>
+                <option value="PAJAK">Pajak / STNK</option>
+                <option value="OPERASIONAL">Operasional Lain</option>
+                <option value="LAINNYA">Lainnya</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nominal (Rp)</label>
+              <input type="number" id="po-nominal" min="0" placeholder="Contoh: 500000"
+                     class="g-input w-full px-3 py-2.5 text-sm">
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Keterangan</label>
+              <input type="text" id="po-ket" placeholder="Contoh: Cuci AC kend AB-123 CD"
+                     class="g-input w-full px-3 py-2.5 text-sm">
+            </div>
+            <button onclick="savePengeluaran()" class="w-full btn-a py-2.5 font-semibold text-sm">
+              Simpan Biaya
+            </button>
+          </div>
+        </div>
+
+        <!-- Riwayat -->
+        <div class="glass rounded-2xl overflow-hidden flex flex-col">
+          <div class="px-5 py-4 border-b border-white/6 flex items-center justify-between">
+            <div class="font-semibold text-white">Riwayat Pengeluaran</div>
+            <div class="text-sm text-gray-500">Total: <span class="font-bold" style="color:#F59E0B;" id="po-total">Rp 0</span></div>
+          </div>
+          <div class="overflow-y-auto flex-1" style="max-height:420px;">
+            <table class="tbl w-full">
+              <thead><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Nominal</th><th>Aksi</th></tr></thead>
+              <tbody id="po-table">
+                <tr><td colspan="5" class="text-center text-gray-600 py-8">Belum ada riwayat pengeluaran yang dicatat.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== STATISTIK KENDARAAN ======================== -->
+    <div id="sec-statistik" class="section">
+      <div class="mb-6">
+        <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+          PERFORMA POPULARITAS BULANAN <span style="color:#F59E0B;">ARMADA</span>
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">Peringkat mobil dengan frekuensi penyewaan tertinggi dan sumbangsi omset.</p>
+      </div>
+
+      <div id="stat-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <!-- Diisi JS -->
+        <div class="col-span-full text-center text-gray-600 py-12">Memuat data armada...</div>
+      </div>
+    </div>
+
+    <!-- ======================== MANAJEMEN KARYAWAN ======================== -->
+    <div id="sec-karyawan" class="section">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+            MANAJEMEN <span style="color:#F59E0B;">KARYAWAN</span>
+          </h1>
+          <p class="text-gray-500 text-sm mt-1">Kelola staf administratif, kasir dan driver.</p>
+        </div>
+        <button onclick="openKaryawanModal()" class="btn-g px-5 py-2.5 flex items-center gap-2 text-sm font-semibold">
+          + Tambah Karyawan
+        </button>
+      </div>
+
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead>
+              <tr>
+                <th>ID / NIP</th><th>Nama Lengkap</th><th>Jabatan</th>
+                <th>Tanggal Masuk</th><th>Gaji / Bulan</th><th>Status Perjanjian</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="kary-table">
+              <tr><td colspan="7" class="text-center text-gray-600 py-8">Memuat data karyawan...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== SEMUA PESANAN ======================== -->
+    <div id="sec-pesanan" class="section">
+      <div class="mb-6">
+        <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+          SEMUA PESANAN <span style="color:#F59E0B;">&amp; PERSETUJUAN</span>
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">Lacak seluruh pemesanan armada secara transparan dan verifikasi tugas staf yang memberikan persetujuan (act.).</p>
+      </div>
+
+      <!-- Search + Filter -->
+      <div class="glass rounded-2xl p-4 mb-5 flex flex-wrap items-center gap-3">
+        <input id="sp-search" type="text" placeholder="Cari ID transaksi, nama pelanggan, atau mobil..."
+               class="g-input flex-1 min-w-48 px-3 py-2.5 text-sm" oninput="filterPesanan()">
+        <div class="flex gap-1 flex-wrap">
+          <button data-sf="semua"        onclick="setPesananFilter('semua')"        class="sf-btn active px-3 py-1.5 rounded-xl text-xs font-semibold">Semua</button>
+          <button data-sf="MENUNGGU"     onclick="setPesananFilter('MENUNGGU')"     class="sf-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-yellow-400">Menunggu</button>
+          <button data-sf="DIKONFIRMASI" onclick="setPesananFilter('DIKONFIRMASI')" class="sf-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-blue-400">Dikonfirmasi</button>
+          <button data-sf="AKTIF"        onclick="setPesananFilter('AKTIF')"        class="sf-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-green-400">Aktif</button>
+          <button data-sf="SELESAI"      onclick="setPesananFilter('SELESAI')"      class="sf-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-400">Selesai</button>
+        </div>
+      </div>
+
+      <!-- Cards Grid -->
+      <div id="sp-grid" class="space-y-3">
+        <div class="text-center text-gray-600 py-12">Memuat semua pesanan...</div>
+      </div>
+    </div>
+
+  </div><!-- /scrollable -->
+</div><!-- /main content -->
+
+<!-- ===== MODAL: TAMBAH KARYAWAN ===== -->
+<div id="modal-kary" class="overlay hidden">
+  <div class="modal-box p-6">
+    <div class="flex items-center justify-between mb-5">
+      <div class="font-semibold text-white text-lg" id="mk-title">Tambah Karyawan</div>
+      <button onclick="closeKaryawanModal()" class="text-gray-600 hover:text-white p-1.5 rounded-lg hover:bg-white/5">✕</button>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nomor Induk Pegawai (NIP)</label>
+        <input type="text" id="mk-nip" placeholder="EMP-003" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nama Lengkap</label>
+        <input type="text" id="mk-nama" placeholder="Budi Hermawan" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Jabatan</label>
+        <select id="mk-role" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+          <option value="KASIR">Kasir (bisa Admin)</option>
+          <option value="OWNER">Owner</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Tanggal Masuk</label>
+        <input type="date" id="mk-tgl" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Status</label>
+        <select id="mk-status" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+          <option value="1">Aktif</option><option value="0">Nonaktif</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Gaji per Bulan (Rp)</label>
+        <input type="number" id="mk-gaji" placeholder="3000000" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Email</label>
+        <input type="email" id="mk-email" placeholder="kasir@aerorent.id" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Password Awal</label>
+        <input type="password" id="mk-pass" placeholder="Min. 8 karakter" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="col-span-2">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="mk-buatakun" class="w-4 h-4 rounded" checked>
+          <span class="text-sm text-gray-300">Buat akun login (role KASIR / ADMIN)</span>
+        </label>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeKaryawanModal()" class="flex-1 btn-o py-2.5 text-sm font-semibold">Batal</button>
+      <button onclick="saveKaryawan()" class="flex-1 btn-g py-2.5 text-sm font-semibold">Simpan Karyawan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast" class="hidden fixed bottom-4 right-4 z-50 max-w-xs">
+  <div class="glass rounded-xl p-3.5 flex items-start gap-3 shadow-2xl toast-anim">
+    <span id="t-ic" class="text-lg shrink-0">✅</span>
+    <div class="flex-1">
+      <div class="font-semibold text-sm" id="t-ttl">—</div>
+      <div class="text-xs text-gray-400 mt-0.5" id="t-msg">—</div>
+    </div>
+    <button onclick="hideToast()" class="text-gray-600 hover:text-white text-xs">✕</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const API      = location.hostname === 'localhost' ? 'http://localhost:8000' : '';
+const AUTH_KEY = 'aerorent_auth';
+
+// ============================================================
+// DEMO DATA (fallback jika API tidak tersedia)
+// ============================================================
+const DEMO = {
+  karyawan: [
+    {id:'k-001',nama:'Admin AeroRent',email:'kasir@aerorent.id',telepon:'+62898',role:'KASIR',is_aktif:1,gaji:3000000,tanggal_masuk:'2026-01-15'},
+    {id:'k-002',nama:'Sopir Budi',    email:'sopir@aerorent.id', telepon:'+62877',role:'KASIR',is_aktif:1,gaji:2500000,tanggal_masuk:'2026-03-10'},
+  ],
+  transaksi: [
+    {id:'t1',booking:'AR-20261001',pelanggan:'Budi Santoso',kendaraan:'Toyota Innova Reborn 2023',mulai:'2026-06-08',selesai_rencana:'2026-06-11',durasi:3,total:2700000,status:'AKTIF',foto_kendaraan:''},
+    {id:'t2',booking:'AR-20261002',pelanggan:'Siti Aminah',  kendaraan:'Honda Brio RS 2023',    mulai:'2026-06-13',selesai_rencana:'2026-06-15',durasi:2,total:600000, status:'MENUNGGU',foto_kendaraan:''},
+  ],
+  laporan: {
+    ringkasan: {total_pendapatan_kotor:2700000, total_biaya_operasional:0, profit_bersih:2700000, margin_persen:100, jumlah_transaksi_selesai:1},
+    tren_bulanan: [
+      {bulan:'2026-04',pendapatan:14200000},{bulan:'2026-05',pendapatan:28500000},{bulan:'2026-06',pendapatan:2700000}
+    ],
+    top_5_kendaraan: [
+      {nama:'Toyota Innova Reborn 2023',total:2700000,jumlah_sewa:1},
+      {nama:'Honda Brio RS 2023',       total:0,       jumlah_sewa:0},
+    ]
+  },
+  armada: {
+    status_armada: {TERSEDIA:6, DISEWA:1, PERAWATAN:0},
+    armada_detail: [
+      {id:'k1',nama:'Toyota Innova Reborn 2023',tipe:'7_SEATER',status:'DISEWA', harga_harian:750000,sewa_bulan_ini:1,pendapatan_bulan_ini:2700000},
+      {id:'k2',nama:'Honda Brio RS 2023',        tipe:'5_SEATER',status:'TERSEDIA',harga_harian:300000,sewa_bulan_ini:0,pendapatan_bulan_ini:0},
+      {id:'k3',nama:'Honda CR-V 2022',            tipe:'5_SEATER',status:'TERSEDIA',harga_harian:650000,sewa_bulan_ini:0,pendapatan_bulan_ini:0},
+      {id:'k4',nama:'Toyota Avanza 2022',         tipe:'7_SEATER',status:'TERSEDIA',harga_harian:350000,sewa_bulan_ini:0,pendapatan_bulan_ini:0},
+    ]
+  },
+  pengeluaran: [],
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let S = {
+  token: null, user: null,
+  currentSection: 'dashboard',
+  laporan: null, armada: null,
+  transaksi: [], karyawan: [],
+  pengeluaran: DEMO.pengeluaran,
+  pesananFilter: 'semua',
+  chartRevenue: null,
+  editKaryId: null,
+};
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  const auth = JSON.parse(localStorage.getItem(AUTH_KEY)||'null');
+  if (auth) { S.token = auth.access_token; S.user = auth.user; }
+
+  const nama = S.user?.nama || 'Bapak Owner';
+  el('sb-nama').textContent    = nama;
+  el('sb-avatar').textContent  = nama[0].toUpperCase();
+
+  // Set default dates
+  const today = new Date().toISOString().split('T')[0];
+  const first = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+  el('lk-dari').value   = first;
+  el('lk-sampai').value = today;
+  el('po-tanggal').value= today;
+  el('mk-tgl').value    = today;
+
+  await loadDashboard();
+}
+
+// ============================================================
+// API HELPER
+// ============================================================
+async function api(path, opts = {}) {
+  if (!S.token) return null;
+  const headers = {'Content-Type':'application/json','Authorization':'Bearer '+S.token,...(opts.headers||{})};
+  try {
+    const r = await fetch(API+path, {...opts, headers});
+    if (r.status === 401) { localStorage.removeItem(AUTH_KEY); location.reload(); return null; }
+    return r;
+  } catch(_) { return null; }
+}
+
+async function apiJson(path, opts = {}) {
+  const r = await api(path, opts);
+  if (r && r.ok) return r.json();
+  return null;
+}
+
+// ============================================================
+// NAVIGASI SECTIONS
+// ============================================================
+function goSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  el(`sec-${name}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.section === name);
+  });
+  S.currentSection = name;
+  closeMobileSidebar();
+
+  if (name === 'laporan')     loadLaporan();
+  if (name === 'karyawan')    loadKaryawan();
+  if (name === 'operasional') loadPengeluaran();
+  if (name === 'statistik')   loadStatistik();
+  if (name === 'pesanan')     loadPesanan();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function loadDashboard() {
+  // Stat cards
+  const armData  = await apiJson('/laporan/armada')  || DEMO.armada;
+  // (lanjutan dari dalam fungsi init() → loadDashboard())
+  const lapData  = await apiJson('/laporan/keuangan?dari=' + el('lk-dari').value + '&sampai=' + el('lk-sampai').value) || DEMO.laporan;
+  S.laporan = lapData;
+  S.armada  = armData;
+
+  const ring  = lapData.ringkasan  || DEMO.laporan.ringkasan;
+  const armSt = armData.status_armada || DEMO.armada.status_armada;
+  const total = Object.values(armSt).reduce((a,b)=>a+b,0)||1;
+  const disewa= armSt.DISEWA||0;
+
+  el('dk-omset').textContent    = rp(ring.total_pendapatan_kotor);
+  el('dk-okupansi').textContent = ((disewa/total)*100).toFixed(1)+'%';
+  el('dk-sukses').textContent   = ring.jumlah_transaksi_selesai+' Sewa';
+
+  // Tabel penyewaan selesai terbaru dari demo/API
+  const trxData = await apiJson('/transaksi?status=SELESAI&limit=5') || [];
+  const rows    = trxData.length ? trxData : DEMO.transaksi.filter(t=>t.status==='SELESAI').slice(0,5);
+  S.transaksi   = trxData.length ? trxData : DEMO.transaksi;
+
+  const tb = el('dk-table');
+  if (!rows.length) {
+    tb.innerHTML = `<tr><td colspan="5" class="text-center text-gray-600 py-8 text-sm">
+      Belum ada rental yang diselesaikan dalam basis data.</td></tr>`;
+  } else {
+    tb.innerHTML = rows.map(t => `
+      <tr>
+        <td><span class="font-mono text-xs text-gray-400">${t.booking||t.id||'—'}</span></td>
+        <td class="font-medium">${t.pelanggan||'—'}</td>
+        <td class="text-gray-400 text-xs">${t.kendaraan||'—'}</td>
+        <td class="font-bold" style="color:#F59E0B;">${rp(t.total||t.total_biaya||0)}</td>
+        <td class="text-gray-500 text-xs">${fmtD(t.mulai||t.tanggal_mulai)}</td>
+      </tr>`).join('');
+  }
+}
+
+// ============================================================
+// LAPORAN KEUANGAN
+// ============================================================
+async function loadLaporan() {
+  const dari   = el('lk-dari').value;
+  const sampai = el('lk-sampai').value;
+  if (!dari || !sampai) return;
+
+  el('lk-table').innerHTML = `<tr><td colspan="5" class="text-center py-6"><div class="spin mx-auto"></div></td></tr>`;
+
+  const data = await apiJson(`/laporan/keuangan?dari=${dari}&sampai=${sampai}`) || DEMO.laporan;
+  S.laporan  = data;
+  const ring = data.ringkasan || DEMO.laporan.ringkasan;
+
+  el('lk-pend').textContent   = rp(ring.total_pendapatan_kotor);
+  el('lk-peng').textContent   = rp(ring.total_biaya_operasional);
+  el('lk-peng-sub').textContent = `Pengeluaran tercatat · Rp ${ring.total_biaya_operasional > 0 ? (ring.total_biaya_operasional/1e6).toFixed(2)+'jt' : '0'}`;
+  el('lk-profit').textContent = rp(ring.profit_bersih);
+  el('lk-margin').textContent = `↑ Margin bersih: ${ring.margin_persen}%`;
+  el('lk-profit').style.color = ring.profit_bersih >= 0 ? '#C084FC' : '#FCA5A5';
+
+  // ---- Chart Revenue (Chart.js) ----
+  const tren    = data.tren_bulanan || DEMO.laporan.tren_bulanan;
+  const labels  = tren.map(t => {
+    const [y,m] = t.bulan.split('-');
+    const bln   = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    return `${bln[parseInt(m)]} ${y}`;
+  });
+  const values  = tren.map(t => t.pendapatan);
+
+  if (S.chartRevenue) S.chartRevenue.destroy();
+  const ctx = document.getElementById('chart-revenue').getContext('2d');
+  S.chartRevenue = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Pendapatan (Rp)',
+        data:  values,
+        backgroundColor: 'rgba(124,58,237,0.45)',
+        borderColor:     '#7C3AED',
+        borderWidth: 1.5,
+        borderRadius: 6,
+        hoverBackgroundColor: 'rgba(245,158,11,0.55)',
+        hoverBorderColor:     '#F59E0B',
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ' + new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(ctx.parsed.y)
+          },
+          backgroundColor: '#0D0D1C',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#9CA3AF',
+          bodyColor:  '#F59E0B',
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6B7280', font: { size: 11 } } },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#6B7280', font: { size: 11 },
+            callback: v => 'Rp ' + (v >= 1e6 ? (v/1e6).toFixed(1)+'jt' : v >= 1e3 ? (v/1e3).toFixed(0)+'rb' : v)
+          }
+        }
+      }
+    }
+  });
+
+  // ---- Tabel Tren Bulanan ----
+  const TARGET = ring.total_pendapatan_kotor / (tren.length || 1);
+  const tb = el('lk-table');
+  if (!tren.length) {
+    tb.innerHTML = `<tr><td colspan="5" class="text-center text-gray-600 py-8">Tidak ada data dalam periode ini.</td></tr>`;
+  } else {
+    tb.innerHTML = tren.map((t, i) => {
+      const [y,m]   = t.bulan.split('-');
+      const bln     = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      const isLatest= i === tren.length - 1;
+      const peng    = (data.distribusi_pengeluaran ? Object.values(data.distribusi_pengeluaran).reduce((a,b)=>a+b,0) : 0) / (tren.length || 1);
+      const profit  = t.pendapatan - peng;
+      const tercapai= t.pendapatan >= TARGET;
+      return `
+        <tr>
+          <td>
+            <div class="font-medium">${bln[parseInt(m)]} ${y}</div>
+            ${isLatest ? '<span class="badge b-aktif-kary" style="font-size:9px;">Aktif</span>' : ''}
+          </td>
+          <td>
+            <span class="${tercapai ? 'text-green-400' : 'text-yellow-400'} font-semibold text-xs flex items-center gap-1">
+              ${tercapai ? '✓ Tercapai' : '⚠ Low Season'}
+            </span>
+          </td>
+          <td class="font-bold text-white">${rp(t.pendapatan)}</td>
+          <td class="text-red-400">${rp(peng)}</td>
+          <td class="font-bold ${profit >= 0 ? 'text-green-400' : 'text-red-400'}">${rp(profit)}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ---- Top 5 Kendaraan ----
+  const topKend = data.top_5_kendaraan || DEMO.laporan.top_5_kendaraan;
+  el('lk-top-kend').innerHTML = !topKend.length
+    ? `<tr><td colspan="4" class="text-center text-gray-600 py-6">Belum ada data.</td></tr>`
+    : topKend.map((k, i) => `
+        <tr>
+          <td><span class="w-6 h-6 rounded-full inline-flex items-center justify-center text-xs font-bold"
+            style="background:rgba(245,158,11,.15);color:#F59E0B;">${i+1}</span></td>
+          <td class="font-medium">${k.nama}</td>
+          <td class="text-gray-400 text-center">${k.jumlah_sewa}×</td>
+          <td class="font-bold" style="color:#F59E0B;">${rp(k.total)}</td>
+        </tr>`).join('');
+}
+
+// ============================================================
+// PENCATATAN OPERASIONAL
+// ============================================================
+async function loadPengeluaran() {
+  const data = await apiJson('/pengeluaran') || DEMO.pengeluaran;
+  S.pengeluaran = Array.isArray(data) ? data : DEMO.pengeluaran;
+  renderPengeluaranTable();
+}
+
+function renderPengeluaranTable() {
+  const tb    = el('po-table');
+  const list  = S.pengeluaran;
+  const total = list.reduce((s,p) => s + (p.jumlah||0), 0);
+  el('po-total').textContent = rp(total);
+
+  if (!list.length) {
+    tb.innerHTML = `<tr><td colspan="5" class="text-center text-gray-600 py-8 text-sm">Belum ada riwayat pengeluaran yang dicatat.</td></tr>`;
+    return;
+  }
+  tb.innerHTML = list.map(p => `
+    <tr>
+      <td class="text-xs text-gray-400 whitespace-nowrap">${fmtD(p.tanggal||p.tanggal_pengeluaran)}</td>
+      <td><span class="badge" style="background:rgba(124,58,237,.12);color:#C084FC;border:1px solid rgba(124,58,237,.25);">${p.kategori}</span></td>
+      <td class="text-gray-300 text-xs max-w-xs truncate">${p.deskripsi}</td>
+      <td class="font-bold text-red-400 whitespace-nowrap">${rp(p.jumlah)}</td>
+      <td>
+        <button onclick="deletePengeluaran('${p.id||p.id_pengeluaran}')"
+                class="btn-r px-2 py-1 rounded-lg text-xs">Hapus</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function savePengeluaran() {
+  const tgl = el('po-tanggal').value;
+  const kat = el('po-kategori').value;
+  const nom = parseFloat(el('po-nominal').value||'0');
+  const ket = el('po-ket').value.trim();
+
+  if (!tgl || !nom || !ket) {
+    toast('⚠️','Validasi','Tanggal, nominal, dan keterangan wajib diisi.'); return;
+  }
+  if (nom <= 0) { toast('⚠️','Validasi','Nominal harus lebih dari 0.'); return; }
+
+  // Kirim ke API atau simpan lokal (demo)
+  let saved = false;
+  const fd  = new FormData();
+  fd.append('deskripsi', ket);
+  fd.append('kategori',  kat);
+  fd.append('jumlah',    nom.toString());
+  fd.append('tanggal_pengeluaran', tgl);
+
+  if (S.token) {
+    try {
+      const r = await fetch(API+'/pengeluaran', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer '+S.token },
+        body: fd
+      });
+      saved = r && r.ok;
+    } catch(_) {}
+  }
+
+  // Simpan ke state lokal untuk tampilan
+  const newEntry = {
+    id: 'po-local-'+ Date.now(),
+    kategori: kat, deskripsi: ket, jumlah: nom,
+    tanggal_pengeluaran: tgl, created_at: new Date().toISOString()
+  };
+  S.pengeluaran.unshift(newEntry);
+  renderPengeluaranTable();
+
+  el('po-nominal').value = '';
+  el('po-ket').value     = '';
+  toast('✅', saved ? 'Tersimpan ke Server' : 'Disimpan Lokal', `Pengeluaran Rp ${rp(nom)} berhasil dicatat.`);
+}
+
+async function deletePengeluaran(id) {
+  if (!confirm('Hapus catatan pengeluaran ini?')) return;
+  if (S.token && !id.startsWith('po-local-')) {
+    const r = await api(`/pengeluaran/${id}`, { method: 'DELETE' });
+    if (!r || !r.ok) { toast('❌','Gagal','Tidak dapat menghapus data.'); return; }
+  }
+  S.pengeluaran = S.pengeluaran.filter(p => (p.id||p.id_pengeluaran) !== id);
+  renderPengeluaranTable();
+  toast('🗑️','Dihapus','Catatan pengeluaran berhasil dihapus.');
+}
+
+// ============================================================
+// STATISTIK KENDARAAN
+// ============================================================
+async function loadStatistik() {
+  const data = await apiJson('/laporan/armada') || DEMO.armada;
+  S.armada   = data;
+  const grid = el('stat-grid');
+  const list = data.armada_detail || DEMO.armada.armada_detail;
+
+  if (!list.length) {
+    grid.innerHTML = `<div class="col-span-full text-center text-gray-600 py-12">Tidak ada data armada.</div>`;
+    return;
+  }
+
+  // Urutkan berdasarkan sewa_bulan_ini DESC
+  const sorted = [...list].sort((a,b) => b.sewa_bulan_ini - a.sewa_bulan_ini);
+
+  grid.innerHTML = sorted.map((k, i) => {
+    const rankColor = ['#F59E0B','#9CA3AF','#CD7F32','rgba(255,255,255,.3)'][Math.min(i,3)];
+    const stBadge   = k.status === 'TERSEDIA'  ? 'b-tersedia'  :
+                      k.status === 'DISEWA'     ? 'b-disewa'    : 'b-perawatan';
+    const stLabel   = k.status === 'TERSEDIA'  ? 'Tersedia'    :
+                      k.status === 'DISEWA'     ? 'Sedang Disewa':'Perawatan';
+    return `
+      <div class="glass rounded-2xl overflow-hidden group hover:-translate-y-1 transition-transform duration-200">
+        <!-- Foto + Rank Badge -->
+        <div class="relative h-36 overflow-hidden" style="background:rgba(255,255,255,.03);">
+          <div class="absolute top-2 left-2 z-10 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+               style="background:${rankColor};color:#0A0A14;">
+            ${i+1}
+          </div>
+          <span class="absolute top-2 right-2 badge ${stBadge}">${stLabel}</span>
+          ${k.foto
+            ? `<img src="${k.foto}" alt="${k.nama}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300">`
+            : `<div class="w-full h-full flex items-center justify-center text-4xl text-gray-700">🚗</div>`}
+          <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(10,10,20,.7) 0%, transparent 60%);"></div>
+        </div>
+        <!-- Info -->
+        <div class="p-4">
+          <div class="font-bebas text-lg tracking-wide text-white leading-tight">${k.nama}</div>
+          <div class="text-xs text-gray-500 mb-3">${(k.tipe||'').replace('_',' ')}</div>
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-500">Total Di-Sewa</span>
+              <span class="font-semibold text-white">${k.sewa_bulan_ini} kali</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-500">Pendapatan Kotor</span>
+              <span class="font-bold" style="color:#F59E0B;">${rp(k.pendapatan_bulan_ini)}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-500">Tarif Harian</span>
+              <span class="text-gray-300">${rp(k.harga_harian)}</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
+// MANAJEMEN KARYAWAN
+// ============================================================
+async function loadKaryawan() {
+  const data = await apiJson('/karyawan') || DEMO.karyawan;
+  S.karyawan = Array.isArray(data) ? data : DEMO.karyawan;
+  renderKaryawanTable();
+}
+
+function renderKaryawanTable() {
+  const tb = el('kary-table');
+  if (!S.karyawan.length) {
+    tb.innerHTML = `<tr><td colspan="7" class="text-center text-gray-600 py-8">Tidak ada data karyawan.</td></tr>`;
+    return;
+  }
+  tb.innerHTML = S.karyawan.map((k, i) => {
+    const nip    = k.id ? k.id.toUpperCase().substring(0,8) : `EMP-${String(i+1).padStart(3,'0')}`;
+    const aktif  = k.is_aktif === 1 || k.is_aktif === true;
+    return `
+      <tr>
+        <td>
+          <span class="font-mono text-xs text-gray-500">${nip}</span>
+        </td>
+        <td>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                 style="background:rgba(245,158,11,.15);color:#F59E0B;">${(k.nama||k.nama_lengkap||'?')[0].toUpperCase()}</div>
+            <div>
+              <div class="font-semibold text-sm">${k.nama||k.nama_lengkap||'—'}</div>
+              <div class="text-xs text-gray-500">${k.email||'—'}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span class="badge" style="background:rgba(59,130,246,.12);color:#60A5FA;border:1px solid rgba(59,130,246,.25);">
+            ${k.role === 'OWNER' ? 'Owner' : 'Kasir'}
+          </span>
+        </td>
+        <td class="text-xs text-gray-400">${fmtD(k.tanggal_masuk)}</td>
+        <td class="font-semibold text-sm">${rp(k.gaji||k.gaji_per_bulan||0)}</td>
+        <td>
+          <span class="badge ${aktif ? 'b-aktif' : 'b-disewa'}">${aktif ? 'Aktif' : 'Nonaktif'}</span>
+        </td>
+        <td>
+          <div class="flex gap-1.5">
+            <button onclick="openKaryawanModal('${k.id||''}')"
+                    class="btn-a px-3 py-1.5 rounded-xl text-xs">Edit Data</button>
+            ${aktif
+              ? `<button onclick="toggleKaryawan('${k.id||''}', 0)"
+                         class="btn-r px-3 py-1.5 rounded-xl text-xs">Nonaktif</button>`
+              : `<button onclick="toggleKaryawan('${k.id||''}', 1)"
+                         class="btn-g px-3 py-1.5 rounded-xl text-xs">Aktifkan</button>`}
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function openKaryawanModal(id = null) {
+  S.editKaryId = id || null;
+  el('mk-title').textContent = id ? 'Edit Data Karyawan' : 'Tambah Karyawan';
+  if (id) {
+    const k = S.karyawan.find(x => x.id === id);
+    if (k) {
+      el('mk-nama').value   = k.nama || k.nama_lengkap || '';
+      el('mk-email').value  = k.email || '';
+      el('mk-role').value   = k.role || 'KASIR';
+      el('mk-tgl').value    = k.tanggal_masuk || '';
+      el('mk-gaji').value   = k.gaji || k.gaji_per_bulan || '';
+      el('mk-status').value = k.is_aktif === 1 ? '1' : '0';
+      el('mk-pass').value   = '';
+    }
+  } else {
+    el('mk-nama').value = el('mk-email').value = el('mk-pass').value = el('mk-nip').value = '';
+    el('mk-gaji').value = '';
+    el('mk-role').value = 'KASIR';
+    el('mk-status').value = '1';
+  }
+  el('modal-kary').classList.remove('hidden');
+}
+
+function closeKaryawanModal() {
+  el('modal-kary').classList.add('hidden');
+  S.editKaryId = null;
+}
+
+async function saveKaryawan() {
+  const nama  = el('mk-nama').value.trim();
+  const email = el('mk-email').value.trim();
+  const role  = el('mk-role').value;
+  const tgl   = el('mk-tgl').value;
+  const gaji  = parseFloat(el('mk-gaji').value || '0');
+  const pass  = el('mk-pass').value;
+  const aktif = parseInt(el('mk-status').value);
+
+  if (!nama || !email) { toast('⚠️','Validasi','Nama dan email wajib diisi.'); return; }
+  if (!S.editKaryId && !pass) { toast('⚠️','Validasi','Password awal wajib diisi untuk karyawan baru.'); return; }
+
+  let ok = false;
+  if (S.editKaryId) {
+    // UPDATE
+    const payload = { nama_lengkap: nama, is_aktif: aktif, gaji_per_bulan: gaji };
+    const r = await api(`/karyawan/${S.editKaryId}`, { method:'PUT', body: JSON.stringify(payload) });
+    ok = r && r.ok;
+    if (ok) {
+      // Update lokal state
+      const idx = S.karyawan.findIndex(k => k.id === S.editKaryId);
+      if (idx >= 0) S.karyawan[idx] = { ...S.karyawan[idx], nama, is_aktif: aktif, gaji_per_bulan: gaji };
+    }
+  } else {
+    // INSERT
+    const payload = { nama_lengkap: nama, email, password: pass, role, gaji_per_bulan: gaji };
+    const r = await api('/karyawan', { method:'POST', body: JSON.stringify(payload) });
+    ok = r && r.ok;
+    if (ok) {
+      const res = await r.json().catch(()=>({}));
+      S.karyawan.unshift({ id: res.id_karyawan||'k-new-'+Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
+    } else if (!S.token) {
+      // Demo mode: simpan lokal
+      S.karyawan.unshift({ id:'k-local-'+Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
+      ok = true;
+    }
+  }
+
+  renderKaryawanTable();
+  closeKaryawanModal();
+  toast(ok ? '✅' : '⚠️', ok ? 'Tersimpan' : 'Mode Demo', `Data karyawan ${nama} berhasil ${S.editKaryId ? 'diperbarui' : 'ditambahkan'}.`);
+}
+
+async function toggleKaryawan(id, aktif) {
+  const label = aktif ? 'mengaktifkan' : 'menonaktifkan';
+  if (!confirm(`Yakin ingin ${label} karyawan ini?`)) return;
+
+  const r = await api(`/karyawan/${id}`, { method:'PUT', body: JSON.stringify({ is_aktif: aktif }) });
+  if (r && r.ok) {
+    const idx = S.karyawan.findIndex(k => k.id === id);
+    if (idx >= 0) S.karyawan[idx].is_aktif = aktif;
+    renderKaryawanTable();
+    toast('✅','Status Diperbarui', aktif ? 'Karyawan berhasil diaktifkan.' : 'Karyawan berhasil dinonaktifkan.');
+  } else {
+    toast('❌','Gagal','Tidak dapat mengubah status karyawan.');
+  }
+}
+
+// ============================================================
+// SEMUA PESANAN
+// ============================================================
+async function loadPesanan() {
+  const data = await apiJson('/transaksi?limit=200') || [];
+  S.transaksi = Array.isArray(data) && data.length ? data : DEMO.transaksi;
+  renderPesanan();
+}
+
+function setPesananFilter(f) {
+  S.pesananFilter = f;
+  document.querySelectorAll('.sf-btn').forEach(b => {
+    const isActive = b.dataset.sf === f;
+    b.style.background = isActive ? '#7C3AED' : 'rgba(255,255,255,.05)';
+    b.style.color      = isActive ? 'white' : '';
+    b.classList.toggle('active', isActive);
+  });
+  renderPesanan();
+}
+
+function filterPesanan() {
+  renderPesanan();
+}
+
+function renderPesanan() {
+  const q     = (el('sp-search').value || '').toLowerCase();
+  const filt  = S.pesananFilter;
+  const grid  = el('sp-grid');
+
+  let list = S.transaksi;
+  if (filt !== 'semua') list = list.filter(t => t.status === filt);
+  if (q) list = list.filter(t =>
+    (t.booking||t.id||'').toLowerCase().includes(q) ||
+    (t.pelanggan||'').toLowerCase().includes(q) ||
+    (t.kendaraan||'').toLowerCase().includes(q)
+  );
+
+  if (!list.length) {
+    grid.innerHTML = `<div class="text-center text-gray-600 py-12 glass rounded-2xl">
+      Tidak ada pesanan ditemukan untuk filter ini.</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(t => {
+    const stBadge = { MENUNGGU:'b-menunggu', DIKONFIRMASI:'b-dikonfirmasi',
+                      AKTIF:'b-aktif', SELESAI:'b-selesai', DIBATALKAN:'b-disewa' };
+    const stLabel = { MENUNGGU:'Menunggu', DIKONFIRMASI:'Dikonfirmasi',
+                      AKTIF:'Aktif', SELESAI:'Selesai', DIBATALKAN:'Dibatalkan' };
+    const actionBtns = buildPesananActions(t);
+    return `
+      <div class="glass rounded-2xl p-4 hover:border-purple-500/30 transition-colors group"
+           style="border-color:rgba(255,255,255,0.06);">
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
+          <!-- Kendaraan foto + info -->
+          <div class="w-full md:w-20 h-20 rounded-xl overflow-hidden bg-white/5 shrink-0 relative">
+            ${t.foto_kendaraan
+              ? `<img src="${t.foto_kendaraan}" alt="" class="w-full h-full object-cover">`
+              : `<div class="w-full h-full flex items-center justify-center text-3xl">🚗</div>`}
+            <span class="absolute top-1 left-1 badge ${stBadge[t.status]||'b-selesai'}" style="font-size:8px;">
+              ${stLabel[t.status]||t.status}
+            </span>
+          </div>
+
+          <!-- Info utama -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-mono font-bold text-white">${t.booking||t.id||'—'}</span>
+            </div>
+            <div class="font-semibold text-gray-200 mt-0.5">${t.kendaraan||'—'}</div>
+            <div class="text-xs text-gray-500 mt-1">
+              Pemesan: <strong class="text-gray-300">${t.pelanggan||'—'}</strong>
+            </div>
+            <div class="text-xs text-gray-600 mt-0.5">
+              ${fmtD(t.mulai||t.tanggal_mulai)} s/d ${fmtD(t.selesai_rencana||t.tanggal_selesai_rencana)}
+              · ${t.durasi||t.durasi_hari||'?'} hari
+            </div>
+          </div>
+
+          <!-- Total + Aksi -->
+          <div class="flex flex-col md:items-end gap-2 shrink-0">
+            <div>
+              <div class="text-xs text-gray-600">TOTAL PEMBAYARAN</div>
+              <div class="font-bold text-lg" style="color:#F59E0B;">${rp(t.total||t.total_biaya||0)}</div>
+            </div>
+            <div class="flex flex-wrap gap-1.5">${actionBtns}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function buildPesananActions(t) {
+  const id = t.id || t.id_transaksi;
+  const actions = [];
+
+  if (t.status === 'MENUNGGU') {
+    actions.push(`
+      <button onclick="ownerUpdateStatus('${id}','DIKONFIRMASI')"
+              class="btn-g px-3 py-1.5 rounded-xl text-xs font-semibold">✓ Konfirmasi</button>
+      <button onclick="ownerUpdateStatus('${id}','DIBATALKAN')"
+              class="btn-r px-3 py-1.5 rounded-xl text-xs">Tolak</button>`);
+  } else if (t.status === 'DIKONFIRMASI') {
+    actions.push(`
+      <button onclick="ownerUpdateStatus('${id}','AKTIF')"
+              class="btn-g px-3 py-1.5 rounded-xl text-xs font-semibold">🚗 Serahkan</button>
+      <button onclick="ownerUpdateStatus('${id}','DIBATALKAN')"
+              class="btn-r px-3 py-1.5 rounded-xl text-xs">Batalkan</button>`);
+  } else if (t.status === 'AKTIF') {
+    actions.push(`
+      <button onclick="ownerUpdateStatus('${id}','SELESAI')"
+              class="btn-o px-3 py-1.5 rounded-xl text-xs font-semibold">✅ Selesaikan</button>`);
+  }
+
+  actions.push(`
+    <a href="pos-kasir.html" class="btn-o px-3 py-1.5 rounded-xl text-xs">🖨 Kwitansi</a>`);
+
+  return actions.join('');
+}
+
+async function ownerUpdateStatus(id, status) {
+  const label = { DIKONFIRMASI:'dikonfirmasi', DIBATALKAN:'dibatalkan', AKTIF:'diserahkan', SELESAI:'diselesaikan' };
+  if (!confirm(`Yakin ingin mengubah status transaksi ini menjadi ${status}?`)) return;
+
+  const r = await api(`/transaksi/${id}/status`, {
+    method: 'PUT',
+    body:   JSON.stringify({ status })
+  });
+
+  if (r && r.ok) {
+    toast('✅','Status Diperbarui', `Transaksi berhasil ${label[status]||status}.`);
+    await loadPesanan();
+  } else {
+    // Fallback demo: update lokal
+    const idx = S.transaksi.findIndex(t => (t.id||t.id_transaksi) === id);
+    if (idx >= 0) S.transaksi[idx].status = status;
+    renderPesanan();
+    toast('⚠️','Mode Demo', `Status diubah secara lokal (API tidak tersedia).`);
+  }
+}
+
+// ============================================================
+// EXPORT EXCEL (FR-10 — menggunakan Blob CSV sederhana)
+// ============================================================
+function exportExcel() {
+  const ring = S.laporan?.ringkasan || DEMO.laporan.ringkasan;
+  const tren = S.laporan?.tren_bulanan || DEMO.laporan.tren_bulanan;
+
+  let csv = '\uFEFF'; // BOM untuk Excel agar terbaca UTF-8
+  csv += 'LAPORAN KEUANGAN AERORENT\n';
+  csv += `Periode,${el('lk-dari').value} s/d ${el('lk-sampai').value}\n\n`;
+  csv += 'RINGKASAN\n';
+  csv += `Total Pendapatan Kotor,${ring.total_pendapatan_kotor}\n`;
+  csv += `Total Biaya Operasional,${ring.total_biaya_operasional}\n`;
+  csv += `Profit Bersih,${ring.profit_bersih}\n`;
+  csv += `Margin,${ring.margin_persen}%\n`;
+  csv += `Jumlah Transaksi Selesai,${ring.jumlah_transaksi_selesai}\n\n`;
+  csv += 'TREN BULANAN\n';
+  csv += 'Bulan,Pendapatan\n';
+  tren.forEach(t => { csv += `${t.bulan},${t.pendapatan}\n`; });
+
+  // Top kendaraan
+  const top = S.laporan?.top_5_kendaraan || DEMO.laporan.top_5_kendaraan;
+  csv += '\nTOP KENDARAAN\n';
+  csv += 'Nama,Jumlah Sewa,Pendapatan\n';
+  top.forEach(k => { csv += `${k.nama},${k.jumlah_sewa},${k.total}\n`; });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `Laporan_AeroRent_${el('lk-dari').value}_${el('lk-sampai').value}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📊','Export Berhasil','File CSV laporan keuangan berhasil diunduh.');
+}
+
+// ============================================================
+// MOBILE SIDEBAR
+// ============================================================
+function openMobileSidebar() {
+  el('sidebar').classList.add('open');
+  el('mobile-overlay').style.display = 'block';
+}
+function closeMobileSidebar() {
+  el('sidebar').classList.remove('open');
+  el('mobile-overlay').style.display = 'none';
+}
+
+// ============================================================
+// LOGOUT
+// ============================================================
+function doLogout() {
+  if (confirm('Yakin ingin keluar dari sesi Owner?')) {
+    localStorage.removeItem(AUTH_KEY);
+    location.href = '/';
+  }
+}
+
+// ============================================================
+// TOAST NOTIFICATION
+// ============================================================
+let toastTimer;
+function toast(icon, title, msg) {
+  el('t-ic').textContent  = icon;
+  el('t-ttl').textContent = title;
+  el('t-msg').textContent = msg;
+  el('toast').classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 4500);
+}
+function hideToast() { el('toast').classList.add('hidden'); }
+
+// ============================================================
+// UTILITAS
+// ============================================================
+const el   = id => document.getElementById(id);
+const rp   = n  => 'Rp ' + Number(n||0).toLocaleString('id-ID');
+const fmtD = d  => d ? new Date(d).toLocaleDateString('id-ID',
+  { day:'numeric', month:'short', year:'numeric' }) : '—';
+
+// Inisialisasi filter tab pesanan
+document.querySelectorAll('.sf-btn').forEach(b => {
+  b.style.background = b.dataset.sf === 'semua' ? '#7C3AED' : 'rgba(255,255,255,0.05)';
+  b.style.color      = b.dataset.sf === 'semua' ? 'white'   : '';
+  b.style.borderRadius = '12px';
+  b.style.transition   = 'all .15s';
+});
+
+// Jalankan saat halaman selesai dimuat
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
+  
