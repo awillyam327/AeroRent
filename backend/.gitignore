@@ -1,0 +1,10 @@
+# Menyembunyikan kata sandi & environment variables
+.env
+
+# Menyembunyikan ruang isolasi Python
+venv/
+.venv/
+
+# Menyembunyikan *cache* bawaan Python
+__pycache__/
+*.pyc

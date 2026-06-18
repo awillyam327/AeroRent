@@ -1,0 +1,40 @@
+# ==============================================================================
+# AeroRent Backend — Python Dependencies
+# Diuji pada Python 3.11 / Python 3.12
+# Instalasi: pip install -r requirements.txt
+# ==============================================================================
+
+# === FRAMEWORK WEB & ASGI SERVER ===
+fastapi==0.111.0
+uvicorn[standard]==0.29.0           # Server ASGI; [standard] = websockets + watchfiles
+python-multipart==0.0.9             # WAJIB untuk OAuth2PasswordRequestForm & file upload
+
+# === ORACLE 19c DATABASE DRIVER ===
+oracledb==2.3.0                     # Driver resmi Oracle; thin-mode, tanpa Oracle Client
+
+# === VALIDASI DATA & SETTINGS ===
+pydantic==2.7.1
+pydantic-settings==2.2.1            # Baca .env ke BaseSettings dengan type-safety
+
+# === KEAMANAN & AUTENTIKASI ===
+PyJWT==2.8.0                        # Encode/decode JWT; mencegah IDOR via token claims
+passlib[bcrypt]==1.7.4              # Hashing password bcrypt (KDF tahan brute-force)
+python-jose[cryptography]==3.3.0    # Operasi kriptografi tambahan
+
+# === HTTP CLIENT ASINKRONUS ===
+httpx==0.27.0                       # Async HTTP client: ImgBB, Midtrans, Fonnte, Traccar
+
+# === VARIABEL LINGKUNGAN ===
+python-dotenv==1.0.1                # Memuat .env ke os.environ saat startup
+
+# === KIRIM EMAIL PDF INVOICE ===
+aiosmtplib==3.0.1                   # Async SMTP — kirim invoice PDF via smtplib non-blocking
+
+# === EKSPOR LAPORAN (FR-10) ===
+openpyxl==3.1.2                     # Ekspor laporan keuangan ke Excel (.xlsx)
+reportlab==4.1.0                    # Generasi laporan PDF keuangan
+Pillow>=10.3.0                     # Manipulasi gambar untuk embed foto di PDF
+
+# === UTILITAS ===
+python-dateutil==2.9.0              # Kalkulasi selisih hari untuk denda (FR-06)
+APScheduler==3.10.4                 # Scheduled job: reminder WA H-1 pengembalian via Fonnte
