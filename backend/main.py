@@ -988,7 +988,7 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, cur=Depends(get
     b_supir = float(kend["harga_supir_harian"]) * durasi if body.gunakan_supir else 0.0
     total   = b_sewa + b_supir
 
-    import random
+    
     hari_ini = datetime.now().strftime("%Y%m%d")
     acak = str(random.randint(0, 9999)).zfill(4)
     nomor_booking = f"BKG-{hari_ini}-{acak}"
