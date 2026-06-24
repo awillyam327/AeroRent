@@ -7,9 +7,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="AeroRent POS Terminal — Kasir">
   <title>AeroRent POS — Kasir</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -19,6 +21,21 @@
       }}
     }
   </script>
+
+  <script>
+    'use strict';
+    
+    // 1. Ambil URL Ngrok dari memori (yang sudah diset di index.html)
+    // Jika tidak ada di memori, kembalikan ke localhost sebagai cadangan
+    const API_BASE = localStorage.getItem('aerorent_api_base') || 'http://localhost:8000';
+    
+    // 2. Siapkan header anti-blokir Ngrok untuk dipakai di fungsi fetch nanti
+    const FETCH_HEADERS = {
+      'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': '69420'
+    };
+  </script>
+  </head>
   <style>
     :root {
       --purple:#7C3AED; --purple-d:#6D28D9; --amber:#F59E0B;
@@ -438,7 +455,7 @@
 // KONFIGURASI & STATE
 // ============================================================
 // Konfigurasi API diselaraskan dengan standar owner-dashboard (Localhost / Ngrok)
-const API = 'http://localhost:8000';
+const API = 'https://pope-bolster-gallon.ngrok-free.dev/transaksi';
 const AUTH_KEY = 'aerorent_auth';
 const IDB_NAME = 'aerorent-pos-idb';
 

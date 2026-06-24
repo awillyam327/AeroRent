@@ -28,6 +28,8 @@
         colors: { dark: '#0A0A14', darker: '#05050A' }
       }}
     }
+
+    
   </script>
 
   <style>
@@ -244,12 +246,12 @@
 
   // ============================================================
   // KONFIGURASI
-  // Ganti API_BASE dengan URL Ngrok saat berbagi ke tim:
-  //   const API_BASE = 'https://xxxx-xxxx.ngrok-free.app';
-  // Atau biarkan 'http://localhost:8000' untuk pengembangan lokal.
   // ============================================================
-  const API_BASE = 'http://127.0.0.1:8000';
+  const API_BASE = 'https://pope-bolster-gallon.ngrok-free.dev';
   const AUTH_KEY = 'aerorent_auth';
+
+  // Simpan URL Ngrok ke memori peramban agar bisa dibaca halaman lain
+  localStorage.setItem('aerorent_api_base', API_BASE);
 
   // Header wajib untuk Ngrok agar tidak muncul peringatan browser
   const FETCH_HEADERS = {
