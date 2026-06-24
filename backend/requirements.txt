@@ -1,16 +1,19 @@
 # ==============================================================================
 # AeroRent Backend — Python Dependencies
-# Diuji pada Python 3.11 / Python 3.12
-# Instalasi: pip install -r requirements.txt
+# Stack    : TiDB Cloud / MySQL (aiomysql) — Versi 2.0
+# Python   : 3.11 / 3.12
+# Install  : pip install -r requirements.txt
 # ==============================================================================
 
 # === FRAMEWORK WEB & ASGI SERVER ===
 fastapi==0.111.0
-uvicorn[standard]==0.29.0           # Server ASGI; [standard] = websockets + watchfiles
+uvicorn[standard]==0.29.0           # [standard] = websockets + watchfiles + httptools
 python-multipart==0.0.9             # WAJIB untuk OAuth2PasswordRequestForm & file upload
 
-# === ORACLE 19c DATABASE DRIVER ===
-oracledb==2.3.0                     # Driver resmi Oracle; thin-mode, tanpa Oracle Client
+# === DATABASE: TiDB Cloud / MySQL ===
+aiomysql==0.2.0                     # Async MySQL/TiDB driver — MENGGANTIKAN oracledb
+PyMySQL==1.1.1                      # Driver sync — dependency wajib aiomysql
+cryptography>=42.0.0                # WAJIB untuk koneksi SSL ke TiDB Cloud
 
 # === VALIDASI DATA & SETTINGS ===
 pydantic==2.7.1
@@ -18,23 +21,23 @@ pydantic-settings==2.2.1            # Baca .env ke BaseSettings dengan type-safe
 
 # === KEAMANAN & AUTENTIKASI ===
 PyJWT==2.8.0                        # Encode/decode JWT; mencegah IDOR via token claims
-passlib[bcrypt]==1.7.4              # Hashing password bcrypt (KDF tahan brute-force)
+passlib[bcrypt]==1.7.4              # Hashing password bcrypt
 python-jose[cryptography]==3.3.0    # Operasi kriptografi tambahan
 
 # === HTTP CLIENT ASINKRONUS ===
-httpx==0.27.0                       # Async HTTP client: ImgBB, Midtrans, Fonnte, Traccar
+httpx==0.27.0                       # Async HTTP: ImgBB, Midtrans, Fonnte, Traccar
 
 # === VARIABEL LINGKUNGAN ===
-python-dotenv==1.0.1                # Memuat .env ke os.environ saat startup
+python-dotenv==1.0.1
 
-# === KIRIM EMAIL PDF INVOICE ===
-aiosmtplib==3.0.1                   # Async SMTP — kirim invoice PDF via smtplib non-blocking
+# === EMAIL INVOICE PDF ===
+aiosmtplib==3.0.1                   # Async SMTP — non-blocking
 
 # === EKSPOR LAPORAN (FR-10) ===
-openpyxl==3.1.2                     # Ekspor laporan keuangan ke Excel (.xlsx)
-reportlab==4.1.0                    # Generasi laporan PDF keuangan
-Pillow>=10.3.0                     # Manipulasi gambar untuk embed foto di PDF
+openpyxl==3.1.2
+reportlab==4.1.0
+Pillow>=10.3.0
 
 # === UTILITAS ===
-python-dateutil==2.9.0              # Kalkulasi selisih hari untuk denda (FR-06)
-APScheduler==3.10.4                 # Scheduled job: reminder WA H-1 pengembalian via Fonnte
+python-dateutil==2.9.0              # Kalkulasi denda (FR-06)
+APScheduler==3.10.4                 # Scheduler: reminder WA H-1 pengembalian

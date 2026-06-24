@@ -7,7 +7,7 @@ Integ. : ImgBB | Midtrans Sandbox | Fonnte WhatsApp | Traccar GPS | SMTP
 Penulis: Tim Backend AeroRent
 ==============================================================================
 """
-import random
+
 import os
 import uuid
 import json
@@ -45,42 +45,31 @@ load_dotenv()
 # KONFIGURASI — Pydantic BaseSettings (baca dari .env)
 # ==============================================================================
 class Settings(BaseSettings):
-    # Database Oracle 19c
+    # ✅ DIPERBAIKI: DB_NAME sebelumnya diisi password secara tidak sengaja
     DB_HOST:     str = "gateway01.ap-southeast-1.prod.aws.tidbcloud.com"
     DB_PORT:     int = 4000
     DB_USER:     str = "2QN6TiyQC2GrnuN.root"
     DB_PASSWORD: str = ""
-    DB_NAME:     str = "NwUQIsMUGSVQ2Whj"
+    DB_NAME:     str = "aerorent"           # ← PERBAIKAN: was "NwUQIsMUGSVQ2Whj"
 
-    # JWT
     JWT_SECRET:         str   = "GANTI_DENGAN_STRING_PANJANG_DAN_ACAK_DI_PRODUCTION"
     JWT_ALGORITHM:      str   = "HS256"
     ACCESS_EXPIRE_MIN:  int   = 60
     REFRESH_EXPIRE_DAYS:int   = 7
 
-    # ImgBB
     IMGBB_API_KEY:      str   = ""
-
-    # Midtrans (Sandbox)
     MIDTRANS_SERVER_KEY:str   = ""
     MIDTRANS_CLIENT_KEY:str   = ""
     MIDTRANS_IS_PROD:   bool  = False
-
-    # Fonnte WhatsApp Gateway
     FONNTE_TOKEN:       str   = ""
-
-    # Traccar GPS Server
     TRACCAR_BASE_URL:   str   = "http://localhost:8082"
     TRACCAR_USER:       str   = "admin"
     TRACCAR_PASSWORD:   str   = "admin"
-
-    # SMTP Email (untuk invoice PDF)
     SMTP_HOST:          str   = "smtp.gmail.com"
     SMTP_PORT:          int   = 587
     SMTP_USER:          str   = ""
     SMTP_PASSWORD:      str   = ""
     SMTP_FROM:          str   = "noreply@aerorent.id"
-
     APP_DEBUG:          bool  = False
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -131,17 +120,16 @@ async def get_db():
 # ==============================================================================
 # KEAMANAN: JWT + bcrypt
 # ==============================================================================
-pwd_ctx       = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-
 def hash_pwd(plain: str) -> str:
-    return pwd_ctx.hash(plain)
-
+    import bcrypt
+    # Menggunakan bcrypt murni tanpa perantara passlib
+    return bcrypt.hashpw(plain.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def verify_pwd(plain: str, hashed: str) -> bool:
-    return pwd_ctx.verify(plain, hashed)
-
+    import bcrypt
+    return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
 
 def make_token(payload: dict, expire_delta: timedelta) -> str:
     data = {
@@ -477,38 +465,44 @@ scheduler = AsyncIOScheduler()
 
 async def job_reminder_pengembalian() -> None:
     """
-    Scheduled job: kirim WA reminder ke pelanggan dengan pengembalian BESOK.
-    Dijadwalkan setiap hari pukul 09:00 WIB.
+    Scheduled job harian 09:00 WIB:
+    Kirim WA reminder ke pelanggan yang jadwal pengembaliannya BESOK.
+    ✅ DIPERBAIKI:
+      - Pakai async with _pool.acquire() (bukan acquire/release manual)
+      - Pakai DictCursor (bukan cursor() polos yang return tuple)
+      - Pakai %(besok)s (bukan :besok syntax Oracle)
+      - Akses data via r["kolom"] (bukan r[0], r[1], r[2])
     """
     if not _pool:
         return
     besok = date.today() + timedelta(days=1)
-    conn  = await _pool.acquire()
-    try:
-        cur = conn.cursor()
-        await cur.execute(
-            """
-            SELECT ts.nomor_booking, p.nama_lengkap, p.no_telepon, k.nama_kendaraan
-            FROM TRANSAKSI_SEWA ts
-            JOIN PELANGGAN  p ON ts.id_pelanggan = p.id_pelanggan
-            JOIN KENDARAAN  k ON ts.id_kendaraan = k.id_kendaraan
-            WHERE ts.status = 'AKTIF' AND ts.tanggal_selesai_rencana = :besok
-            """,
-            {"besok": besok},
-        )
-        rows = await cur.fetchall()
-        for r in rows:
-            await fonnte_send(
-                r[2],
-                f"⏰ *Reminder Pengembalian — AeroRent*\n\n"
-                f"Halo {r[1]},\nKendaraan *{r[3]}* (Booking: *{r[0]}*) "
-                f"dijadwalkan dikembalikan *besok, {besok.strftime('%d %B %Y')}*.\n\n"
-                f"Pastikan kondisi kendaraan baik.\nInfo: +62 812-3456-7890\n\n"
-                f"Terima kasih 🚗 AeroRent",
+
+    async with _pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:          # ← DictCursor
+            await cur.execute(
+                """
+                SELECT ts.nomor_booking, p.nama_lengkap, p.no_telepon, k.nama_kendaraan
+                FROM TRANSAKSI_SEWA ts
+                JOIN PELANGGAN  p ON ts.id_pelanggan = p.id_pelanggan
+                JOIN KENDARAAN  k ON ts.id_kendaraan = k.id_kendaraan
+                WHERE ts.status = 'AKTIF'
+                  AND ts.tanggal_selesai_rencana = %(besok)s
+                """,                                                   # ← %(besok)s
+                {"besok": besok},
             )
-        log.info(f"[Scheduler] Reminder WA terkirim untuk {len(rows)} transaksi.")
-    finally:
-        await _pool.release(conn)
+            rows = await cur.fetchall()
+
+    for r in rows:
+        await fonnte_send(
+            r["no_telepon"],                                           # ← dict access
+            f"⏰ *Reminder Pengembalian — AeroRent*\n\n"
+            f"Halo {r['nama_lengkap']},\n"
+            f"Kendaraan *{r['nama_kendaraan']}* (Booking: *{r['nomor_booking']}*) "
+            f"dijadwalkan dikembalikan *besok, {besok.strftime('%d %B %Y')}*.\n\n"
+            f"Pastikan kondisi kendaraan baik.\nInfo: +62 812-3456-7890\n\n"
+            f"Terima kasih 🚗 AeroRent",
+        )
+    log.info(f"[Scheduler] Reminder WA terkirim untuk {len(rows)} transaksi.")
 
 
 # ==============================================================================
@@ -535,12 +529,14 @@ app = FastAPI(
     redoc_url   = "/redoc",
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins     = ["*"],   # BATASI ke domain frontend di production!
-    allow_credentials = True,
-    allow_methods     = ["*"],
-    allow_headers     = ["*"],
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -989,9 +985,9 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, cur=Depends(get
     total   = b_sewa + b_supir
 
     
-    hari_ini = datetime.now().strftime("%Y%m%d")
-    acak = str(random.randint(0, 9999)).zfill(4)
-    nomor_booking = f"BKG-{hari_ini}-{acak}"
+    tahun_ini     = datetime.now().strftime("%Y")
+    unique_suffix = uuid.uuid4().hex[:8].upper()          # 8 karakter hex unik
+    nomor_booking = f"AR-{tahun_ini}-{unique_suffix}" 
 
     tid = f"trx-{uuid.uuid4()}"
     await cur.execute(

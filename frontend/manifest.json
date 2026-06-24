@@ -1,0 +1,23 @@
+{
+  "name": "AeroRent Fleet & POS System",
+  "short_name": "AeroRent",
+  "description": "Sistem Manajemen Armada & Point of Sales AeroRent Salatiga",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0A0A14",
+  "theme_color": "#7C3AED",
+  "icons": [
+    {
+      "src": "./icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

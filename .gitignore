@@ -1,11 +1,19 @@
-# Menyembunyikan semua ruang isolasi Python di mana pun letaknya
-venv/
-.venv/
-backend/venv/
-
-# Menyembunyikan file rahasia
+# Batasi berkas lingkungan dan rahasia
 backend/.env
+.env
 
-# Menyembunyikan cache
-__pycache__/
+# Batasi Virtual Environment Python
+backend/venv/
+venv/
+
+# Batasi berkas sampah Python & cache
+**/__pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+backend/.pytest_cache/
+
+# Batasi berkas pengaturan VS Code lokal
+.vscode/
+.DS_Store
