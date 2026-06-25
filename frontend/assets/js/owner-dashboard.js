@@ -16,12 +16,12 @@ const DEMO = {
   karyawan: [],
   transaksi: [],
   laporan: {
-    ringkasan: {total_pendapatan_kotor:0, total_biaya_operasional:0, profit_bersih:0, margin_persen:0, jumlah_transaksi_selesai:0},
+    ringkasan: { total_pendapatan_kotor: 0, total_biaya_operasional: 0, profit_bersih: 0, margin_persen: 0, jumlah_transaksi_selesai: 0 },
     tren_bulanan: [],
     top_5_kendaraan: []
   },
   armada: {
-    status_armada: {TERSEDIA:0, DISEWA:0, PERAWATAN:0},
+    status_armada: { TERSEDIA: 0, DISEWA: 0, PERAWATAN: 0 },
     armada_detail: []
   },
   pengeluaran: [],
@@ -45,20 +45,20 @@ let S = {
 // INIT
 // ============================================================
 async function init() {
-  const auth = JSON.parse(localStorage.getItem(AUTH_KEY)||'null');
+  const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
   if (auth) { S.token = auth.access_token; S.user = auth.user; }
 
   const nama = S.user?.nama || 'Bapak Owner';
-  el('sb-nama').textContent    = nama;
-  el('sb-avatar').textContent  = nama[0].toUpperCase();
+  el('sb-nama').textContent = nama;
+  el('sb-avatar').textContent = nama[0].toUpperCase();
 
   // Set default dates
   const today = new Date().toISOString().split('T')[0];
   const first = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-  el('lk-dari').value   = first;
+  el('lk-dari').value = first;
   el('lk-sampai').value = today;
-  el('po-tanggal').value= today;
-  el('mk-tgl').value    = today;
+  el('po-tanggal').value = today;
+  el('mk-tgl').value = today;
 
   await loadDashboard();
 }
@@ -70,14 +70,14 @@ async function api(path, opts = {}) {
   const headers = {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': '69420',
-    ...(S.token ? {'Authorization': 'Bearer ' + S.token} : {}),
-    ...(opts.headers||{})
+    ...(S.token ? { 'Authorization': 'Bearer ' + S.token } : {}),
+    ...(opts.headers || {})
   };
-  
+
   try {
-    const r = await fetch(API+path, {...opts, headers});
-    
-    if (r.status === 401) { 
+    const r = await fetch(API + path, { ...opts, headers });
+
+    if (r.status === 401) {
       localStorage.removeItem(AUTH_KEY);
       // Hanya lakukan reload jika sebelumnya token ada (berarti token kedaluwarsa)
       if (S.token) {
@@ -88,12 +88,12 @@ async function api(path, opts = {}) {
         // Jika memang dari awal tidak ada token, hentikan loop dan beri peringatan
         toast('🔒', 'Mode Demo Aktif', 'Belum login. Data yang tampil adalah simulasi.');
       }
-      return null; 
+      return null;
     }
-    
+
     return r;
-  } catch(_) { 
-    return null; 
+  } catch (_) {
+    return null;
   }
 }
 
@@ -115,11 +115,11 @@ function goSection(name) {
   S.currentSection = name;
   closeMobileSidebar();
 
-  if (name === 'laporan')     loadLaporan();
-  if (name === 'karyawan')    loadKaryawan();
+  if (name === 'laporan') loadLaporan();
+  if (name === 'karyawan') loadKaryawan();
   if (name === 'operasional') loadPengeluaran();
-  if (name === 'statistik')   loadStatistik();
-  if (name === 'pesanan')     loadPesanan();
+  if (name === 'statistik') loadStatistik();
+  if (name === 'pesanan') loadPesanan();
 }
 
 // ============================================================
@@ -127,24 +127,24 @@ function goSection(name) {
 // ============================================================
 async function loadDashboard() {
   // Stat cards
-  const armData  = await apiJson('/laporan/armada')  || DEMO.armada;
-  const lapData  = await apiJson('/laporan/keuangan?dari=' + el('lk-dari').value + '&sampai=' + el('lk-sampai').value) || DEMO.laporan;
+  const armData = await apiJson('/laporan/armada') || DEMO.armada;
+  const lapData = await apiJson('/laporan/keuangan?dari=' + el('lk-dari').value + '&sampai=' + el('lk-sampai').value) || DEMO.laporan;
   S.laporan = lapData;
-  S.armada  = armData;
+  S.armada = armData;
 
-  const ring  = lapData.ringkasan  || DEMO.laporan.ringkasan;
+  const ring = lapData.ringkasan || DEMO.laporan.ringkasan;
   const armSt = armData.status_armada || DEMO.armada.status_armada;
-  const total = Object.values(armSt).reduce((a,b)=>a+b,0)||1;
-  const disewa= armSt.DISEWA||0;
+  const total = Object.values(armSt).reduce((a, b) => a + b, 0) || 1;
+  const disewa = armSt.DISEWA || 0;
 
-  el('dk-omset').textContent    = rp(ring.total_pendapatan_kotor);
-  el('dk-okupansi').textContent = ((disewa/total)*100).toFixed(1)+'%';
-  el('dk-sukses').textContent   = ring.jumlah_transaksi_selesai+' Sewa';
+  el('dk-omset').textContent = rp(ring.total_pendapatan_kotor);
+  el('dk-okupansi').textContent = ((disewa / total) * 100).toFixed(1) + '%';
+  el('dk-sukses').textContent = ring.jumlah_transaksi_selesai + ' Sewa';
 
   // Tabel penyewaan selesai terbaru dari demo/API
   const trxData = await apiJson('/transaksi?status=SELESAI&limit=5') || [];
-  const rows    = trxData.length ? trxData : DEMO.transaksi.filter(t=>t.status==='SELESAI').slice(0,5);
-  S.transaksi   = trxData.length ? trxData : DEMO.transaksi;
+  const rows = trxData.length ? trxData : DEMO.transaksi.filter(t => t.status === 'SELESAI').slice(0, 5);
+  S.transaksi = trxData.length ? trxData : DEMO.transaksi;
 
   const tb = el('dk-table');
   if (!rows.length) {
@@ -153,11 +153,11 @@ async function loadDashboard() {
   } else {
     tb.innerHTML = rows.map(t => `
       <tr>
-        <td><span class="font-mono text-xs text-gray-400">${t.booking||t.id||'—'}</span></td>
-        <td class="font-medium">${t.pelanggan||'—'}</td>
-        <td class="text-gray-400 text-xs">${t.kendaraan||'—'}</td>
-        <td class="font-bold" style="color:#F59E0B;">${rp(t.total||t.total_biaya||0)}</td>
-        <td class="text-gray-500 text-xs">${fmtD(t.mulai||t.tanggal_mulai)}</td>
+        <td><span class="font-mono text-xs text-gray-400">${t.booking || t.id || '—'}</span></td>
+        <td class="font-medium">${t.pelanggan || '—'}</td>
+        <td class="text-gray-400 text-xs">${t.kendaraan || '—'}</td>
+        <td class="font-bold" style="color:#F59E0B;">${rp(t.total || t.total_biaya || 0)}</td>
+        <td class="text-gray-500 text-xs">${fmtD(t.mulai || t.tanggal_mulai)}</td>
       </tr>`).join('');
   }
 }
@@ -166,31 +166,31 @@ async function loadDashboard() {
 // LAPORAN KEUANGAN
 // ============================================================
 async function loadLaporan() {
-  const dari   = el('lk-dari').value;
+  const dari = el('lk-dari').value;
   const sampai = el('lk-sampai').value;
   if (!dari || !sampai) return;
 
   el('lk-table').innerHTML = `<tr><td colspan="5" class="text-center py-6"><div class="spin mx-auto"></div></td></tr>`;
 
   const data = await apiJson(`/laporan/keuangan?dari=${dari}&sampai=${sampai}`) || DEMO.laporan;
-  S.laporan  = data;
+  S.laporan = data;
   const ring = data.ringkasan || DEMO.laporan.ringkasan;
 
-  el('lk-pend').textContent   = rp(ring.total_pendapatan_kotor);
-  el('lk-peng').textContent   = rp(ring.total_biaya_operasional);
-  el('lk-peng-sub').textContent = `Pengeluaran tercatat · Rp ${ring.total_biaya_operasional > 0 ? (ring.total_biaya_operasional/1e6).toFixed(2)+'jt' : '0'}`;
+  el('lk-pend').textContent = rp(ring.total_pendapatan_kotor);
+  el('lk-peng').textContent = rp(ring.total_biaya_operasional);
+  el('lk-peng-sub').textContent = `Pengeluaran tercatat · Rp ${ring.total_biaya_operasional > 0 ? (ring.total_biaya_operasional / 1e6).toFixed(2) + 'jt' : '0'}`;
   el('lk-profit').textContent = rp(ring.profit_bersih);
   el('lk-margin').textContent = `↑ Margin bersih: ${ring.margin_persen}%`;
   el('lk-profit').style.color = ring.profit_bersih >= 0 ? '#C084FC' : '#FCA5A5';
 
   // ---- Chart Revenue (Chart.js) ----
-  const tren    = data.tren_bulanan || DEMO.laporan.tren_bulanan;
-  const labels  = tren.map(t => {
-    const [y,m] = t.bulan.split('-');
-    const bln   = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const tren = data.tren_bulanan || DEMO.laporan.tren_bulanan;
+  const labels = tren.map(t => {
+    const [y, m] = t.bulan.split('-');
+    const bln = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     return `${bln[parseInt(m)]} ${y}`;
   });
-  const values  = tren.map(t => t.pendapatan);
+  const values = tren.map(t => t.pendapatan);
 
   if (S.chartRevenue) S.chartRevenue.destroy();
   const ctx = document.getElementById('chart-revenue').getContext('2d');
@@ -200,13 +200,13 @@ async function loadLaporan() {
       labels,
       datasets: [{
         label: 'Pendapatan (Rp)',
-        data:  values,
+        data: values,
         backgroundColor: 'rgba(124,58,237,0.45)',
-        borderColor:     '#7C3AED',
+        borderColor: '#7C3AED',
         borderWidth: 1.5,
         borderRadius: 6,
         hoverBackgroundColor: 'rgba(245,158,11,0.55)',
-        hoverBorderColor:     '#F59E0B',
+        hoverBorderColor: '#F59E0B',
       }]
     },
     options: {
@@ -215,13 +215,13 @@ async function loadLaporan() {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => ' ' + new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(ctx.parsed.y)
+            label: ctx => ' ' + new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(ctx.parsed.y)
           },
           backgroundColor: '#0D0D1C',
           borderColor: 'rgba(255,255,255,0.1)',
           borderWidth: 1,
           titleColor: '#9CA3AF',
-          bodyColor:  '#F59E0B',
+          bodyColor: '#F59E0B',
         }
       },
       scales: {
@@ -230,7 +230,7 @@ async function loadLaporan() {
           grid: { color: 'rgba(255,255,255,0.04)' },
           ticks: {
             color: '#6B7280', font: { size: 11 },
-            callback: v => 'Rp ' + (v >= 1e6 ? (v/1e6).toFixed(1)+'jt' : v >= 1e3 ? (v/1e3).toFixed(0)+'rb' : v)
+            callback: v => 'Rp ' + (v >= 1e6 ? (v / 1e6).toFixed(1) + 'jt' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'rb' : v)
           }
         }
       }
@@ -244,12 +244,12 @@ async function loadLaporan() {
     tb.innerHTML = `<tr><td colspan="5" class="text-center text-gray-600 py-8">Tidak ada data dalam periode ini.</td></tr>`;
   } else {
     tb.innerHTML = tren.map((t, i) => {
-      const [y,m]   = t.bulan.split('-');
-      const bln     = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-      const isLatest= i === tren.length - 1;
-      const peng    = (data.distribusi_pengeluaran ? Object.values(data.distribusi_pengeluaran).reduce((a,b)=>a+b,0) : 0) / (tren.length || 1);
-      const profit  = t.pendapatan - peng;
-      const tercapai= t.pendapatan >= TARGET;
+      const [y, m] = t.bulan.split('-');
+      const bln = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      const isLatest = i === tren.length - 1;
+      const peng = (data.distribusi_pengeluaran ? Object.values(data.distribusi_pengeluaran).reduce((a, b) => a + b, 0) : 0) / (tren.length || 1);
+      const profit = t.pendapatan - peng;
+      const tercapai = t.pendapatan >= TARGET;
       return `
         <tr>
           <td>
@@ -275,7 +275,7 @@ async function loadLaporan() {
     : topKend.map((k, i) => `
         <tr>
           <td><span class="w-6 h-6 rounded-full inline-flex items-center justify-center text-xs font-bold"
-            style="background:rgba(245,158,11,.15);color:#F59E0B;">${i+1}</span></td>
+            style="background:rgba(245,158,11,.15);color:#F59E0B;">${i + 1}</span></td>
           <td class="font-medium">${k.nama}</td>
           <td class="text-gray-400 text-center">${k.jumlah_sewa}×</td>
           <td class="font-bold" style="color:#F59E0B;">${rp(k.total)}</td>
@@ -292,9 +292,9 @@ async function loadPengeluaran() {
 }
 
 function renderPengeluaranTable() {
-  const tb    = el('po-table');
-  const list  = S.pengeluaran;
-  const total = list.reduce((s,p) => s + (p.jumlah||0), 0);
+  const tb = el('po-table');
+  const list = S.pengeluaran;
+  const total = list.reduce((s, p) => s + (p.jumlah || 0), 0);
   el('po-total').textContent = rp(total);
 
   if (!list.length) {
@@ -303,12 +303,12 @@ function renderPengeluaranTable() {
   }
   tb.innerHTML = list.map(p => `
     <tr>
-      <td class="text-xs text-gray-400 whitespace-nowrap">${fmtD(p.tanggal||p.tanggal_pengeluaran)}</td>
+      <td class="text-xs text-gray-400 whitespace-nowrap">${fmtD(p.tanggal || p.tanggal_pengeluaran)}</td>
       <td><span class="badge" style="background:rgba(124,58,237,.12);color:#C084FC;border:1px solid rgba(124,58,237,.25);">${p.kategori}</span></td>
       <td class="text-gray-300 text-xs max-w-xs truncate">${p.deskripsi}</td>
       <td class="font-bold text-red-400 whitespace-nowrap">${rp(p.jumlah)}</td>
       <td>
-        <button onclick="deletePengeluaran('${p.id||p.id_pengeluaran}')"
+        <button onclick="deletePengeluaran('${p.id || p.id_pengeluaran}')"
                 class="btn-r px-2 py-1 rounded-lg text-xs">Hapus</button>
       </td>
     </tr>`).join('');
@@ -317,13 +317,13 @@ function renderPengeluaranTable() {
 async function savePengeluaran() {
   const tgl = el('po-tanggal').value;
   const kat = el('po-kategori').value;
-  const nom = parseFloat(el('po-nominal').value||'0');
+  const nom = parseFloat(el('po-nominal').value || '0');
   const ket = el('po-ket').value.trim();
 
   if (!tgl || !nom || !ket) {
-    toast('⚠️','Validasi','Tanggal, nominal, dan keterangan wajib diisi.'); return;
+    toast('⚠️', 'Validasi', 'Tanggal, nominal, dan keterangan wajib diisi.'); return;
   }
-  if (nom <= 0) { toast('⚠️','Validasi','Nominal harus lebih dari 0.'); return; }
+  if (nom <= 0) { toast('⚠️', 'Validasi', 'Nominal harus lebih dari 0.'); return; }
 
   let saved = false;
   // Backend menggunakan Form(...), jadi kita harus kirim FormData — bukan JSON
@@ -344,12 +344,12 @@ async function savePengeluaran() {
         body: fd
       });
       saved = r && r.ok;
-    } catch(_) {}
+    } catch (_) { }
   }
 
   // Simpan ke state lokal untuk tampilan
   const newEntry = {
-    id: 'po-local-'+ Date.now(),
+    id: 'po-local-' + Date.now(),
     kategori: kat, deskripsi: ket, jumlah: nom,
     tanggal_pengeluaran: tgl, created_at: new Date().toISOString()
   };
@@ -357,7 +357,7 @@ async function savePengeluaran() {
   renderPengeluaranTable();
 
   el('po-nominal').value = '';
-  el('po-ket').value     = '';
+  el('po-ket').value = '';
   toast('✅', saved ? 'Tersimpan ke Server' : 'Disimpan Lokal', `Pengeluaran Rp ${rp(nom)} berhasil dicatat.`);
 }
 
@@ -365,11 +365,11 @@ async function deletePengeluaran(id) {
   if (!confirm('Hapus catatan pengeluaran ini?')) return;
   if (S.token && !id.startsWith('po-local-')) {
     const r = await api(`/pengeluaran/${id}`, { method: 'DELETE' });
-    if (!r || !r.ok) { toast('❌','Gagal','Tidak dapat menghapus data.'); return; }
+    if (!r || !r.ok) { toast('❌', 'Gagal', 'Tidak dapat menghapus data.'); return; }
   }
-  S.pengeluaran = S.pengeluaran.filter(p => (p.id||p.id_pengeluaran) !== id);
+  S.pengeluaran = S.pengeluaran.filter(p => (p.id || p.id_pengeluaran) !== id);
   renderPengeluaranTable();
-  toast('🗑️','Dihapus','Catatan pengeluaran berhasil dihapus.');
+  toast('🗑️', 'Dihapus', 'Catatan pengeluaran berhasil dihapus.');
 }
 
 // ============================================================
@@ -377,7 +377,7 @@ async function deletePengeluaran(id) {
 // ============================================================
 async function loadStatistik() {
   const data = await apiJson('/laporan/armada') || DEMO.armada;
-  S.armada   = data;
+  S.armada = data;
   const grid = el('stat-grid');
   const list = data.armada_detail || DEMO.armada.armada_detail;
 
@@ -387,30 +387,30 @@ async function loadStatistik() {
   }
 
   // Urutkan berdasarkan sewa_bulan_ini DESC
-  const sorted = [...list].sort((a,b) => b.sewa_bulan_ini - a.sewa_bulan_ini);
+  const sorted = [...list].sort((a, b) => b.sewa_bulan_ini - a.sewa_bulan_ini);
 
   grid.innerHTML = sorted.map((k, i) => {
-    const rankColor = ['#F59E0B','#9CA3AF','#CD7F32','rgba(255,255,255,.3)'][Math.min(i,3)];
-    const stBadge   = k.status === 'TERSEDIA'  ? 'b-tersedia'  :
-                      k.status === 'DISEWA'     ? 'b-disewa'    : 'b-perawatan';
-    const stLabel   = k.status === 'TERSEDIA'  ? 'Tersedia'    :
-                      k.status === 'DISEWA'     ? 'Sedang Disewa':'Perawatan';
+    const rankColor = ['#F59E0B', '#9CA3AF', '#CD7F32', 'rgba(255,255,255,.3)'][Math.min(i, 3)];
+    const stBadge = k.status === 'TERSEDIA' ? 'b-tersedia' :
+      k.status === 'DISEWA' ? 'b-disewa' : 'b-perawatan';
+    const stLabel = k.status === 'TERSEDIA' ? 'Tersedia' :
+      k.status === 'DISEWA' ? 'Sedang Disewa' : 'Perawatan';
     return `
       <div class="glass rounded-2xl overflow-hidden group hover:-translate-y-1 transition-transform duration-200">
         <div class="relative h-36 overflow-hidden" style="background:rgba(255,255,255,.03);">
           <div class="absolute top-2 left-2 z-10 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
                style="background:${rankColor};color:#0A0A14;">
-            ${i+1}
+            ${i + 1}
           </div>
           <span class="absolute top-2 right-2 badge ${stBadge}">${stLabel}</span>
           ${k.foto
-            ? `<img src="${k.foto}" alt="${k.nama}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300">`
-            : `<div class="w-full h-full flex items-center justify-center text-4xl text-gray-700">🚗</div>`}
+        ? `<img src="${k.foto}" alt="${k.nama}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300">`
+        : `<div class="w-full h-full flex items-center justify-center text-4xl text-gray-700">🚗</div>`}
           <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(10,10,20,.7) 0%, transparent 60%);"></div>
         </div>
         <div class="p-4">
           <div class="font-bebas text-lg tracking-wide text-white leading-tight">${k.nama}</div>
-          <div class="text-xs text-gray-500 mb-3">${(k.tipe||'').replace('_',' ')}</div>
+          <div class="text-xs text-gray-500 mb-3">${(k.tipe || '').replace('_', ' ')}</div>
           <div class="space-y-1.5">
             <div class="flex justify-between text-xs">
               <span class="text-gray-500">Total Di-Sewa</span>
@@ -446,8 +446,8 @@ function renderKaryawanTable() {
     return;
   }
   tb.innerHTML = S.karyawan.map((k, i) => {
-    const nip    = k.id ? k.id.toUpperCase().substring(0,8) : `EMP-${String(i+1).padStart(3,'0')}`;
-    const aktif  = k.is_aktif === 1 || k.is_aktif === true;
+    const nip = k.id ? k.id.toUpperCase().substring(0, 8) : `EMP-${String(i + 1).padStart(3, '0')}`;
+    const aktif = k.is_aktif === 1 || k.is_aktif === true;
     return `
       <tr>
         <td>
@@ -456,10 +456,10 @@ function renderKaryawanTable() {
         <td>
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-                 style="background:rgba(245,158,11,.15);color:#F59E0B;">${(k.nama||k.nama_lengkap||'?')[0].toUpperCase()}</div>
+                 style="background:rgba(245,158,11,.15);color:#F59E0B;">${(k.nama || k.nama_lengkap || '?')[0].toUpperCase()}</div>
             <div>
-              <div class="font-semibold text-sm">${k.nama||k.nama_lengkap||'—'}</div>
-              <div class="text-xs text-gray-500">${k.email||'—'}</div>
+              <div class="font-semibold text-sm">${k.nama || k.nama_lengkap || '—'}</div>
+              <div class="text-xs text-gray-500">${k.email || '—'}</div>
             </div>
           </div>
         </td>
@@ -469,18 +469,18 @@ function renderKaryawanTable() {
           </span>
         </td>
         <td class="text-xs text-gray-400">${fmtD(k.tanggal_masuk)}</td>
-        <td class="font-semibold text-sm">${rp(k.gaji||k.gaji_per_bulan||0)}</td>
+        <td class="font-semibold text-sm">${rp(k.gaji || k.gaji_per_bulan || 0)}</td>
         <td>
           <span class="badge ${aktif ? 'b-aktif' : 'b-disewa'}">${aktif ? 'Aktif' : 'Nonaktif'}</span>
         </td>
         <td>
           <div class="flex gap-1.5">
-            <button onclick="openKaryawanModal('${k.id||''}')"
+            <button onclick="openKaryawanModal('${k.id || ''}')"
                     class="btn-a px-3 py-1.5 rounded-xl text-xs">Edit Data</button>
             ${aktif
-              ? `<button onclick="toggleKaryawan('${k.id||''}', 0)"
+        ? `<button onclick="toggleKaryawan('${k.id || ''}', 0)"
                          class="btn-r px-3 py-1.5 rounded-xl text-xs">Nonaktif</button>`
-              : `<button onclick="toggleKaryawan('${k.id||''}', 1)"
+        : `<button onclick="toggleKaryawan('${k.id || ''}', 1)"
                          class="btn-g px-3 py-1.5 rounded-xl text-xs">Aktifkan</button>`}
           </div>
         </td>
@@ -494,13 +494,13 @@ function openKaryawanModal(id = null) {
   if (id) {
     const k = S.karyawan.find(x => x.id === id);
     if (k) {
-      el('mk-nama').value   = k.nama || k.nama_lengkap || '';
-      el('mk-email').value  = k.email || '';
-      el('mk-role').value   = k.role || 'KASIR';
-      el('mk-tgl').value    = k.tanggal_masuk || '';
-      el('mk-gaji').value   = k.gaji || k.gaji_per_bulan || '';
+      el('mk-nama').value = k.nama || k.nama_lengkap || '';
+      el('mk-email').value = k.email || '';
+      el('mk-role').value = k.role || 'KASIR';
+      el('mk-tgl').value = k.tanggal_masuk || '';
+      el('mk-gaji').value = k.gaji || k.gaji_per_bulan || '';
       el('mk-status').value = k.is_aktif === 1 ? '1' : '0';
-      el('mk-pass').value   = '';
+      el('mk-pass').value = '';
     }
   } else {
     el('mk-nama').value = el('mk-email').value = el('mk-pass').value = el('mk-nip').value = '';
@@ -517,22 +517,22 @@ function closeKaryawanModal() {
 }
 
 async function saveKaryawan() {
-  const nama  = el('mk-nama').value.trim();
+  const nama = el('mk-nama').value.trim();
   const email = el('mk-email').value.trim();
-  const role  = el('mk-role').value;
-  const tgl   = el('mk-tgl').value;
-  const gaji  = parseFloat(el('mk-gaji').value || '0');
-  const pass  = el('mk-pass').value;
+  const role = el('mk-role').value;
+  const tgl = el('mk-tgl').value;
+  const gaji = parseFloat(el('mk-gaji').value || '0');
+  const pass = el('mk-pass').value;
   const aktif = parseInt(el('mk-status').value);
 
-  if (!nama || !email) { toast('⚠️','Validasi','Nama dan email wajib diisi.'); return; }
-  if (!S.editKaryId && !pass) { toast('⚠️','Validasi','Password awal wajib diisi untuk karyawan baru.'); return; }
+  if (!nama || !email) { toast('⚠️', 'Validasi', 'Nama dan email wajib diisi.'); return; }
+  if (!S.editKaryId && !pass) { toast('⚠️', 'Validasi', 'Password awal wajib diisi untuk karyawan baru.'); return; }
 
   let ok = false;
   if (S.editKaryId) {
     // UPDATE
     const payload = { nama_lengkap: nama, is_aktif: aktif, gaji_per_bulan: gaji };
-    const r = await api(`/karyawan/${S.editKaryId}`, { method:'PUT', body: JSON.stringify(payload) });
+    const r = await api(`/karyawan/${S.editKaryId}`, { method: 'PUT', body: JSON.stringify(payload) });
     ok = r && r.ok;
     if (ok) {
       // Update lokal state
@@ -542,14 +542,14 @@ async function saveKaryawan() {
   } else {
     // INSERT
     const payload = { nama_lengkap: nama, email, password: pass, role, gaji_per_bulan: gaji };
-    const r = await api('/karyawan', { method:'POST', body: JSON.stringify(payload) });
+    const r = await api('/karyawan', { method: 'POST', body: JSON.stringify(payload) });
     ok = r && r.ok;
     if (ok) {
-      const res = await r.json().catch(()=>({}));
-      S.karyawan.unshift({ id: res.id_karyawan||'k-new-'+Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
+      const res = await r.json().catch(() => ({}));
+      S.karyawan.unshift({ id: res.id_karyawan || 'k-new-' + Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
     } else if (!S.token) {
       // Demo mode: simpan lokal
-      S.karyawan.unshift({ id:'k-local-'+Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
+      S.karyawan.unshift({ id: 'k-local-' + Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
       ok = true;
     }
   }
@@ -563,14 +563,14 @@ async function toggleKaryawan(id, aktif) {
   const label = aktif ? 'mengaktifkan' : 'menonaktifkan';
   if (!confirm(`Yakin ingin ${label} karyawan ini?`)) return;
 
-  const r = await api(`/karyawan/${id}`, { method:'PUT', body: JSON.stringify({ is_aktif: aktif }) });
+  const r = await api(`/karyawan/${id}`, { method: 'PUT', body: JSON.stringify({ is_aktif: aktif }) });
   if (r && r.ok) {
     const idx = S.karyawan.findIndex(k => k.id === id);
     if (idx >= 0) S.karyawan[idx].is_aktif = aktif;
     renderKaryawanTable();
-    toast('✅','Status Diperbarui', aktif ? 'Karyawan berhasil diaktifkan.' : 'Karyawan berhasil dinonaktifkan.');
+    toast('✅', 'Status Diperbarui', aktif ? 'Karyawan berhasil diaktifkan.' : 'Karyawan berhasil dinonaktifkan.');
   } else {
-    toast('❌','Gagal','Tidak dapat mengubah status karyawan.');
+    toast('❌', 'Gagal', 'Tidak dapat mengubah status karyawan.');
   }
 }
 
@@ -588,7 +588,7 @@ function setPesananFilter(f) {
   document.querySelectorAll('.sf-btn').forEach(b => {
     const isActive = b.dataset.sf === f;
     b.style.background = isActive ? '#7C3AED' : 'rgba(255,255,255,.05)';
-    b.style.color      = isActive ? 'white' : '';
+    b.style.color = isActive ? 'white' : '';
     b.classList.toggle('active', isActive);
   });
   renderPesanan();
@@ -599,16 +599,16 @@ function filterPesanan() {
 }
 
 function renderPesanan() {
-  const q     = (el('sp-search').value || '').toLowerCase();
-  const filt  = S.pesananFilter;
-  const grid  = el('sp-grid');
+  const q = (el('sp-search').value || '').toLowerCase();
+  const filt = S.pesananFilter;
+  const grid = el('sp-grid');
 
   let list = S.transaksi;
   if (filt !== 'semua') list = list.filter(t => t.status === filt);
   if (q) list = list.filter(t =>
-    (t.booking||t.id||'').toLowerCase().includes(q) ||
-    (t.pelanggan||'').toLowerCase().includes(q) ||
-    (t.kendaraan||'').toLowerCase().includes(q)
+    (t.booking || t.id || '').toLowerCase().includes(q) ||
+    (t.pelanggan || '').toLowerCase().includes(q) ||
+    (t.kendaraan || '').toLowerCase().includes(q)
   );
 
   if (!list.length) {
@@ -618,10 +618,14 @@ function renderPesanan() {
   }
 
   grid.innerHTML = list.map(t => {
-    const stBadge = { MENUNGGU:'b-menunggu', DIKONFIRMASI:'b-dikonfirmasi',
-                      AKTIF:'b-aktif', SELESAI:'b-selesai', DIBATALKAN:'b-disewa' };
-    const stLabel = { MENUNGGU:'Menunggu', DIKONFIRMASI:'Dikonfirmasi',
-                      AKTIF:'Aktif', SELESAI:'Selesai', DIBATALKAN:'Dibatalkan' };
+    const stBadge = {
+      MENUNGGU: 'b-menunggu', DIKONFIRMASI: 'b-dikonfirmasi',
+      AKTIF: 'b-aktif', SELESAI: 'b-selesai', DIBATALKAN: 'b-disewa'
+    };
+    const stLabel = {
+      MENUNGGU: 'Menunggu', DIKONFIRMASI: 'Dikonfirmasi',
+      AKTIF: 'Aktif', SELESAI: 'Selesai', DIBATALKAN: 'Dibatalkan'
+    };
     const actionBtns = buildPesananActions(t);
     return `
       <div class="glass rounded-2xl p-4 hover:border-purple-500/30 transition-colors group"
@@ -629,31 +633,31 @@ function renderPesanan() {
         <div class="flex flex-col md:flex-row md:items-center gap-4">
           <div class="w-full md:w-20 h-20 rounded-xl overflow-hidden bg-white/5 shrink-0 relative">
             ${t.foto_kendaraan
-              ? `<img src="${t.foto_kendaraan}" alt="" class="w-full h-full object-cover">`
-              : `<div class="w-full h-full flex items-center justify-center text-3xl">🚗</div>`}
-            <span class="absolute top-1 left-1 badge ${stBadge[t.status]||'b-selesai'}" style="font-size:8px;">
-              ${stLabel[t.status]||t.status}
+        ? `<img src="${t.foto_kendaraan}" alt="" class="w-full h-full object-cover">`
+        : `<div class="w-full h-full flex items-center justify-center text-3xl">🚗</div>`}
+            <span class="absolute top-1 left-1 badge ${stBadge[t.status] || 'b-selesai'}" style="font-size:8px;">
+              ${stLabel[t.status] || t.status}
             </span>
           </div>
 
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="font-mono font-bold text-white">${t.booking||t.id||'—'}</span>
+              <span class="font-mono font-bold text-white">${t.booking || t.id || '—'}</span>
             </div>
-            <div class="font-semibold text-gray-200 mt-0.5">${t.kendaraan||'—'}</div>
+            <div class="font-semibold text-gray-200 mt-0.5">${t.kendaraan || '—'}</div>
             <div class="text-xs text-gray-500 mt-1">
-              Pemesan: <strong class="text-gray-300">${t.pelanggan||'—'}</strong>
+              Pemesan: <strong class="text-gray-300">${t.pelanggan || '—'}</strong>
             </div>
             <div class="text-xs text-gray-600 mt-0.5">
-              ${fmtD(t.mulai||t.tanggal_mulai)} s/d ${fmtD(t.selesai_rencana||t.tanggal_selesai_rencana)}
-              · ${t.durasi||t.durasi_hari||'?'} hari
+              ${fmtD(t.mulai || t.tanggal_mulai)} s/d ${fmtD(t.selesai_rencana || t.tanggal_selesai_rencana)}
+              · ${t.durasi || t.durasi_hari || '?'} hari
             </div>
           </div>
 
           <div class="flex flex-col md:items-end gap-2 shrink-0">
             <div>
               <div class="text-xs text-gray-600">TOTAL PEMBAYARAN</div>
-              <div class="font-bold text-lg" style="color:#F59E0B;">${rp(t.total||t.total_biaya||0)}</div>
+              <div class="font-bold text-lg" style="color:#F59E0B;">${rp(t.total || t.total_biaya || 0)}</div>
             </div>
             <div class="flex flex-wrap gap-1.5">${actionBtns}</div>
           </div>
@@ -691,23 +695,23 @@ function buildPesananActions(t) {
 }
 
 async function ownerUpdateStatus(id, status) {
-  const label = { DIKONFIRMASI:'dikonfirmasi', DIBATALKAN:'dibatalkan', AKTIF:'diserahkan', SELESAI:'diselesaikan' };
+  const label = { DIKONFIRMASI: 'dikonfirmasi', DIBATALKAN: 'dibatalkan', AKTIF: 'diserahkan', SELESAI: 'diselesaikan' };
   if (!confirm(`Yakin ingin mengubah status transaksi ini menjadi ${status}?`)) return;
 
   const r = await api(`/transaksi/${id}/status`, {
     method: 'PUT',
-    body:   JSON.stringify({ status })
+    body: JSON.stringify({ status })
   });
 
   if (r && r.ok) {
-    toast('✅','Status Diperbarui', `Transaksi berhasil ${label[status]||status}.`);
+    toast('✅', 'Status Diperbarui', `Transaksi berhasil ${label[status] || status}.`);
     await loadPesanan();
   } else {
     // Fallback demo: update lokal
-    const idx = S.transaksi.findIndex(t => (t.id||t.id_transaksi) === id);
+    const idx = S.transaksi.findIndex(t => (t.id || t.id_transaksi) === id);
     if (idx >= 0) S.transaksi[idx].status = status;
     renderPesanan();
-    toast('⚠️','Mode Demo', `Status diubah secara lokal (API tidak tersedia).`);
+    toast('⚠️', 'Mode Demo', `Status diubah secara lokal (API tidak tersedia).`);
   }
 }
 
@@ -738,19 +742,19 @@ function exportExcel() {
   top.forEach(k => { csv += `${k.nama},${k.jumlah_sewa},${k.total}\n`; });
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
   a.download = `Laporan_AeroRent_${el('lk-dari').value}_${el('lk-sampai').value}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('📊','Export Berhasil','File CSV laporan keuangan berhasil diunduh.');
+  toast('📊', 'Export Berhasil', 'File CSV laporan keuangan berhasil diunduh.');
 }
 
 function exportPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  
+
   const ring = S.laporan?.ringkasan || DEMO.laporan.ringkasan;
   const tren = S.laporan?.tren_bulanan || DEMO.laporan.tren_bulanan;
   const top = S.laporan?.top_5_kendaraan || DEMO.laporan.top_5_kendaraan;
@@ -822,7 +826,7 @@ function doLogout() {
 // ============================================================
 let toastTimer;
 function toast(icon, title, msg) {
-  el('t-ic').textContent  = icon;
+  el('t-ic').textContent = icon;
   el('t-ttl').textContent = title;
   el('t-msg').textContent = msg;
   el('toast').classList.remove('hidden');
@@ -834,17 +838,17 @@ function hideToast() { el('toast').classList.add('hidden'); }
 // ============================================================
 // UTILITAS
 // ============================================================
-const el   = id => document.getElementById(id);
-const rp   = n  => 'Rp ' + Number(n||0).toLocaleString('id-ID');
-const fmtD = d  => d ? new Date(d).toLocaleDateString('id-ID',
-  { day:'numeric', month:'short', year:'numeric' }) : '—';
+const el = id => document.getElementById(id);
+const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+const fmtD = d => d ? new Date(d).toLocaleDateString('id-ID',
+  { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 // Inisialisasi filter tab pesanan
 document.querySelectorAll('.sf-btn').forEach(b => {
   b.style.background = b.dataset.sf === 'semua' ? '#7C3AED' : 'rgba(255,255,255,0.05)';
-  b.style.color      = b.dataset.sf === 'semua' ? 'white'   : '';
+  b.style.color = b.dataset.sf === 'semua' ? 'white' : '';
   b.style.borderRadius = '12px';
-  b.style.transition   = 'all .15s';
+  b.style.transition = 'all .15s';
 });
 
 // Jalankan saat halaman selesai dimuat

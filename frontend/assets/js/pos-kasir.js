@@ -698,10 +698,10 @@
             id: p.id || p.id_pelanggan,
             nama: nama, telepon: telp,
             email: p.email || ''
-          }).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          });
 
           return `
-        <button onclick='btPilihPlg("${data.replace(/&quot;/g, '&quot;')}")'
+        <button onclick='btPilihPlg(${data.replace(/'/g, "&#39;")})'
                 class="w-full text-left p-3 rounded-xl transition-colors flex items-center gap-3"
                 style="border:1px solid rgba(255,255,255,.06);"
                 onmouseover="this.style.background='rgba(255,255,255,.05)'"
