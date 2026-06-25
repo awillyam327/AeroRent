@@ -7,7 +7,7 @@
  * ==============================================================================
  */
 
-const SW_VERSION   = 'v1.2.1';
+const SW_VERSION   = 'v1.2.2';
 const STATIC_CACHE = `aerorent-static-${SW_VERSION}`;
 const API_CACHE    = `aerorent-api-${SW_VERSION}`;
 const IDB_NAME     = 'aerorent-pos-idb';
@@ -86,7 +86,13 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Semua aset lain (HTML, Font, Tailwind CDN) → Cache-First
+    // HTML file -> Network-First (agar update UI langsung terbaca)
+    if (request.headers.get('accept').includes('text/html') || url.pathname.endsWith('.html')) {
+        event.respondWith(networkFirstStrategy(request, STATIC_CACHE));
+        return;
+    }
+
+    // Semua aset lain (Font, Tailwind CDN, gambar) → Cache-First
     event.respondWith(cacheFirstStrategy(request));
 });
 
