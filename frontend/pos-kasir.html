@@ -1323,10 +1323,10 @@ const BT = {
 
 // ── Buka Modal ──────────────────────────────────────────────
 async function bukaModalTransaksi() {
-  // Reset state
+  // 1. Reset state
   BT.step = 1; BT.pelanggan = null; BT.kendaraan = null; BT.filterTipe = 'semua';
 
-  // Reset form
+  // 2. Reset form
   ['bt-plg-q','bt-np-nama','bt-np-telp','bt-np-alamat','bt-catatan'].forEach(id => {
     const e = el(id); if (e) e.value = '';
   });
@@ -1336,20 +1336,23 @@ async function bukaModalTransaksi() {
   el('bt-metode').value   = 'TUNAI';
   el('bt-new-plg-form').classList.add('hidden');
 
-  // Reset UI pelanggan
+  // 3. Reset UI pelanggan
   el('bt-plg-selected').classList.add('hidden');
   el('bt-plg-results').innerHTML = '<div class="text-xs text-gray-600 text-center py-4">Ketik minimal 2 karakter untuk mencari.</div>';
 
   el('bt-modal').classList.remove('hidden');
   btGotoStep(1);
 
-  // Pre-load data paralel
+  // --- KODE INI YANG HILANG DARI POTONGAN TADI ---
+  // 4. Ambil data dari server
   const [rKend, rPlg] = await Promise.all([
-    api('/kendaraan?status=TERSEDIA'),
+    api('/kendaraan?status=TERSEDIA'), 
     api('/pelanggan')
   ]);
+  
   if (rKend?.ok) BT.daftarKend = await rKend.json();
   if (rPlg?.ok)  BT._allPlg    = await rPlg.json();
+  // -----------------------------------------------
 }
 
 function tutupBuatTrx() { el('bt-modal').classList.add('hidden'); }
