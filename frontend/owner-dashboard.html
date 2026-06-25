@@ -868,17 +868,25 @@ async function savePengeluaran() {
   if (nom <= 0) { toast('⚠️','Validasi','Nominal harus lebih dari 0.'); return; }
 
   let saved = false;
-  // Diperbarui agar bisa menerima JSON atau form sesuai TiDB/FastAPI. Kita gunakan JSON
-  const payload = {
-    deskripsi: ket,
-    kategori: kat,
-    jumlah: nom,
-    tanggal_pengeluaran: tgl
-  };
-
+  // Backend menggunakan Form(...), jadi kita harus kirim FormData — bukan JSON
   if (S.token) {
-    const r = await api('/pengeluaran', { method:'POST', body: JSON.stringify(payload) });
-    saved = r && r.ok;
+    try {
+      const fd = new FormData();
+      fd.append('deskripsi', ket);
+      fd.append('kategori', kat);
+      fd.append('jumlah', nom.toString());
+      fd.append('tanggal_pengeluaran', tgl);
+
+      const r = await fetch(API + '/pengeluaran', {
+        method: 'POST',
+        headers: {
+          'ngrok-skip-browser-warning': '69420',
+          'Authorization': 'Bearer ' + S.token
+        },
+        body: fd
+      });
+      saved = r && r.ok;
+    } catch(_) {}
   }
 
   // Simpan ke state lokal untuk tampilan

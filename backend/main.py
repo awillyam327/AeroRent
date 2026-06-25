@@ -83,6 +83,9 @@ logging.basicConfig(
 )
 log = logging.getLogger("aerorent")
 
+if cfg.JWT_SECRET == "GANTI_DENGAN_STRING_PANJANG_DAN_ACAK_DI_PRODUCTION":
+    log.warning("⚠️  JWT_SECRET masih menggunakan nilai default! Ganti di .env untuk production.")
+
 # ==============================================================================
 # DATABASE CONNECTION POOL (TiDB Cloud / MySQL via aiomysql)
 # ==============================================================================
@@ -532,7 +535,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # Izinkan SEMUA domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -678,9 +681,6 @@ async def update_karyawan(kid: str, body: KaryawanUpd, user=Depends(req_owner), 
     return {"message": "Karyawan berhasil diperbarui."}
 
 
-# ==============================================================================
-# ROUTER: KENDARAAN
-# ==============================================================================
 # ==============================================================================
 # ROUTER: KENDARAAN
 # ==============================================================================
@@ -911,7 +911,7 @@ async def list_transaksi(
 
 
 @app.get("/transaksi/{tid}", tags=["📋 Transaksi"])
-async def detail_transaksi(tid: str, cur=Depends(get_db)):
+async def detail_transaksi(tid: str, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
     await cur.execute(
         "SELECT ts.id_transaksi, ts.nomor_booking, ts.id_pelanggan, ts.id_kendaraan, "
         "p.nama_lengkap, p.no_telepon, p.email, p.foto_ktp_url, p.alamat, "
@@ -968,7 +968,7 @@ async def detail_transaksi(tid: str, cur=Depends(get_db)):
 
 
 @app.post("/transaksi", status_code=201, tags=["📋 Transaksi"])
-async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, cur=Depends(get_db)):
+async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
     await cur.execute("SELECT status, harga_sewa_harian, harga_supir_harian FROM KENDARAAN WHERE id_kendaraan = %(id)s", {"id": body.id_kendaraan})
     kend = await cur.fetchone()
     if not kend: raise HTTPException(404, "Kendaraan tidak ditemukan.")
@@ -1113,7 +1113,7 @@ async def upload_foto_kondisi(
 
 
 @app.post("/transaksi/{tid}/midtrans-snap", tags=["📋 Transaksi"])
-async def buat_snap(tid: str, cur=Depends(get_db)):
+async def buat_snap(tid: str, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
     await cur.execute(
         "SELECT ts.nomor_booking, ts.total_biaya, p.nama_lengkap, p.email "
         "FROM TRANSAKSI_SEWA ts JOIN PELANGGAN p ON ts.id_pelanggan = p.id_pelanggan "

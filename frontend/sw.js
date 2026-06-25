@@ -7,7 +7,7 @@
  * ==============================================================================
  */
 
-const SW_VERSION   = 'v1.2.0';
+const SW_VERSION   = 'v1.2.1';
 const STATIC_CACHE = `aerorent-static-${SW_VERSION}`;
 const API_CACHE    = `aerorent-api-${SW_VERSION}`;
 const IDB_NAME     = 'aerorent-pos-idb';
