@@ -64,7 +64,7 @@ async def login_customer(
     if not row or not row["password_hash"] or not verify_pwd(body.password, row["password_hash"]):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Email atau password salah.")
 
-    token_data = {"sub": row["id_pelanggan"], "nama": row["nama_lengkap"], "email": row["email"], "role": "PELANGGAN"}
+    token_data = {"sub": row["id_pelanggan"], "nama": row["nama_lengkap"], "email": row["email"], "role": "CUSTOMER"}
     access_tok  = make_token(token_data, timedelta(minutes=cfg.ACCESS_EXPIRE_MIN))
     
     log.info(f"[Auth] Login Customer: {row['email']}")
@@ -110,7 +110,7 @@ async def register_customer(
         }
     )
     
-    token_data = {"sub": new_id, "nama": nama_lengkap, "email": email, "role": "PELANGGAN"}
+    token_data = {"sub": new_id, "nama": nama_lengkap, "email": email, "role": "CUSTOMER"}
     access_tok = make_token(token_data, timedelta(minutes=cfg.ACCESS_EXPIRE_MIN))
 
     return {
