@@ -4,7 +4,7 @@ from typing import Optional
 import aiomysql
 from datetime import date
 from database import get_db
-from dependencies import req_kasir_or_owner, req_owner
+from dependencies import req_kasir_or_owner, req_owner, get_current_account
 from models import TransaksiIn, StatusUpd
 from utils import fonnte_send, imgbb_upload
 import uuid
@@ -16,7 +16,7 @@ async def list_transaksi(
     dari:   Optional[date] = None,
     sampai: Optional[date] = None,
     limit:  int = 100,
-    user=Depends(req_kasir_or_owner),
+    user=Depends(get_current_account),
     cur=Depends(get_db),
 ):
     q = (
@@ -29,6 +29,10 @@ async def list_transaksi(
         "JOIN KENDARAAN k ON ts.id_kendaraan = k.id_kendaraan WHERE 1=1"
     )
     params: dict = {}
+    if user["role"] == "PELANGGAN":
+        q += " AND ts.id_pelanggan = %(uid)s"
+        params["uid"] = user["id"]
+        
     if status: q += " AND ts.status = %(st)s";       params["st"] = status.upper()
     if dari:   q += " AND ts.tanggal_mulai >= %(d)s"; params["d"]  = dari
     if sampai: q += " AND ts.tanggal_mulai <= %(s)s"; params["s"]  = sampai
@@ -101,8 +105,8 @@ async def detail_transaksi(tid: str, user=Depends(req_kasir_or_owner), cur=Depen
     }
 
 
-@router.post("", status_code=201, tags=["📋 Transaksi"])
-async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
+@router.post("", status_code=201, tags=["🛒 Transaksi"])
+async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(get_current_account), cur=Depends(get_db)):
     await cur.execute("SELECT status, harga_sewa_harian, harga_supir_harian FROM KENDARAAN WHERE id_kendaraan = %(id)s", {"id": body.id_kendaraan})
     kend = await cur.fetchone()
     if not kend: raise HTTPException(404, "Kendaraan tidak ditemukan.")

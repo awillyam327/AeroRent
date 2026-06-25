@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0A0A14">
-  <meta name="description" content="AeroRent Fleet & POS System — Login">
-  <title>AeroRent — Login Sistem</title>
+  <meta name="description" content="AeroRent — Rental Mobil Premium">
+  <title>AeroRent — Sewa Mobil Mudah</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
@@ -28,129 +28,569 @@
         colors: { dark: '#0A0A14', darker: '#05050A' }
       }}
     }
-
-    
   </script>
 
-  <link rel="stylesheet" href="assets/css/index.css">
+  <link rel="stylesheet" href="assets/css/customer.css">
 </head>
 
-<body class="flex items-center justify-center min-h-screen relative">
+<body class="bg-darker text-gray-300 font-dm selection:bg-purple-500/30">
 
-  <!-- Background glow decorations -->
-  <div class="bg-glow" style="background:#7C3AED; top:-100px; left:-100px; opacity:.12;"></div>
-  <div class="bg-glow" style="background:#F59E0B; bottom:-100px; right:-100px; opacity:.08;"></div>
+  <!-- Background Glow -->
+  <div class="fixed top-0 left-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+  <div class="fixed bottom-0 right-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-[100px] translate-x-1/4 translate-y-1/4 pointer-events-none"></div>
 
-  <!-- Main login card -->
-  <div class="w-full max-w-md px-5 sm:px-0 relative z-10">
-
-    <!-- Brand header -->
-    <div class="flex flex-col items-center mb-8">
-      <!-- Logo SVG -->
-      <svg width="52" height="52" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" class="mb-4 drop-shadow-lg">
-        <defs>
-          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#7C3AED"/>
-            <stop offset="100%" stop-color="#F59E0B"/>
-          </linearGradient>
-        </defs>
-        <polygon points="20,3 37,34 3,34" fill="url(#logoGrad)"/>
-        <line x1="20" y1="3" x2="9"  y2="24" stroke="white" stroke-width="1.5" opacity=".7"/>
-        <line x1="20" y1="3" x2="14" y2="30" stroke="white" stroke-width="1"   opacity=".4"/>
-      </svg>
-
-      <div class="font-bebas text-4xl tracking-widest leading-none">
-        AERO<span style="color:#7C3AED;">RENT</span>
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 glass border-b border-white/5 transition-all duration-300">
+    <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+      
+      <!-- Brand -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="goSection('beranda')">
+        <svg width="32" height="32" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#7C3AED"/>
+              <stop offset="100%" stop-color="#F59E0B"/>
+            </linearGradient>
+          </defs>
+          <polygon points="20,3 37,34 3,34" fill="url(#logoGrad)"/>
+          <line x1="20" y1="3" x2="9"  y2="24" stroke="white" stroke-width="1.5" opacity=".7"/>
+          <line x1="20" y1="3" x2="14" y2="30" stroke="white" stroke-width="1" opacity=".4"/>
+        </svg>
+        <div class="font-bebas text-2xl tracking-widest leading-none">
+          AERO<span style="color:#7C3AED;">RENT</span>
+        </div>
       </div>
-      <div class="text-gray-500 text-xs mt-1.5 tracking-widest uppercase">
-        Fleet &amp; POS System
+
+      <!-- Links Desktop -->
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+        <a href="#" onclick="goSection('beranda')" class="nav-item hover:text-white transition-colors">Beranda</a>
+        <a href="#" onclick="goSection('armada')" class="nav-item hover:text-white transition-colors">Armada</a>
       </div>
+
+      <!-- Auth Action -->
+      <div id="nav-auth">
+        <button onclick="openAuthModal()" class="px-5 py-2 rounded-full bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)]">Masuk / Daftar</button>
+      </div>
+
+      <!-- Mobile Menu Toggle -->
+      <button class="md:hidden text-white" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+      </button>
     </div>
 
-    <!-- Login form card -->
-    <form id="loginForm" class="glass rounded-3xl p-7 sm:p-8 shadow-2xl" onsubmit="handleLogin(event)" novalidate>
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden glass border-t border-white/5 p-4 flex flex-col gap-4 text-center">
+      <a href="#" onclick="goSection('beranda')" class="block py-2">Beranda</a>
+      <a href="#" onclick="goSection('armada')" class="block py-2">Armada</a>
+    </div>
+  </nav>
 
-      <div class="mb-6">
-        <h2 class="text-xl font-bold text-white">Selamat Datang</h2>
-        <p class="text-sm text-gray-400 mt-1">Masuk dengan akun karyawan AeroRent Anda.</p>
+  <!-- MAIN CONTAINER -->
+  <main class="pt-24 pb-20 min-h-screen relative z-10">
+
+    <!-- ============================================== -->
+    <!-- SECTION: BERANDA -->
+    <!-- ============================================== -->
+    <section id="sec-beranda" class="section active">
+      <!-- Hero -->
+      <div class="max-w-6xl mx-auto px-6 pt-12 pb-24 text-center md:text-left">
+        <h1 class="text-4xl md:text-6xl font-semibold text-white leading-tight mb-6">
+          Mau sewa mobil <span class="text-amber-500 font-bebas tracking-wide">hemat seperti Brio atau Agya?</span>
+        </h1>
+        
+        <!-- Search Bar -->
+        <div class="glass p-2 rounded-full inline-flex flex-col md:flex-row items-center gap-2 max-w-2xl w-full border border-white/10 shadow-xl relative z-20">
+          <input type="text" id="search-home" placeholder="Cari kategori: '5 Seater', 'Avanza'..." class="bg-transparent border-none outline-none text-white px-6 py-3 w-full" onkeypress="if(event.key === 'Enter') { goSection('armada'); filterArmadaSearch(this.value); }">
+          <input type="date" id="date-home" class="bg-white/5 rounded-full px-4 py-2 text-gray-300 outline-none text-sm w-full md:w-auto">
+          <button onclick="goSection('armada'); filterArmadaSearch(document.getElementById('search-home').value);" class="bg-amber-500 hover:bg-amber-400 text-dark font-bold w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-colors">
+            🔍
+          </button>
+        </div>
       </div>
 
-      <div class="space-y-4">
-        <div>
-          <label class="text-xs text-gray-500 uppercase tracking-widest block mb-2">
-            Email Karyawan
-          </label>
-          <input
-            type="email"
-            id="email"
-            required
-            placeholder="owner@aerorent.id"
-            class="g-input"
-            autocomplete="email"
-          >
+      <!-- Kategori -->
+      <div class="max-w-6xl mx-auto px-6 mb-24">
+        <div class="text-center mb-10">
+          <h2 class="text-3xl font-bebas tracking-widest text-white mb-2">PILIH KATEGORI <span class="text-purple-400">KENDARAAN</span></h2>
+          <p class="text-gray-500 text-sm">Pilih tipe armada yang paling cocok untuk menemani perjalanan Anda.</p>
         </div>
-
-        <div>
-          <label class="text-xs text-gray-500 uppercase tracking-widest block mb-2">
-            Kata Sandi
-          </label>
-          <div class="relative">
-            <input
-              type="password"
-              id="password"
-              required
-              placeholder="••••••••"
-              class="g-input"
-              autocomplete="current-password"
-              style="padding-right: 48px;"
-            >
-            <!-- Toggle show/hide password -->
-            <button type="button" id="togglePwd"
-              onclick="togglePassword()"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors p-1">
-              <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
-                   stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="glass p-8 rounded-3xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group" onclick="goSection('armada'); setKategori('5_SEATER')">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600/20 text-purple-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">🚗</div>
+            <h3 class="text-xl font-bold text-white mb-2">5 SEATER</h3>
+            <p class="text-sm text-gray-500 mb-8">Hatchback, sedan, dan compact crossover lincah untuk daerah perkotaan.</p>
+            <div class="text-amber-500 text-xs font-bold uppercase tracking-wider">Mulai Rp 300rb</div>
+          </div>
+          <div class="glass p-8 rounded-3xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group" onclick="goSection('armada'); setKategori('7_SEATER')">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600/20 text-purple-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">🚙</div>
+            <h3 class="text-xl font-bold text-white mb-2">7 SEATER / SUV</h3>
+            <p class="text-sm text-gray-500 mb-8">SUV dan MPV lega yang nyaman untuk keluarga maupun perjalanan jauh.</p>
+            <div class="text-amber-500 text-xs font-bold uppercase tracking-wider">Mulai Rp 350rb</div>
+          </div>
+          <div class="glass p-8 rounded-3xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group" onclick="goSection('armada'); setKategori('MICROBUS')">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600/20 text-purple-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">🚐</div>
+            <h3 class="text-xl font-bold text-white mb-2">MICROBUS</h3>
+            <p class="text-sm text-gray-500 mb-8">Minibus kapasitas besar super nyaman untuk rombongan pariwisata.</p>
+            <div class="text-amber-500 text-xs font-bold uppercase tracking-wider">Mulai Harga</div>
           </div>
         </div>
       </div>
 
-      <button type="submit" id="btnSubmit" class="btn-submit mt-7 flex items-center justify-center gap-2">
-        <span id="btnText">Masuk ke Sistem</span>
+      <!-- Armada Unggulan -->
+      <div class="max-w-6xl mx-auto px-6 mb-24">
+        <div class="flex justify-between items-end mb-10 border-b border-white/10 pb-4">
+          <div>
+            <h2 class="text-3xl font-bebas tracking-widest text-white mb-1">ARMADA <span class="text-amber-500">UNGGULAN</span></h2>
+            <p class="text-gray-500 text-sm">Pilihan mobil terfavorit pelanggan kami dengan performa andal dan kenyamanan ekstra.</p>
+          </div>
+          <button onclick="goSection('armada')" class="text-xs font-semibold text-purple-400 hover:text-purple-300 glass px-4 py-2 rounded-full border border-purple-500/20">Lihat Semua Armada</button>
+        </div>
+        <div id="unggulan-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <footer class="max-w-6xl mx-auto px-6 pt-12 pb-6 border-t border-white/10 text-sm text-gray-600 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>© 2026 AeroRent. Hak Cipta Dilindungi.</div>
+        <div class="flex gap-6">
+          <a href="#" class="hover:text-gray-300">Syarat & Ketentuan</a>
+          <a href="#" class="hover:text-gray-300">Kebijakan Privasi</a>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ============================================== -->
+    <!-- SECTION: ARMADA KAMI -->
+    <!-- ============================================== -->
+    <section id="sec-armada" class="section hidden">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="text-center mb-10">
+          <h2 class="text-3xl font-bebas tracking-widest text-white mb-2">EKSPLORASI <span class="text-purple-400">ARMADA KAMI</span></h2>
+          <p class="text-gray-500 text-sm">Pilih kendaraan favorit Anda di Salatiga dengan kondisi prima, AC dingin, dan kebersihan yang selalu terjaga.</p>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="glass p-4 rounded-3xl mb-10 border border-white/5 flex flex-col items-center gap-6 max-w-3xl mx-auto">
+          
+          <div class="w-full flex flex-col md:flex-row items-center gap-2">
+            <input type="text" id="search-armada" placeholder="Cari kategori: '5 Seater', 'Avanza'..." class="bg-white/5 rounded-full px-6 py-3 w-full text-white outline-none text-sm" oninput="renderArmada()">
+            <input type="date" id="date-armada" class="bg-white/5 rounded-full px-4 py-3 text-gray-300 outline-none text-sm w-full md:w-auto border border-transparent focus:border-purple-500/50">
+          </div>
+
+          <div class="flex flex-col gap-3 w-full">
+            <div class="text-xs text-gray-500 uppercase tracking-widest text-center">Kategori Kendaraan</div>
+            <div class="flex flex-wrap justify-center gap-2">
+              <button class="kat-btn px-4 py-1.5 rounded-full text-xs font-semibold" data-k="semua" onclick="setKategori('semua')">Semua Kategori</button>
+              <button class="kat-btn px-4 py-1.5 rounded-full text-xs font-semibold" data-k="5_SEATER" onclick="setKategori('5_SEATER')">5 Seater</button>
+              <button class="kat-btn px-4 py-1.5 rounded-full text-xs font-semibold" data-k="7_SEATER" onclick="setKategori('7_SEATER')">7 Seater</button>
+              <button class="kat-btn px-4 py-1.5 rounded-full text-xs font-semibold" data-k="MICROBUS" onclick="setKategori('MICROBUS')">Microbus</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="armada-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- SECTION: PEMESANAN TRANSAKSI -->
+    <!-- ============================================== -->
+    <section id="sec-pemesanan" class="section hidden">
+      <div class="max-w-4xl mx-auto px-6">
+        <h2 class="text-3xl font-bebas tracking-widest text-white mb-8">PROSES <span class="text-purple-400">TRANSAKSI</span></h2>
+
+        <!-- Progress Steps -->
+        <div class="flex items-center justify-between mb-10 relative">
+          <div class="absolute left-0 top-1/2 w-full h-0.5 bg-white/10 -z-10 -translate-y-1/2"></div>
+          
+          <div class="flex items-center gap-2 bg-darker pr-4">
+            <div id="step-1-cir" class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-sm">1</div>
+            <span id="step-1-lbl" class="text-sm font-semibold text-white">Jadwal</span>
+          </div>
+          <div class="flex items-center gap-2 bg-darker px-4">
+            <div id="step-2-cir" class="w-8 h-8 rounded-full bg-white/10 text-gray-400 flex items-center justify-center font-bold text-sm">2</div>
+            <span id="step-2-lbl" class="text-sm font-semibold text-gray-500">Data Diri</span>
+          </div>
+          <div class="flex items-center gap-2 bg-darker pl-4">
+            <div id="step-3-cir" class="w-8 h-8 rounded-full bg-white/10 text-gray-400 flex items-center justify-center font-bold text-sm">3</div>
+            <span id="step-3-lbl" class="text-sm font-semibold text-gray-500">Selesai</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Main Form Area -->
+          <div class="lg:col-span-2">
+            
+            <!-- STEP 1: JADWAL -->
+            <div id="pemesanan-step-1" class="glass rounded-3xl p-6 border border-white/5">
+              <h3 class="text-sm font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+                📅 Detail Waktu & Layanan
+              </h3>
+              
+              <div class="space-y-5">
+                <div>
+                  <label class="text-xs text-gray-500 block mb-2">Tanggal Mulai Sewa</label>
+                  <input type="date" id="p-tanggal" class="w-full bg-dark rounded-xl px-4 py-3 text-white outline-none border border-white/10 focus:border-purple-500" onchange="calculateTotal()">
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 block mb-2">Durasi Sewa (Hari)</label>
+                  <input type="number" id="p-durasi" min="1" max="30" value="1" class="w-full bg-dark rounded-xl px-4 py-3 text-white outline-none border border-white/10 focus:border-purple-500" oninput="calculateTotal()">
+                </div>
+                
+                <div class="flex items-center justify-between bg-dark p-4 rounded-xl border border-white/10">
+                  <div>
+                    <div class="text-sm font-semibold text-white">Gunakan Jasa Supir?</div>
+                    <div class="text-xs text-gray-500" id="p-supir-tarif">+ Rp 150.000 / hari</div>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="p-supir" class="sr-only peer" onchange="calculateTotal()">
+                    <div class="w-11 h-6 bg-white/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-purple-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 2: DATA DIRI -->
+            <div id="pemesanan-step-2" class="hidden glass rounded-3xl p-6 border border-white/5 space-y-6">
+              <div>
+                <h3 class="text-sm font-bold text-white uppercase tracking-widest mb-2 flex items-center gap-2">
+                  👤 Lengkapi Data Diri
+                </h3>
+                <p class="text-xs text-gray-500 mb-6">Pastikan data pengenal sesuai dengan KTP Anda.</p>
+                <div class="space-y-4">
+                  <div>
+                    <label class="text-xs text-gray-500 block mb-1">Nama Lengkap Sesuai KTP</label>
+                    <input type="text" id="p-nama" class="w-full bg-dark rounded-xl px-4 py-2.5 text-white outline-none border border-white/10" readonly>
+                  </div>
+                  <div>
+                    <label class="text-xs text-gray-500 block mb-1">Nomor Telepon / WhatsApp</label>
+                    <input type="text" id="p-telp" class="w-full bg-dark rounded-xl px-4 py-2.5 text-white outline-none border border-white/10" readonly>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 class="text-sm font-bold text-white uppercase tracking-widest mb-4">Metode Pembayaran</h3>
+                <div class="grid grid-cols-2 gap-4">
+                  <label class="cursor-pointer">
+                    <input type="radio" name="p-metode" value="CASH" class="peer sr-only" checked>
+                    <div class="glass p-4 rounded-xl border border-white/5 text-center peer-checked:border-amber-500 peer-checked:bg-amber-500/10 transition-colors">
+                      <div class="font-bold text-white mb-1">Cash</div>
+                      <div class="text-xs text-gray-500">Bayar di Tempat</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="radio" name="p-metode" value="TRANSFER" class="peer sr-only">
+                    <div class="glass p-4 rounded-xl border border-white/5 text-center peer-checked:border-purple-500 peer-checked:bg-purple-600/10 transition-colors">
+                      <div class="font-bold text-white mb-1">Cashless</div>
+                      <div class="text-xs text-gray-500">Pelunasan Web</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 3: SELESAI -->
+            <div id="pemesanan-step-3" class="hidden glass rounded-3xl p-10 border border-white/5 text-center">
+              <div class="w-20 h-20 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+              </div>
+              <h3 class="text-2xl font-bebas tracking-wider text-white mb-4">PEMESANAN BERHASIL!</h3>
+              <p class="text-gray-400 text-sm max-w-md mx-auto mb-8">
+                Terima kasih <strong id="p-res-nama" class="text-white"></strong>, pemesanan Anda telah terverifikasi ke sistem AeroRent Salatiga.<br><br>
+                Tim admin kami akan mengirimkan link rincian invoice pembayaran dan info supir via WhatsApp dalam waktu maksimal 10 menit.
+              </p>
+              <button onclick="goSection('dashboard')" class="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-8 py-3 rounded-full w-full max-w-xs transition-colors">
+                Lihat Dashboard Saya
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Order Summary Sidebar -->
+          <div class="lg:col-span-1">
+            <div class="glass p-5 rounded-3xl border border-white/5 sticky top-28" id="p-summary-box">
+              <div class="flex gap-4 mb-6">
+                <div class="w-16 h-16 rounded-xl bg-white/10 overflow-hidden shrink-0" id="p-sum-img"></div>
+                <div>
+                  <div class="font-bold text-sm text-white" id="p-sum-nama">-</div>
+                  <div class="text-xs text-gray-500" id="p-sum-tipe">-</div>
+                  <div class="text-xs text-gray-400 mt-1" id="p-sum-harga">-</div>
+                </div>
+              </div>
+              
+              <div class="space-y-2 border-b border-white/10 pb-4 mb-4 text-xs">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Biaya Sewa (<span id="p-sum-dur">0</span> hari)</span>
+                  <span class="text-white font-medium" id="p-sum-totsewa">Rp 0</span>
+                </div>
+                <div class="flex justify-between" id="p-sum-supir-row" style="display:none;">
+                  <span class="text-gray-500">Biaya Supir</span>
+                  <span class="text-white font-medium" id="p-sum-totsupir">Rp 0</span>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center mb-6">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">TOTAL BAYAR</span>
+                <span class="text-lg font-bold text-amber-500" id="p-sum-total">Rp 0</span>
+              </div>
+
+              <!-- Button actions -->
+              <div id="p-action-1">
+                <button onclick="nextStep()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-3 rounded-xl transition-colors mb-2 text-sm flex items-center justify-center gap-2">
+                  Mulai Isi Data Diri ➔
+                </button>
+                <button onclick="goSection('armada')" class="w-full bg-white/5 hover:bg-white/10 text-gray-400 font-semibold px-4 py-3 rounded-xl transition-colors text-sm">
+                  Batal Pemesanan
+                </button>
+              </div>
+
+              <div id="p-action-2" class="hidden">
+                <div class="flex items-start gap-3 mb-6">
+                  <input type="checkbox" id="p-syarat" class="mt-1" checked>
+                  <label class="text-[10px] text-gray-500 leading-tight">Saya menyetujui <a href="#" class="text-purple-400">Syarat & Ketentuan</a> yang berlaku, termasuk denda keterlambatan dan kebijakan pembatalan sewa.</label>
+                </div>
+                <button onclick="submitPemesanan()" id="btn-submit-book" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-3 rounded-xl transition-colors mb-2 text-sm">
+                  Konfirmasi & Sewa ➔
+                </button>
+                <button onclick="prevStep()" class="w-full bg-transparent hover:bg-white/5 text-gray-500 font-medium px-4 py-3 rounded-xl transition-colors text-xs flex items-center justify-center gap-2">
+                  ← Kembali
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- SECTION: DASHBOARD CUSTOMER -->
+    <!-- ============================================== -->
+    <section id="sec-dashboard" class="section hidden">
+      <div class="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <!-- Sidebar Dashboard -->
+        <div class="lg:col-span-1">
+          <div class="glass p-6 rounded-3xl border border-white/5 mb-6 sticky top-28">
+            <div class="flex items-center gap-4 mb-8 border-b border-white/10 pb-6">
+              <div class="w-12 h-12 rounded-full bg-purple-600/30 text-purple-400 flex items-center justify-center font-bold text-lg" id="dash-ava">C</div>
+              <div>
+                <div class="font-bold text-white text-sm" id="dash-nama">Customer Name</div>
+                <div class="text-xs text-gray-500">Terverifikasi</div>
+              </div>
+            </div>
+            
+            <div class="flex flex-col gap-2">
+              <button onclick="switchDashTab('overview')" class="dash-tab active text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">Dashboard</button>
+              <button onclick="goSection('armada')" class="text-left px-4 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:text-white hover:bg-white/5 transition-colors">Sewa Baru</button>
+              <button onclick="switchDashTab('riwayat')" class="dash-tab text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">Riwayat Pemesanan</button>
+              <button onclick="switchDashTab('profil')" class="dash-tab text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">Profil Saya</button>
+            </div>
+
+            <div class="mt-8 border-t border-white/10 pt-6">
+              <button onclick="doLogout()" class="w-full text-left px-4 py-2 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-400/10 transition-colors flex items-center gap-2">
+                [→ Keluar Akun
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content Dashboard -->
+        <div class="lg:col-span-3 min-h-[500px]">
+          
+          <!-- Tab: Overview -->
+          <div id="d-overview" class="d-tab">
+            <h2 class="text-2xl font-bebas tracking-wider text-white mb-6 uppercase">Halo, <span id="dash-title-nama">Budi Santoso</span>! 👋</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              <div class="glass p-5 rounded-2xl border border-white/5 flex items-center justify-between">
+                <div>
+                  <div class="text-xs text-gray-500 uppercase tracking-widest mb-1">Total Sewa</div>
+                  <div class="text-2xl font-bold text-white" id="d-stat-total">0 KALI</div>
+                </div>
+                <div class="text-gray-600">⏱️</div>
+              </div>
+              <div class="glass p-5 rounded-2xl border border-white/5 flex items-center justify-between">
+                <div>
+                  <div class="text-xs text-gray-500 uppercase tracking-widest mb-1">Pemesanan Aktif / Menunggu</div>
+                  <div class="text-2xl font-bold text-white" id="d-stat-aktif">0 TRANSAKSI</div>
+                </div>
+                <div class="text-gray-600">⌛</div>
+              </div>
+            </div>
+
+            <h3 class="text-sm font-bold text-white uppercase tracking-widest mb-4">Pemesanan Aktif Terbaru</h3>
+            <div class="glass rounded-2xl border border-white/5 overflow-x-auto">
+              <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-white/5 text-xs text-gray-500 uppercase tracking-wider">
+                  <tr>
+                    <th class="p-4 font-medium">No. Booking</th>
+                    <th class="p-4 font-medium">Kendaraan</th>
+                    <th class="p-4 font-medium">Tanggal</th>
+                    <th class="p-4 font-medium">Status</th>
+                    <th class="p-4 font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5" id="d-recent-tb">
+                  <!-- JS Populate -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab: Riwayat -->
+          <div id="d-riwayat" class="d-tab hidden">
+            <div class="mb-8">
+              <h2 class="text-2xl font-bebas tracking-wider text-white uppercase mb-1">RIWAYAT <span class="text-purple-400">PEMESANAN</span></h2>
+              <p class="text-xs text-gray-500">Daftar seluruh transaksi sewa kendaraan Anda.</p>
+            </div>
+            <div class="space-y-4" id="d-riwayat-list">
+              <!-- JS Populate -->
+            </div>
+          </div>
+
+          <!-- Tab: Profil -->
+          <div id="d-profil" class="d-tab hidden">
+            <div class="mb-8">
+              <h2 class="text-2xl font-bebas tracking-wider text-white uppercase mb-1">PROFIL <span class="text-purple-400">SAYA</span></h2>
+              <p class="text-xs text-gray-500">Kelola informasi data diri akun Anda.</p>
+            </div>
+            
+            <div class="glass p-6 rounded-3xl border border-white/5 space-y-6 max-w-xl">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="text-[10px] text-gray-500 uppercase block mb-1">Nama Lengkap</label>
+                  <input type="text" id="prof-nama" class="w-full bg-dark rounded-xl px-4 py-2.5 text-white outline-none border border-white/10" readonly>
+                </div>
+                <div>
+                  <label class="text-[10px] text-gray-500 uppercase block mb-1">Email (Tidak dapat diubah)</label>
+                  <input type="text" id="prof-email" class="w-full bg-dark rounded-xl px-4 py-2.5 text-gray-500 outline-none border border-white/10" readonly>
+                </div>
+                <div>
+                  <label class="text-[10px] text-gray-500 uppercase block mb-1">Nomor Telepon / WhatsApp</label>
+                  <input type="text" id="prof-telp" class="w-full bg-dark rounded-xl px-4 py-2.5 text-white outline-none border border-white/10" readonly>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL: AUTH (LOGIN & REGISTER) -->
+  <!-- ============================================== -->
+  <div id="modal-auth" class="fixed inset-0 z-[100] bg-dark/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    
+    <div class="glass w-full max-w-md rounded-3xl overflow-hidden relative shadow-2xl border border-white/10 animate-fade-in flex flex-col max-h-[90vh]">
+      <!-- Close Button -->
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white z-10 w-8 h-8 bg-dark/50 rounded-full flex items-center justify-center">
+        ✕
       </button>
 
-      <!-- Status koneksi API -->
-      <div id="apiStatus" class="hidden mt-4 text-center text-xs text-gray-600">
-        Menghubungkan ke <span id="apiHost" class="text-gray-500"></span>…
+      <div class="p-6 md:p-8 overflow-y-auto custom-scroll">
+        <!-- Logo Header -->
+        <div class="flex justify-center mb-6">
+          <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="logoGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#F59E0B"/>
+              </linearGradient>
+            </defs>
+            <polygon points="20,3 37,34 3,34" fill="url(#logoGrad2)"/>
+            <line x1="20" y1="3" x2="9"  y2="24" stroke="white" stroke-width="1.5" opacity=".7"/>
+          </svg>
+        </div>
+
+        <!-- FORM LOGIN -->
+        <div id="form-login-sec">
+          <div class="text-center mb-6">
+            <h2 class="text-xl font-bold text-white mb-1 uppercase tracking-widest">MASUK AKUN</h2>
+            <p class="text-xs text-gray-400">Silakan masuk untuk menyewa armada AeroRent.</p>
+          </div>
+          
+          <div class="flex bg-white/5 rounded-full p-1 mb-6 border border-white/5">
+            <button class="flex-1 py-2 text-xs font-bold text-white bg-white/10 rounded-full shadow">Login</button>
+            <button class="flex-1 py-2 text-xs font-bold text-gray-500 hover:text-gray-300 transition-colors" onclick="switchAuth('register')">Daftar</button>
+          </div>
+
+          <form onsubmit="handleCustomerLogin(event)" class="space-y-4">
+            <div>
+              <label class="text-[10px] text-gray-500 uppercase block mb-1">Alamat Email</label>
+              <input type="email" id="l-email" required placeholder="customer@aerorent.id" class="w-full bg-dark rounded-xl px-4 py-3 text-white outline-none border border-white/10 focus:border-purple-500 text-sm">
+            </div>
+            <div>
+              <label class="text-[10px] text-gray-500 uppercase block mb-1">Password</label>
+              <input type="password" id="l-pass" required placeholder="••••••••" class="w-full bg-dark rounded-xl px-4 py-3 text-white outline-none border border-white/10 focus:border-purple-500 text-sm">
+            </div>
+            <button type="submit" id="btn-login" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 rounded-xl transition-colors text-sm mt-2">
+              Masuk Sekarang
+            </button>
+          </form>
+        </div>
+
+        <!-- FORM REGISTER -->
+        <div id="form-register-sec" class="hidden">
+          <div class="text-center mb-6">
+            <h2 class="text-xl font-bold text-white mb-1 uppercase tracking-widest">DAFTAR BARU</h2>
+            <p class="text-xs text-gray-400">Daftarkan identitas Anda untuk memulai.</p>
+          </div>
+
+          <div class="flex bg-white/5 rounded-full p-1 mb-6 border border-white/5">
+            <button class="flex-1 py-2 text-xs font-bold text-gray-500 hover:text-gray-300 transition-colors" onclick="switchAuth('login')">Login</button>
+            <button class="flex-1 py-2 text-xs font-bold text-white bg-white/10 rounded-full shadow">Daftar</button>
+          </div>
+
+          <form onsubmit="handleCustomerRegister(event)" class="space-y-4">
+            <div>
+              <label class="text-[10px] text-gray-500 uppercase block mb-1">Nama Lengkap Sesuai KTP</label>
+              <input type="text" id="r-nama" required class="w-full bg-dark rounded-xl px-4 py-2.5 text-white outline-none border border-white/10 focus:border-purple-500 text-sm">
+            </div>
+            <div>
+              <label class="text-[10px] text-gray-500 uppercase block mb-1">Nomor Telepon / WhatsApp</label>
+              <input type="text" id="r-telp" required class="w-full bg-dark rounded-xl px-4 py-2.5 text-white outline-none border border-white/10 focus:border-purple-500 text-sm">
+            </div>
+            <div>
+              <label class="text-[10px] text-gray-500 uppercase block mb-1">Alamat Email</label>
+              <input type="email" id="r-email" required class="w-full bg-dark rounded-xl px-4 py-2.5 text-white outline-none border border-white/10 focus:border-purple-500 text-sm">
+            </div>
+            <div>
+              <label class="text-[10px] text-gray-500 uppercase block mb-1">Password</label>
+              <input type="password" id="r-pass" required class="w-full bg-dark rounded-xl px-4 py-2.5 text-white outline-none border border-white/10 focus:border-purple-500 text-sm">
+            </div>
+            <button type="submit" id="btn-register" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 rounded-xl transition-colors text-sm mt-2">
+              Daftar Akun
+            </button>
+          </form>
+        </div>
+
       </div>
-
-    </form>
-
-    <div class="text-center text-xs text-gray-600 mt-6">
-      &copy; 2026 AeroRent Salatiga. All rights reserved.
+      
+      <!-- Go to admin login -->
+      <div class="bg-dark/80 p-4 border-t border-white/5 text-center">
+         <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Portal Karyawan</p>
+         <a href="admin.html" class="text-xs text-amber-500 hover:text-amber-400 font-semibold inline-block">Login Karyawan / Admin ➔</a>
+      </div>
     </div>
   </div>
 
-  <!-- Toast notification -->
-  <div id="toast"
-       class="fixed top-5 right-5 z-50 glass rounded-2xl p-4 flex items-start gap-3 max-w-xs shadow-2xl"
-       style="border-color: rgba(239,68,68,.3);">
-    <span id="toastIcon" class="text-xl shrink-0">⚠️</span>
-    <div>
-      <div class="text-sm font-semibold text-red-200" id="toastTitle">Gagal Login</div>
-      <div class="text-xs text-red-300/70 mt-0.5" id="toastMsg">—</div>
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-6 right-6 z-[9999] glass p-4 rounded-2xl border border-white/10 shadow-2xl flex items-start gap-3 w-80 hidden animate-fade-in" style="background:rgba(20,20,30,0.85); backdrop-filter:blur(16px);">
+    <div id="t-ic" class="text-xl">✅</div>
+    <div class="flex-1">
+      <div id="t-ttl" class="font-bold text-sm text-white mb-0.5">Title</div>
+      <div id="t-msg" class="text-xs text-gray-400 leading-snug">Message</div>
     </div>
-    <button onclick="hideToast()" class="ml-auto text-gray-600 hover:text-white shrink-0 mt-0.5">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"
-           stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M18 6 6 18M6 6l12 12"/>
-      </svg>
-    </button>
   </div>
 
-<script src="assets/js/index.js"></script>
+  <!-- Custom Scripts -->
+  <script src="assets/js/customer.js"></script>
 </body>
 </html>

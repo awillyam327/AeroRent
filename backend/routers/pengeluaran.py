@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile
-from utils import fmt_float, fmt_date
+from utils import fmt_float, fmt_date, imgbb_upload
 from typing import Optional
 import aiomysql
 from database import get_db

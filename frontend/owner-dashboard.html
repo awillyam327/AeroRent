@@ -69,6 +69,10 @@
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Manajemen Karyawan
     </div>
+    <div class="nav-item" data-section="kendaraan" onclick="goSection('kendaraan')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a2 2 0 0 0-1.6-.8H6.5a2 2 0 0 0-2 2v7.5h3m3 3a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm10 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+      Manajemen Kendaraan
+    </div>
     <div class="nav-item" data-section="laporan" onclick="goSection('laporan')">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       Laporan Keuangan
@@ -320,6 +324,36 @@
       </div>
     </div>
 
+    <div id="sec-kendaraan" class="section">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+            MANAJEMEN <span style="color:#F59E0B;">KENDARAAN</span>
+          </h1>
+          <p class="text-gray-500 text-sm mt-1">Kelola armada kendaraan dan integrasi Traccar GPS.</p>
+        </div>
+        <button onclick="openKendaraanModal()" class="btn-g px-5 py-2.5 flex items-center gap-2 text-sm font-semibold">
+          + Tambah Kendaraan
+        </button>
+      </div>
+
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead>
+              <tr>
+                <th>ID</th><th>Nama Kendaraan</th><th>Plat</th>
+                <th>Sewa/Hari</th><th>Supir/Hari</th><th>Traccar ID</th><th>Status</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="kend-table">
+              <tr><td colspan="8" class="text-center text-gray-600 py-8">Memuat data kendaraan...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="sec-karyawan" class="section">
       <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
@@ -375,7 +409,72 @@
       </div>
     </div>
 
-  </div></div><div id="modal-kary" class="overlay hidden">
+  </div></div>
+  
+  <div id="modal-kendaraan" class="overlay hidden">
+  <div class="modal-box p-6" style="max-width:600px;">
+    <div class="flex items-center justify-between mb-5">
+      <div class="font-semibold text-white text-lg" id="mkend-title">Tambah Kendaraan</div>
+      <button onclick="closeKendaraanModal()" class="text-gray-600 hover:text-white p-1.5 rounded-lg hover:bg-white/5">✕</button>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nama Kendaraan</label>
+        <input type="text" id="mkend-nama" placeholder="Contoh: Toyota Avanza 2024" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Merk</label>
+        <input type="text" id="mkend-merk" placeholder="Toyota" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Model</label>
+        <input type="text" id="mkend-model" placeholder="Avanza" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Tahun</label>
+        <input type="number" id="mkend-tahun" placeholder="2024" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nomor Plat</label>
+        <input type="text" id="mkend-plat" placeholder="H 1234 AB" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Tipe Kendaraan</label>
+        <select id="mkend-tipe" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+          <option value="5_SEATER">5 Seater</option>
+          <option value="7_SEATER">7 Seater</option>
+          <option value="MICROBUS">Microbus</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Status</label>
+        <select id="mkend-status" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+          <option value="TERSEDIA">Tersedia</option>
+          <option value="DISEWA">Disewa</option>
+          <option value="PERAWATAN">Perawatan</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Harga Sewa Harian (Rp)</label>
+        <input type="number" id="mkend-sewa" placeholder="300000" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Harga Supir Harian (Rp)</label>
+        <input type="number" id="mkend-supir" placeholder="150000" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Traccar Device ID</label>
+        <input type="text" id="mkend-traccar" placeholder="Internal ID di Web Traccar (contoh: 1)" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="closeKendaraanModal()" class="flex-1 btn-o py-2.5 text-sm font-semibold">Batal</button>
+      <button onclick="saveKendaraan()" class="flex-1 btn-g py-2.5 text-sm font-semibold">Simpan Kendaraan</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-kary" class="overlay hidden">
   <div class="modal-box p-6">
     <div class="flex items-center justify-between mb-5">
       <div class="font-semibold text-white text-lg" id="mk-title">Tambah Karyawan</div>

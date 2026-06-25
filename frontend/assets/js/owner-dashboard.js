@@ -47,6 +47,7 @@ let S = {
 async function init() {
   const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
   if (auth) { S.token = auth.access_token; S.user = auth.user; }
+  if (!auth?.access_token) { location.href = 'admin.html'; return; }
 
   const nama = S.user?.nama || 'Bapak Owner';
   el('sb-nama').textContent = nama;
@@ -117,6 +118,7 @@ function goSection(name) {
 
   if (name === 'laporan') loadLaporan();
   if (name === 'karyawan') loadKaryawan();
+  if (name === 'kendaraan') loadKendaraan();
   if (name === 'operasional') loadPengeluaran();
   if (name === 'statistik') loadStatistik();
   if (name === 'pesanan') loadPesanan();
@@ -428,6 +430,134 @@ async function loadStatistik() {
         </div>
       </div>`;
   }).join('');
+}
+
+// ============================================================
+// MANAJEMEN KENDARAAN
+// ============================================================
+async function loadKendaraan() {
+  const data = await apiJson('/kendaraan') || [];
+  S.kendaraan = Array.isArray(data) ? data : [];
+  renderKendaraanTable();
+}
+
+function renderKendaraanTable() {
+  const tb = el('kend-table');
+  if (!S.kendaraan || !S.kendaraan.length) {
+    tb.innerHTML = `<tr><td colspan="8" class="text-center text-gray-600 py-8">Tidak ada data kendaraan.</td></tr>`;
+    return;
+  }
+  tb.innerHTML = S.kendaraan.map(k => {
+    const plat = k.nomor_plat || k.plat_nomor || '-';
+    return `
+      <tr>
+        <td>
+          <span class="font-mono text-xs text-gray-500">${k.id_kendaraan.split('-')[0] + '-' + k.id_kendaraan.split('-')[1].substring(0,4)}</span>
+        </td>
+        <td>
+          <div class="font-semibold text-sm">${k.nama_kendaraan}</div>
+          <div class="text-xs text-gray-500">${(k.tipe_kendaraan||'').replace('_', ' ')} • ${k.tahun}</div>
+        </td>
+        <td class="font-semibold">${plat}</td>
+        <td class="text-sm">${rp(k.harga_sewa_harian)}</td>
+        <td class="text-sm">${rp(k.harga_supir_harian)}</td>
+        <td>
+          <span class="badge" style="background:rgba(59,130,246,.12);color:#60A5FA;">
+            ID: ${k.traccar_device_id || 'Belum'}
+          </span>
+        </td>
+        <td>
+          <span class="badge ${k.status === 'TERSEDIA' ? 'b-aktif' : k.status === 'DISEWA' ? 'b-disewa' : 'b-nonaktif'}">${k.status}</span>
+        </td>
+        <td>
+          <div class="flex gap-1.5">
+            <button onclick="openKendaraanModal('${k.id_kendaraan}')"
+                    class="btn-a px-3 py-1.5 rounded-xl text-xs">Edit</button>
+            <button onclick="deleteKendaraan('${k.id_kendaraan}')"
+                    class="btn-r px-3 py-1.5 rounded-xl text-xs">Hapus</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function openKendaraanModal(id = null) {
+  S.editKendId = id || null;
+  el('mkend-title').textContent = id ? 'Edit Data Kendaraan' : 'Tambah Kendaraan';
+  if (id) {
+    const k = S.kendaraan.find(x => x.id_kendaraan === id);
+    if (k) {
+      el('mkend-nama').value = k.nama_kendaraan;
+      el('mkend-merk').value = k.merk || '';
+      el('mkend-model').value = k.model || '';
+      el('mkend-tahun').value = k.tahun || new Date().getFullYear();
+      el('mkend-plat').value = k.nomor_plat || k.plat_nomor || '';
+      el('mkend-tipe').value = k.tipe_kendaraan || '5_SEATER';
+      el('mkend-status').value = k.status || 'TERSEDIA';
+      el('mkend-sewa').value = k.harga_sewa_harian || 0;
+      el('mkend-supir').value = k.harga_supir_harian || 0;
+      el('mkend-traccar').value = k.traccar_device_id || '';
+    }
+  } else {
+    el('mkend-nama').value = ''; el('mkend-merk').value = ''; el('mkend-model').value = '';
+    el('mkend-tahun').value = new Date().getFullYear(); el('mkend-plat').value = '';
+    el('mkend-tipe').value = '5_SEATER'; el('mkend-status').value = 'TERSEDIA';
+    el('mkend-sewa').value = ''; el('mkend-supir').value = ''; el('mkend-traccar').value = '';
+  }
+  el('modal-kendaraan').classList.remove('hidden');
+}
+
+function closeKendaraanModal() {
+  el('modal-kendaraan').classList.add('hidden');
+  S.editKendId = null;
+}
+
+async function saveKendaraan() {
+  const payload = {
+    nama_kendaraan: el('mkend-nama').value.trim(),
+    merk: el('mkend-merk').value.trim() || undefined,
+    model: el('mkend-model').value.trim() || undefined,
+    tahun: parseInt(el('mkend-tahun').value) || new Date().getFullYear(),
+    nomor_plat: el('mkend-plat').value.trim(),
+    tipe_kendaraan: el('mkend-tipe').value,
+    status: el('mkend-status').value,
+    harga_sewa_harian: parseFloat(el('mkend-sewa').value || '0'),
+    harga_supir_harian: parseFloat(el('mkend-supir').value || '0'),
+    traccar_device_id: el('mkend-traccar').value.trim() || null
+  };
+
+  if (!payload.nama_kendaraan || !payload.nomor_plat) {
+    toast('⚠️', 'Validasi', 'Nama dan plat nomor wajib diisi.');
+    return;
+  }
+
+  let ok = false;
+  if (S.editKendId) {
+    const r = await api(`/kendaraan/${S.editKendId}`, { method: 'PUT', body: JSON.stringify(payload) });
+    ok = r && r.ok;
+  } else {
+    const r = await api('/kendaraan', { method: 'POST', body: JSON.stringify(payload) });
+    ok = r && r.ok;
+  }
+
+  if (ok) {
+    await loadKendaraan();
+    closeKendaraanModal();
+    toast('✅', 'Berhasil', `Kendaraan berhasil ${S.editKendId ? 'diperbarui' : 'ditambahkan'}.`);
+  } else {
+    toast('❌', 'Gagal', 'Terjadi kesalahan saat menyimpan kendaraan.');
+  }
+}
+
+async function deleteKendaraan(id) {
+  if (!confirm('Yakin ingin menghapus kendaraan ini?')) return;
+  const r = await api(`/kendaraan/${id}`, { method: 'DELETE' });
+  if (r && r.ok) {
+    await loadKendaraan();
+    toast('✅', 'Berhasil', 'Kendaraan dihapus.');
+  } else {
+    toast('❌', 'Gagal', 'Gagal menghapus. Mungkin ada transaksi aktif.');
+  }
 }
 
 // ============================================================
@@ -817,7 +947,7 @@ function closeMobileSidebar() {
 function doLogout() {
   if (confirm('Yakin ingin keluar dari sesi Owner?')) {
     localStorage.removeItem(AUTH_KEY);
-    location.href = '/';
+    location.href = 'admin.html';
   }
 }
 

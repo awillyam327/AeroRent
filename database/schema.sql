@@ -68,6 +68,7 @@
         id_pelanggan      VARCHAR(50)     NOT NULL PRIMARY KEY,
         nama_lengkap      VARCHAR(100)    NOT NULL,
         email             VARCHAR(100),
+        password_hash     VARCHAR(255),
         no_telepon        VARCHAR(25)     NOT NULL,
         alamat            TEXT,
         no_ktp            VARCHAR(25),

@@ -3,7 +3,7 @@ from utils import fmt_float, fmt_date
 from typing import Optional
 import aiomysql
 from database import get_db
-from dependencies import req_kasir_or_owner
+from dependencies import req_kasir_or_owner, get_current_account
 from models import PelangganIn
 from utils import imgbb_upload
 import uuid
@@ -21,12 +21,15 @@ async def list_pelanggan(user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
 
 
 @router.get("/{pid}", tags=["👥 Pelanggan"])
-async def detail_pelanggan(pid: str, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
+async def detail_pelanggan(pid: str, user=Depends(get_current_account), cur=Depends(get_db)):
+    if user["role"] == "PELANGGAN" and user["id"] != pid:
+        raise HTTPException(403, "Akses ditolak.")
+        
     await cur.execute(
         "SELECT id_pelanggan AS id, nama_lengkap AS nama, email, no_telepon AS telepon, alamat, "
         "no_ktp, foto_ktp_url AS foto_ktp, foto_sim_url AS foto_sim, is_verified, created_at "
-        "FROM PELANGGAN WHERE id_pelanggan = %(id)s",
-        {"id": pid},
+        "FROM PELANGGAN WHERE id_pelanggan = %(pid)s",
+        {"pid": pid}
     )
     r = await cur.fetchone()
     if not r: raise HTTPException(404, "Pelanggan tidak ditemukan.")

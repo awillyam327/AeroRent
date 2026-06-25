@@ -5,9 +5,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 import aiomysql
 from database import get_db
 from config import cfg, log
-from dependencies import verify_pwd, make_token, get_current_user
+from dependencies import verify_pwd, make_token, get_current_user, hash_pwd
 from models import TokenPair
+from pydantic import BaseModel
 import uuid
+
+class RegisterCustomerReq(BaseModel):
+    nama_lengkap: str
+    email: str
+    no_telepon: str
+    password: str
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 @router.post("/login", response_model=TokenPair, tags=["🔐 Auth"])
@@ -43,6 +50,67 @@ async def login(
     )
 
 
+@router.post("/login/customer", tags=["🔐 Auth"])
+async def login_customer(
+    form: OAuth2PasswordRequestForm = Depends(),
+    cur: aiomysql.DictCursor = Depends(get_db),
+):
+    await cur.execute(
+        "SELECT id_pelanggan, nama_lengkap, email, password_hash "
+        "FROM PELANGGAN WHERE email = %(e)s",
+        {"e": form.username},
+    )
+    row = await cur.fetchone()
+
+    if not row or not row["password_hash"] or not verify_pwd(form.password, row["password_hash"]):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Email atau password salah.",
+                            headers={"WWW-Authenticate": "Bearer"})
+
+    token_data = {"sub": row["id_pelanggan"], "nama": row["nama_lengkap"], "email": row["email"], "role": "PELANGGAN"}
+    access_tok  = make_token(token_data, timedelta(minutes=cfg.ACCESS_EXPIRE_MIN))
+    
+    log.info(f"[Auth] Login Customer: {row['email']}")
+    return {
+        "access_token": access_tok,
+        "token_type": "bearer",
+        "user": token_data
+    }
+
+
+@router.post("/register", tags=["🔐 Auth"])
+async def register_customer(
+    req: RegisterCustomerReq,
+    cur: aiomysql.DictCursor = Depends(get_db),
+):
+    # Cek apakah email sudah dipakai
+    await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE email = %(e)s", {"e": req.email})
+    if await cur.fetchone():
+        raise HTTPException(400, "Email sudah terdaftar.")
+
+    new_id = "p-" + uuid.uuid4().hex[:12]
+    hashed = hash_pwd(req.password)
+
+    await cur.execute(
+        "INSERT INTO PELANGGAN (id_pelanggan, nama_lengkap, email, no_telepon, password_hash) "
+        "VALUES (%(id)s, %(nama)s, %(email)s, %(telp)s, %(pwd)s)",
+        {
+            "id": new_id,
+            "nama": req.nama_lengkap,
+            "email": req.email,
+            "telp": req.no_telepon,
+            "pwd": hashed
+        }
+    )
+    
+    token_data = {"sub": new_id, "nama": req.nama_lengkap, "email": req.email, "role": "PELANGGAN"}
+    access_tok = make_token(token_data, timedelta(minutes=cfg.ACCESS_EXPIRE_MIN))
+
+    return {
+        "message": "Registrasi berhasil",
+        "access_token": access_tok,
+        "token_type": "bearer",
+        "user": token_data
+    }
 @router.post("/refresh", tags=["🔐 Auth"])
 async def refresh(body: dict, cur=Depends(get_db)): # <-- oracledb dihapus, langsung pakai cur
     """Perbarui access token menggunakan refresh token yang masih valid."""

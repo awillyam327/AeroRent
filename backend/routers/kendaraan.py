@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from utils import fmt_float, fmt_date
+from utils import fmt_float, fmt_date, imgbb_upload, traccar_posisi
 from typing import Optional
 import aiomysql
 from database import get_db
 from dependencies import req_kasir_or_owner, req_owner, get_current_user
 from models import KendaraanIn, KendaraanUpd
-from utils import imgbb_upload
 import uuid
 
 router = APIRouter(prefix="/kendaraan", tags=["Kendaraan"])
@@ -127,3 +126,21 @@ async def gps_kendaraan(kid: str, user=Depends(req_kasir_or_owner), cur=Depends(
     if not posisi: raise HTTPException(503, "Data GPS tidak tersedia. Pastikan perangkat Traccar aktif.")
     return {"kendaraan": row["nama_kendaraan"], **posisi}
 
+
+@router.delete("/{kid}", tags=["🚗 Kendaraan"])
+async def hapus_kendaraan(kid: str, user=Depends(req_owner), cur=Depends(get_db)):
+    await cur.execute("SELECT id_kendaraan, nama_kendaraan FROM KENDARAAN WHERE id_kendaraan = %(id)s", {"id": kid})
+    row = await cur.fetchone()
+    if not row: raise HTTPException(404, "Kendaraan tidak ditemukan.")
+
+    # Cek apakah ada transaksi aktif
+    await cur.execute(
+        "SELECT COUNT(*) AS jml FROM TRANSAKSI_SEWA WHERE id_kendaraan = %(id)s AND status IN ('MENUNGGU','DIKONFIRMASI','AKTIF')",
+        {"id": kid}
+    )
+    aktif = await cur.fetchone()
+    if aktif["jml"] > 0:
+        raise HTTPException(409, f"Kendaraan '{row['nama_kendaraan']}' masih memiliki {aktif['jml']} transaksi aktif. Selesaikan atau batalkan dulu.")
+
+    await cur.execute("DELETE FROM KENDARAAN WHERE id_kendaraan = %(id)s", {"id": kid})
+    return {"message": f"Kendaraan '{row['nama_kendaraan']}' berhasil dihapus."}

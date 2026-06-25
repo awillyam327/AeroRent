@@ -22,9 +22,9 @@ class Settings(BaseSettings):
     MIDTRANS_CLIENT_KEY:str   = ""
     MIDTRANS_IS_PROD:   bool  = False
     FONNTE_TOKEN:       str   = ""
-    TRACCAR_BASE_URL:   str   = "http://localhost:8082"
-    TRACCAR_USER:       str   = "admin"
-    TRACCAR_PASSWORD:   str   = "admin"
+    TRACCAR_BASE_URL:   str   = "https://demo.traccar.org"
+    TRACCAR_USER:       str   = "awillyam327@gmail.com"
+    TRACCAR_PASSWORD:   str   = "arthurgaming123"
     SMTP_HOST:          str   = "smtp.gmail.com"
     SMTP_PORT:          int   = 587
     SMTP_USER:          str   = ""
