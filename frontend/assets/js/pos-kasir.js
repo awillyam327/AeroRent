@@ -18,7 +18,7 @@
     // ============================================================
     async function init() {
       const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
-      if (!auth?.access_token) { window.location.href = 'admin.html'; return; }
+      if (!auth?.access_token) { window.location.href = 'login.html'; return; }
       S.token = auth.access_token;
       S.user = auth.user;
 
@@ -127,7 +127,7 @@
         const r = await fetch(API + path, { ...opts, headers, cache: 'no-store' });
         if (r.status === 401) {
           localStorage.removeItem(AUTH_KEY);
-          window.location.href = 'admin.html';
+          window.location.href = 'login.html';
           return null;
         }
         return r;
@@ -1008,7 +1008,7 @@
     function doLogout() {
       if (confirm('Yakin ingin keluar dari sesi POS?')) {
         localStorage.removeItem(AUTH_KEY);
-        window.location.href = 'admin.html';
+        window.location.href = 'login.html';
       }
     }
 

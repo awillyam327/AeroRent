@@ -47,7 +47,7 @@ let S = {
 async function init() {
   const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
   if (auth) { S.token = auth.access_token; S.user = auth.user; }
-  if (!auth?.access_token) { location.href = 'admin.html'; return; }
+  if (!auth?.access_token) { location.href = 'login.html'; return; }
 
   const nama = S.user?.nama || 'Bapak Owner';
   el('sb-nama').textContent = nama;
@@ -947,7 +947,7 @@ function closeMobileSidebar() {
 function doLogout() {
   if (confirm('Yakin ingin keluar dari sesi Owner?')) {
     localStorage.removeItem(AUTH_KEY);
-    location.href = 'admin.html';
+    location.href = 'login.html';
   }
 }
 
