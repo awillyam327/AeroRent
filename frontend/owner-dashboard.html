@@ -546,7 +546,9 @@
 // ============================================================
 // Ganti URL ini dengan URL Ngrok milik Anda
 // Gunakan localhost untuk pengujian di laptop sendiri
-const API = 'https://pope-bolster-gallon.ngrok-free.dev/transaksi'; 
+// ✅ BENAR — baca dari localStorage agar sinkron dengan index.html
+// Tidak perlu update manual setiap kali URL Ngrok berubah
+const API = localStorage.getItem('aerorent_api_base') || 'https://pope-bolster-gallon.ngrok-free.dev';
 const AUTH_KEY = 'aerorent_auth';
 
 // ============================================================

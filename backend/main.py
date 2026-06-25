@@ -84,7 +84,7 @@ logging.basicConfig(
 log = logging.getLogger("aerorent")
 
 # ==============================================================================
-# DATABASE CONNECTION POOL (Oracle 19c Async)
+# DATABASE CONNECTION POOL (TiDB Cloud / MySQL via aiomysql)
 # ==============================================================================
 _pool: Optional[aiomysql.Pool] = None
 
@@ -529,7 +529,6 @@ app = FastAPI(
     redoc_url   = "/redoc",
 )
 
-from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,

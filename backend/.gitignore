@@ -1,10 +1,65 @@
-# Menyembunyikan kata sandi & environment variables
-.env
+# ==============================================================================
+# AeroRent — .gitignore
+# Melindungi file sensitif dari terekspos di repositori publik GitHub
+# ==============================================================================
 
-# Menyembunyikan ruang isolasi Python
+# === VARIABEL RAHASIA (PALING PENTING) ===
+.env
+*.env
+.env.*
+!.env.example           # Template boleh di-commit, file asli tidak
+
+# === VIRTUAL ENVIRONMENT PYTHON ===
 venv/
 .venv/
+env/
+ENV/
+.python-version
 
-# Menyembunyikan *cache* bawaan Python
+# === CACHE PYTHON ===
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.pycache
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# === EDITOR & IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === LOG & DATABASE LOKAL ===
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# === CERTIFICATE & KEY ===
+*.pem
+*.key
+*.crt
+*.cer
+tidb-ca.pem
+
+# === VERCEL ===
+.vercel/
+.vercel
+
+# === NODE (jika ada tooling) ===
+node_modules/
+npm-debug.log*
+
+# === FILE SEMENTARA ===
+*.tmp
+*.temp
+.cache/

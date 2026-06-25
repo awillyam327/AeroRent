@@ -7,35 +7,27 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="AeroRent POS Terminal — Kasir">
   <title>AeroRent POS — Kasir</title>
-  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: { extend: {
-        fontFamily: { bebas: ['"Bebas Neue"','cursive'], dm: ['"DM Sans"','sans-serif'] },
+        fontFamily: { bebas:['"Bebas Neue"','cursive'], dm:['"DM Sans"','sans-serif'] },
         colors: { dark:'#0A0A14', darker:'#05050A', panel:'#0D0D1C' }
       }}
     }
   </script>
-
   <script>
     'use strict';
-    
-    // 1. Ambil URL Ngrok dari memori (yang sudah diset di index.html)
-    // Jika tidak ada di memori, kembalikan ke localhost sebagai cadangan
+    // Ambil URL API dari localStorage (diset oleh index.html)
     const API_BASE = localStorage.getItem('aerorent_api_base') || 'http://localhost:8000';
-    
-    // 2. Siapkan header anti-blokir Ngrok untuk dipakai di fungsi fetch nanti
     const FETCH_HEADERS = {
       'Content-Type': 'application/json',
       'ngrok-skip-browser-warning': '69420'
     };
   </script>
-  </head>
   <style>
     :root {
       --purple:#7C3AED; --purple-d:#6D28D9; --amber:#F59E0B;
@@ -51,10 +43,11 @@
     ::-webkit-scrollbar-thumb:hover{background:var(--purple);}
 
     .glass{background:var(--glass-bg);border:1px solid var(--glass-bd);backdrop-filter:blur(12px);}
-    .g-input{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+    .g-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
              color:white;outline:none;transition:border-color .2s;}
     .g-input:focus{border-color:var(--purple);}
-    .g-input::placeholder{color:rgba(255,255,255,0.25);}
+    .g-input::placeholder{color:rgba(255,255,255,.25);}
+    select.g-input option{background:#0A0A14;}
 
     /* Badges */
     .badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;
@@ -66,39 +59,89 @@
     .b-dibatalkan{background:rgba(239,68,68,.15);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);}
 
     /* Buttons */
-    .btn-p{background:var(--purple);color:white;border:none;cursor:pointer;
-           transition:background .2s,box-shadow .2s;}
+    .btn-p{background:var(--purple);color:white;border:none;cursor:pointer;transition:background .2s,box-shadow .2s;}
     .btn-p:hover{background:var(--purple-d);box-shadow:0 0 20px rgba(124,58,237,.4);}
     .btn-p:disabled{opacity:.4;cursor:not-allowed;}
-    .btn-a{background:var(--amber);color:#0A0A14;font-weight:700;border:none;cursor:pointer;
-           transition:background .2s;}
+    .btn-a{background:var(--amber);color:#0A0A14;font-weight:700;border:none;cursor:pointer;transition:background .2s;}
     .btn-a:hover{background:#D97706;}
-    .btn-g{background:rgba(16,185,129,.15);color:#34D399;border:1px solid rgba(16,185,129,.3);
-           cursor:pointer;transition:background .2s;}
+    .btn-a:disabled{opacity:.5;cursor:not-allowed;}
+    .btn-g{background:rgba(16,185,129,.15);color:#34D399;border:1px solid rgba(16,185,129,.3);cursor:pointer;transition:background .2s;}
     .btn-g:hover{background:rgba(16,185,129,.28);}
-    .btn-r{background:rgba(239,68,68,.12);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);
-           cursor:pointer;transition:background .2s;}
+    .btn-r{background:rgba(239,68,68,.12);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);cursor:pointer;transition:background .2s;}
     .btn-r:hover{background:rgba(239,68,68,.22);}
-    .btn-o{background:transparent;color:rgba(255,255,255,.6);
-           border:1px solid rgba(255,255,255,.18);cursor:pointer;transition:all .2s;}
+    .btn-o{background:transparent;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.18);cursor:pointer;transition:all .2s;}
     .btn-o:hover{color:white;border-color:rgba(255,255,255,.45);}
 
-    /* Transaction card */
+    /* Transaction list card */
     .trx-card{border-left:3px solid transparent;cursor:pointer;transition:all .15s;}
     .trx-card:hover{background:rgba(255,255,255,.04);border-left-color:var(--purple);}
     .trx-card.selected{background:rgba(124,58,237,.08);border-left-color:var(--purple);}
 
     /* Upload zone */
-    .up-zone{border:2px dashed rgba(255,255,255,.12);border-radius:12px;
-             cursor:pointer;transition:all .2s;}
+    .up-zone{border:2px dashed rgba(255,255,255,.12);border-radius:12px;cursor:pointer;transition:all .2s;}
     .up-zone:hover,.up-zone.drag{border-color:var(--purple);background:rgba(124,58,237,.05);}
     .up-zone.done{border-color:var(--green);border-style:solid;background:rgba(16,185,129,.05);}
 
-    /* Modal */
+    /* Overlay & Modal */
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(4px);
              z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;}
     .modal-box{background:#0A0A14;border:1px solid rgba(255,255,255,.1);
                border-radius:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+
+    /* Modal Buat Transaksi — lebih besar */
+    #bt-modal .bt-inner{
+      background:#0A0A14;
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:20px;
+      width:100%;
+      max-width:620px;
+      max-height:calc(100vh - 40px);
+      display:flex;
+      flex-direction:column;
+    }
+    #bt-modal{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.85);
+      backdrop-filter:blur(4px);
+      z-index:50;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:20px 16px;
+      overflow-y:auto;
+    }
+
+    /* Step indicator dots */
+    .bt-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+            justify-content:center;font-size:12px;font-weight:700;transition:all .3s;flex-shrink:0;}
+    .bt-dot.active{background:var(--purple);color:white;}
+    .bt-dot.done{background:var(--green);color:white;}
+    .bt-dot.upcoming{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);}
+    .bt-line{flex:1;height:1px;transition:background .3s;}
+    .bt-line.done{background:rgba(16,185,129,.4);}
+    .bt-line.upcoming{background:rgba(255,255,255,.1);}
+
+    /* Filter tabs di step 2 */
+    .bt-tab{padding:6px 14px;border-radius:10px;font-size:11px;font-weight:600;
+            cursor:pointer;transition:all .15s;border:1px solid rgba(255,255,255,.08);
+            background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);white-space:nowrap;}
+    .bt-tab.active{background:var(--purple);color:white;border-color:transparent;}
+
+    /* Kendaraan card di step 2 */
+    .bt-kend-card{border-radius:16px;overflow:hidden;cursor:pointer;transition:all .2s;
+                  border:2px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);}
+    .bt-kend-card:hover{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.04);}
+    .bt-kend-card.selected{border-color:var(--purple);background:rgba(124,58,237,.1);
+                           box-shadow:0 0 20px rgba(124,58,237,.2);}
+
+    /* Toggle switch */
+    .sw-wrap{position:relative;width:44px;height:26px;cursor:pointer;display:inline-block;}
+    .sw-wrap input{opacity:0;width:0;height:0;position:absolute;}
+    .sw-track{position:absolute;inset:0;border-radius:999px;background:rgba(255,255,255,.12);transition:background .25s;}
+    .sw-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+              background:white;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+    .sw-wrap input:checked ~ .sw-track{background:var(--purple);}
+    .sw-wrap input:checked ~ .sw-thumb{transform:translateX(18px);}
 
     @keyframes spin{to{transform:rotate(360deg);}}
     .spin{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.15);
@@ -108,17 +151,19 @@
     .slide-in{animation:slideIn .2s ease-out;}
 
     @media(max-width:767px){
-      #right-panel{display:none;position:fixed;inset:0;z-index:20;
-                   background:#0A0A14;flex-direction:column;}
+      #right-panel{display:none;position:fixed;inset:0;z-index:20;background:#0A0A14;flex-direction:column;}
       #right-panel.show{display:flex;}
+      .bt-inner{max-width:100%!important;}
     }
   </style>
 </head>
 
 <body class="flex flex-col h-screen overflow-hidden">
 
+<!-- ===== TOP HEADER ===== -->
 <header class="flex items-center justify-between px-4 py-2.5 shrink-0 border-b border-white/10 z-30"
         style="background:#05050A;">
+  <!-- Logo -->
   <div class="flex items-center gap-2.5">
     <svg width="30" height="30" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -127,8 +172,8 @@
         </linearGradient>
       </defs>
       <polygon points="20,3 37,34 3,34" fill="url(#lg)"/>
-      <line x1="20" y1="3" x2="9" y2="24" stroke="white" stroke-width="1.5" opacity=".7"/>
-      <line x1="20" y1="3" x2="14" y2="30" stroke="white" stroke-width="1" opacity=".4"/>
+      <line x1="20" y1="3" x2="9"  y2="24" stroke="white" stroke-width="1.5" opacity=".7"/>
+      <line x1="20" y1="3" x2="14" y2="30" stroke="white" stroke-width="1"   opacity=".4"/>
     </svg>
     <div class="leading-none">
       <div class="font-bebas text-xl tracking-widest">AERO<span style="color:#7C3AED;">RENT</span></div>
@@ -136,72 +181,97 @@
     </div>
   </div>
 
+  <!-- Info sesi -->
   <div class="hidden md:flex items-center gap-5 text-xs text-gray-500">
     <span id="hdr-date">—</span>
     <span>Kasir: <strong class="text-gray-300" id="hdr-user">—</strong></span>
   </div>
 
+  <!-- Aksi header -->
   <div class="flex items-center gap-2">
+    <!-- Tombol buat transaksi baru -->
+    <button onclick="bukaModalTransaksi()"
+            class="btn-a px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor"
+           stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Transaksi Baru
+    </button>
+
+    <!-- Status koneksi -->
     <div id="conn-wrap" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-xs font-semibold">
       <span id="conn-dot" class="w-2 h-2 rounded-full" style="background:#10B981;"></span>
       <span id="conn-lbl">Online</span>
     </div>
+
     <div id="queue-badge" class="hidden px-2 py-1 rounded-full text-xs font-bold"
          style="background:rgba(239,68,68,.15);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);">
       <span id="queue-n">0</span> pending
     </div>
     <button id="btn-sync" class="hidden btn-p px-3 py-1.5 rounded-lg text-xs" onclick="manualSync()">Sync</button>
-    <button onclick="doLogout()" class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-red-400
-            hover:bg-red-500/10 border border-red-500/20 transition-all">
+
+    <!-- Logout -->
+    <button onclick="doLogout()"
+            class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-all">
       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>Keluar
     </button>
   </div>
 </header>
 
+<!-- ===== MAIN SPLIT LAYOUT ===== -->
 <main class="flex flex-1 overflow-hidden">
 
+  <!-- === PANEL KIRI: Daftar Transaksi === -->
   <div id="left-panel" class="w-full md:w-80 lg:w-96 flex flex-col shrink-0 border-r border-white/10"
        style="background:#07070F;">
 
+    <!-- Search -->
     <div class="p-3 border-b border-white/5">
       <div class="relative">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600"
-             xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+             xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none"
+             stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input id="search-in" type="text" placeholder="No. Booking (AR-XXXX) / Nama..."
-               class="g-input w-full rounded-xl pl-9 pr-12 py-2.5 text-sm"
+        <input id="search-in" type="text" placeholder="No. Booking / Nama pelanggan..."
+               class="g-input w-full rounded-xl pl-9 pr-11 py-2.5 text-sm"
                oninput="onSearchInput(this.value)"
                onkeydown="if(event.key==='Enter')searchTrx()">
         <button onclick="searchTrx()" class="absolute right-2 top-1/2 -translate-y-1/2 btn-p p-1.5 rounded-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor"
+               stroke-width="2.5" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
         </button>
       </div>
     </div>
 
-    <div class="flex gap-1 px-3 py-2 border-b border-white/5 overflow-x-auto no-scrollbar">
+    <!-- Filter tabs -->
+    <div class="flex gap-1 px-3 py-2 border-b border-white/5 overflow-x-auto">
       <button data-f="semua"        onclick="setFilter('semua')"        class="ftab active px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap">Semua</button>
       <button data-f="MENUNGGU"     onclick="setFilter('MENUNGGU')"     class="ftab px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap text-yellow-400">Menunggu</button>
       <button data-f="DIKONFIRMASI" onclick="setFilter('DIKONFIRMASI')" class="ftab px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap text-blue-400">Konfirmasi</button>
       <button data-f="AKTIF"        onclick="setFilter('AKTIF')"        class="ftab px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap text-green-400">Aktif</button>
     </div>
 
+    <!-- List transaksi -->
     <div id="trx-list" class="flex-1 overflow-y-auto">
       <div id="list-empty" class="flex flex-col items-center justify-center h-64 gap-3 text-gray-600">
-        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" stroke="currentColor"
+             stroke-width="1" viewBox="0 0 24 24">
           <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
         </svg>
-        <p class="text-sm text-center px-4">Ketik nomor booking<br>atau muat ulang daftar</p>
+        <p class="text-sm text-center px-4">Belum ada transaksi.<br>Klik <strong class="text-amber-400">Transaksi Baru</strong> untuk memulai.</p>
       </div>
       <div id="list-loading" class="hidden flex items-center justify-center py-10">
         <div class="spin"></div>
       </div>
     </div>
 
+    <!-- Reload -->
     <div class="p-3 border-t border-white/5">
       <button onclick="loadList()" class="w-full btn-o py-2 rounded-xl text-xs font-semibold">
         ↻ Muat Ulang
@@ -209,26 +279,39 @@
     </div>
   </div>
 
+  <!-- === PANEL KANAN: Detail Transaksi === -->
   <div id="right-panel" class="flex-1 flex flex-col overflow-hidden">
 
+    <!-- Empty state -->
     <div id="det-empty" class="flex-1 flex flex-col items-center justify-center gap-4 text-gray-700">
       <div class="w-20 h-20 rounded-2xl glass flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="currentColor"
+             stroke-width="1" viewBox="0 0 24 24">
           <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
         </svg>
       </div>
       <div class="text-center">
         <div class="font-bebas text-2xl text-gray-600 tracking-wider">PILIH TRANSAKSI</div>
-        <p class="text-sm text-gray-700 mt-1">Pilih nomor booking dari daftar kiri</p>
+        <p class="text-sm text-gray-700 mt-1">Pilih dari daftar kiri atau buat transaksi baru</p>
+        <button onclick="bukaModalTransaksi()"
+                class="btn-a mt-4 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 mx-auto">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor"
+               stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Buat Transaksi Baru
+        </button>
       </div>
     </div>
 
+    <!-- Detail content -->
     <div id="det-content" class="hidden flex-1 flex flex-col overflow-hidden">
 
-      <div class="flex items-center justify-between px-5 py-3.5 shrink-0 border-b border-white/10" style="background:#05050A;">
+      <!-- Detail header -->
+      <div class="flex items-center justify-between px-5 py-3.5 shrink-0 border-b border-white/10"
+           style="background:#05050A;">
         <div class="flex items-center gap-3">
           <button class="md:hidden p-1.5 rounded-lg hover:bg-white/5" onclick="closeDetail()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
+                 stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
           </button>
           <div>
             <div class="flex items-center gap-2">
@@ -241,8 +324,8 @@
         <button onclick="printReceipt()" class="btn-o px-3 py-1.5 rounded-lg text-xs">🖨 Kwitansi</button>
       </div>
 
+      <!-- Scrollable detail body -->
       <div id="det-body" class="flex-1 overflow-y-auto p-4 lg:p-5 space-y-3">
-
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <div class="glass rounded-2xl p-4">
             <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Kendaraan</div>
@@ -262,13 +345,13 @@
             <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Pelanggan</div>
             <div class="flex gap-3 items-start">
               <div id="det-plg-av" class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-base"
-                   style="background:rgba(124,58,237,.2);color:#C084FC;">B</div>
+                   style="background:rgba(124,58,237,.2);color:#C084FC;">?</div>
               <div>
                 <div class="font-semibold text-white" id="det-plg-nama">—</div>
                 <div class="text-xs text-gray-400 mt-0.5" id="det-plg-telp">—</div>
                 <a id="det-plg-ktp" href="#" target="_blank"
                    class="hidden text-xs text-purple-400 hover:text-purple-300 underline mt-1 block">
-                   Lihat Foto KTP
+                  Lihat Foto KTP
                 </a>
               </div>
             </div>
@@ -279,7 +362,7 @@
           <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Jadwal Sewa</div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div><div class="text-xs text-gray-500">Mulai</div><div class="font-semibold text-sm mt-0.5" id="det-tgl-mulai">—</div></div>
-            <div><div class="text-xs text-gray-500">Selesai (Rencana)</div><div class="font-semibold text-sm mt-0.5" id="det-tgl-selesai">—</div></div>
+            <div><div class="text-xs text-gray-500">Selesai Rencana</div><div class="font-semibold text-sm mt-0.5" id="det-tgl-selesai">—</div></div>
             <div><div class="text-xs text-gray-500">Durasi</div><div class="font-semibold text-sm mt-0.5" id="det-durasi">—</div></div>
             <div><div class="text-xs text-gray-500">Supir</div><div class="font-semibold text-sm mt-0.5" id="det-supir">—</div></div>
           </div>
@@ -321,12 +404,245 @@
             </div>
           </div>
         </div>
+      </div>
 
-      </div><div id="action-bar" class="shrink-0 px-4 lg:px-5 py-3.5 border-t border-white/10 space-y-2"
+      <!-- Action bar -->
+      <div id="action-bar" class="shrink-0 px-4 lg:px-5 py-3.5 border-t border-white/10 space-y-2"
            style="background:#05050A;"></div>
+    </div>
+  </div>
+</main>
 
-    </div></div></main>
 
+<!-- ====================================================================== -->
+<!-- MODAL: BUAT TRANSAKSI BARU (3-step wizard)                             -->
+<!-- ====================================================================== -->
+<div id="bt-modal" class="hidden">
+  <div class="bt-inner">
+
+    <!-- Header Modal -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0"
+         style="border-radius:20px 20px 0 0;position:sticky;top:0;background:#0A0A14;z-index:5;">
+      <div>
+        <div class="font-bebas text-2xl tracking-wider">
+          BUAT TRANSAKSI <span style="color:#F59E0B;">BARU</span>
+        </div>
+        <div class="text-xs text-gray-500 mt-0.5" id="bt-subtitle">Langkah 1 dari 3 — Pilih Pelanggan</div>
+      </div>
+      <button onclick="tutupBuatTrx()"
+              class="text-gray-500 hover:text-white w-9 h-9 rounded-xl hover:bg-white/8 transition-colors flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor"
+             stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="flex items-center gap-2 px-5 py-3 border-b border-white/5 shrink-0">
+      <div id="bt-sd1" class="bt-dot active">1</div>
+      <div id="bt-sl1" class="bt-line upcoming"></div>
+      <div id="bt-sd2" class="bt-dot upcoming">2</div>
+      <div id="bt-sl2" class="bt-line upcoming"></div>
+      <div id="bt-sd3" class="bt-dot upcoming">3</div>
+      <div class="ml-3 text-xs text-gray-500" id="bt-step-lbl">Pilih Pelanggan</div>
+    </div>
+
+    <!-- ── STEP 1: PELANGGAN ── -->
+    <div id="bt-s1" class="p-5 overflow-y-auto flex-1">
+
+      <!-- Search input -->
+      <div class="mb-3">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-2">Cari Pelanggan Terdaftar</label>
+        <input type="text" id="bt-plg-q" placeholder="Ketik nama atau nomor telepon..."
+               class="g-input w-full rounded-xl px-4 py-3 text-sm"
+               oninput="btCariPlg(this.value)">
+      </div>
+
+      <!-- Hasil pencarian -->
+      <div id="bt-plg-results" class="space-y-1 mb-3 max-h-44 overflow-y-auto">
+        <div class="text-xs text-gray-600 text-center py-4">Ketik minimal 2 karakter untuk mencari.</div>
+      </div>
+
+      <!-- Pelanggan terpilih -->
+      <div id="bt-plg-selected" class="hidden mb-4 p-3 rounded-2xl"
+           style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold shrink-0"
+               style="background:rgba(16,185,129,.2);color:#34D399;" id="bt-plg-av">?</div>
+          <div class="flex-1">
+            <div class="font-semibold text-sm text-white" id="bt-plg-nama-sel">—</div>
+            <div class="text-xs text-gray-400" id="bt-plg-telp-sel">—</div>
+          </div>
+          <span class="text-xs text-green-400 font-semibold">✓ Dipilih</span>
+          <button onclick="btClearPlg()" class="text-gray-500 hover:text-red-400 ml-1 p-1 transition-colors">✕</button>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="flex items-center gap-3 my-4">
+        <div class="flex-1 h-px" style="background:rgba(255,255,255,.08);"></div>
+        <span class="text-xs text-gray-600 uppercase tracking-widest">atau</span>
+        <div class="flex-1 h-px" style="background:rgba(255,255,255,.08);"></div>
+      </div>
+
+      <!-- Tambah pelanggan baru -->
+      <div>
+        <button onclick="btToggleNewPlg()"
+                class="w-full text-left px-4 py-3 rounded-xl text-sm text-gray-500 hover:text-white transition-all flex items-center gap-2"
+                style="border:2px dashed rgba(255,255,255,.1);"
+                onmouseover="this.style.borderColor='rgba(124,58,237,.4)'"
+                onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor"
+               stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Daftarkan Pelanggan Baru
+        </button>
+
+        <div id="bt-new-plg-form" class="hidden mt-3 space-y-3 p-4 rounded-2xl"
+             style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);">
+          <div class="font-semibold text-sm text-white">Data Pelanggan Baru</div>
+          <input type="text" id="bt-np-nama" placeholder="Nama Lengkap *"
+                 class="g-input w-full rounded-xl px-4 py-2.5 text-sm">
+          <input type="tel" id="bt-np-telp" placeholder="Nomor Telepon / WhatsApp *"
+                 class="g-input w-full rounded-xl px-4 py-2.5 text-sm">
+          <input type="text" id="bt-np-alamat" placeholder="Alamat (opsional)"
+                 class="g-input w-full rounded-xl px-4 py-2.5 text-sm">
+          <button onclick="btSimpanPlgBaru()" id="bt-np-btn"
+                  class="w-full btn-p py-2.5 rounded-xl text-sm font-semibold">
+            Simpan &amp; Pilih Pelanggan Ini
+          </button>
+        </div>
+      </div>
+    </div><!-- /bt-s1 -->
+
+
+    <!-- ── STEP 2: KENDARAAN ── -->
+    <div id="bt-s2" class="hidden flex-1 overflow-hidden flex flex-col">
+
+      <!-- Filter tipe -->
+      <div class="flex gap-1.5 px-5 pt-4 pb-3 shrink-0 overflow-x-auto border-b border-white/5">
+        <button data-tipe="semua"    onclick="btSetTipe('semua')"    class="bt-tab active">Semua</button>
+        <button data-tipe="5_SEATER" onclick="btSetTipe('5_SEATER')" class="bt-tab">5 Seater</button>
+        <button data-tipe="7_SEATER" onclick="btSetTipe('7_SEATER')" class="bt-tab">7 Seater / SUV</button>
+        <button data-tipe="MICROBUS" onclick="btSetTipe('MICROBUS')" class="bt-tab">Microbus</button>
+      </div>
+
+      <!-- Grid kendaraan -->
+      <div id="bt-kend-grid" class="flex-1 overflow-y-auto p-5 grid grid-cols-1 sm:grid-cols-2 gap-3 content-start">
+        <div class="col-span-full text-center py-8 text-gray-600 text-sm">
+          <div class="spin mx-auto mb-2" style="border-top-color:#F59E0B;width:22px;height:22px;border-width:2.5px;"></div>
+          Memuat armada tersedia...
+        </div>
+      </div>
+    </div><!-- /bt-s2 -->
+
+
+    <!-- ── STEP 3: JADWAL & KONFIRMASI ── -->
+    <div id="bt-s3" class="hidden p-5 overflow-y-auto flex-1 space-y-4">
+
+      <!-- Ringkasan pilihan -->
+      <div class="glass rounded-2xl p-4">
+        <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Ringkasan Pilihan</div>
+        <div class="flex gap-3 items-center">
+          <div class="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-white/5 flex items-center justify-center text-2xl">
+            <img id="bt-s3-foto" src="" alt="" class="w-full h-full object-cover" onerror="this.style.display='none'">
+            <span id="bt-s3-emoji" class="hidden">🚗</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-white text-sm" id="bt-s3-kend">—</div>
+            <div class="text-xs text-gray-400 mt-0.5" id="bt-s3-plg">—</div>
+            <div class="text-xs font-semibold mt-0.5" style="color:#F59E0B;" id="bt-s3-harga">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form jadwal -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Tanggal Mulai *</label>
+          <input type="date" id="bt-tgl-mulai" class="g-input w-full rounded-xl px-3 py-2.5 text-sm"
+                 oninput="btHitung()">
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Durasi (Hari) *</label>
+          <input type="number" id="bt-durasi" min="1" max="365" value="1"
+                 class="g-input w-full rounded-xl px-3 py-2.5 text-sm" oninput="btHitung()">
+        </div>
+      </div>
+
+      <!-- Tanggal selesai otomatis -->
+      <div class="flex justify-between items-center text-sm px-0.5">
+        <span class="text-gray-500 text-xs uppercase tracking-widest">Tanggal Selesai (Rencana)</span>
+        <span class="font-semibold text-white" id="bt-tgl-selesai">—</span>
+      </div>
+
+      <!-- Toggle supir -->
+      <div class="glass rounded-xl px-4 py-3.5 flex items-center justify-between">
+        <div>
+          <div class="text-sm font-semibold text-white">Gunakan Jasa Supir?</div>
+          <div class="text-xs text-gray-500 mt-0.5" id="bt-supir-info">+ Rp 150.000 / hari</div>
+        </div>
+        <label class="sw-wrap">
+          <input type="checkbox" id="bt-supir-chk" onchange="btHitung()">
+          <div class="sw-track"></div>
+          <div class="sw-thumb"></div>
+        </label>
+      </div>
+
+      <!-- Metode pembayaran -->
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Metode Pembayaran</label>
+        <select id="bt-metode" class="g-input w-full rounded-xl px-3 py-2.5 text-sm bg-transparent">
+          <option value="TUNAI">💵 Tunai</option>
+          <option value="TRANSFER">🏦 Transfer Bank</option>
+          <option value="QRIS">📱 QRIS</option>
+        </select>
+      </div>
+
+      <!-- Catatan -->
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Catatan Kasir (Opsional)</label>
+        <textarea id="bt-catatan" rows="2" placeholder="Catatan tambahan untuk rekap transaksi..."
+                  class="g-input w-full rounded-xl px-3 py-2.5 text-sm resize-none"></textarea>
+      </div>
+
+      <!-- Kalkulasi biaya -->
+      <div class="glass rounded-2xl p-4">
+        <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Kalkulasi Biaya</div>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-400" id="bt-lbl-sewa">Biaya Sewa (1 hari)</span>
+            <span id="bt-val-sewa" class="font-semibold">—</span>
+          </div>
+          <div class="flex justify-between" id="bt-row-supir" style="display:none;">
+            <span class="text-gray-400">Biaya Supir</span>
+            <span id="bt-val-supir" class="font-semibold">—</span>
+          </div>
+          <div class="border-t border-white/10 pt-2.5 mt-1 flex justify-between items-center">
+            <span class="font-bold text-white text-sm">TOTAL YANG HARUS DIBAYAR</span>
+            <span id="bt-total" class="text-2xl font-bold" style="color:#F59E0B;">Rp 0</span>
+          </div>
+        </div>
+      </div>
+    </div><!-- /bt-s3 -->
+
+
+    <!-- Footer Buttons -->
+    <div class="flex gap-2 px-5 py-4 border-t border-white/10 shrink-0"
+         style="border-radius:0 0 20px 20px;position:sticky;bottom:0;background:#0A0A14;z-index:5;">
+      <button id="bt-btn-back" onclick="btPrev()"
+              class="btn-o py-2.5 px-5 rounded-xl text-sm font-semibold" style="display:none;">
+        ← Kembali
+      </button>
+      <button id="bt-btn-next" onclick="btNext()"
+              class="flex-1 btn-a py-2.5 rounded-xl text-sm font-bold">
+        Selanjutnya →
+      </button>
+    </div>
+
+  </div><!-- /bt-inner -->
+</div><!-- /bt-modal -->
+
+
+<!-- ===== MODAL: UPLOAD FOTO KONDISI ===== -->
 <div id="modal-foto" class="overlay hidden">
   <div class="modal-box p-5">
     <div class="flex items-center justify-between mb-4">
@@ -336,60 +652,42 @@
       </div>
       <button onclick="closeFotoModal()" class="text-gray-600 hover:text-white p-1.5 rounded-lg hover:bg-white/5">✕</button>
     </div>
-
     <div class="grid grid-cols-3 gap-2 mb-4">
       <div id="zone-d" class="up-zone p-3 text-center" onclick="pickFile('inp-d')">
-        <div id="zone-d-e" class="flex flex-col items-center gap-1 text-gray-600">
-          <span class="text-2xl">📷</span><span class="text-xs">Depan</span>
-        </div>
-        <div id="zone-d-p" class="hidden">
-          <img id="img-d" src="" alt="" class="w-full h-14 object-cover rounded-lg">
-          <div class="text-xs text-green-400 mt-1">✓ Depan</div>
-        </div>
+        <div id="zone-d-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Depan</span></div>
+        <div id="zone-d-p" class="hidden"><img id="img-d" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Depan</div></div>
         <input type="file" id="inp-d" accept="image/*" class="hidden" onchange="onFile('d',this)">
       </div>
       <div id="zone-s" class="up-zone p-3 text-center" onclick="pickFile('inp-s')">
-        <div id="zone-s-e" class="flex flex-col items-center gap-1 text-gray-600">
-          <span class="text-2xl">📷</span><span class="text-xs">Samping</span>
-        </div>
-        <div id="zone-s-p" class="hidden">
-          <img id="img-s" src="" alt="" class="w-full h-14 object-cover rounded-lg">
-          <div class="text-xs text-green-400 mt-1">✓ Samping</div>
-        </div>
+        <div id="zone-s-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Samping</span></div>
+        <div id="zone-s-p" class="hidden"><img id="img-s" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Samping</div></div>
         <input type="file" id="inp-s" accept="image/*" class="hidden" onchange="onFile('s',this)">
       </div>
       <div id="zone-b" class="up-zone p-3 text-center" onclick="pickFile('inp-b')">
-        <div id="zone-b-e" class="flex flex-col items-center gap-1 text-gray-600">
-          <span class="text-2xl">📷</span><span class="text-xs">Belakang</span>
-        </div>
-        <div id="zone-b-p" class="hidden">
-          <img id="img-b" src="" alt="" class="w-full h-14 object-cover rounded-lg">
-          <div class="text-xs text-green-400 mt-1">✓ Belakang</div>
-        </div>
+        <div id="zone-b-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Belakang</span></div>
+        <div id="zone-b-p" class="hidden"><img id="img-b" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Belakang</div></div>
         <input type="file" id="inp-b" accept="image/*" class="hidden" onchange="onFile('b',this)">
       </div>
     </div>
-
     <div id="sect-catatan" class="hidden mb-4 space-y-2">
       <textarea id="inp-catatan" rows="2" placeholder="Catatan kerusakan (jika ada)..."
                 class="g-input w-full rounded-xl p-3 text-sm resize-none"></textarea>
       <input type="number" id="inp-denda-k" min="0" placeholder="Biaya denda kerusakan (Rp)"
              class="g-input w-full rounded-xl p-3 text-sm">
     </div>
-
     <div id="up-status" class="hidden text-center py-2">
       <div class="spin mx-auto mb-2"></div>
-      <div class="text-xs text-gray-500">Mengupload foto...</div>
+      <div class="text-xs text-gray-500">Mengupload foto ke ImgBB...</div>
     </div>
-
     <div class="flex gap-2">
       <button onclick="closeFotoModal()" class="flex-1 btn-o py-2.5 rounded-xl text-sm font-semibold">Batal</button>
       <button id="btn-submit-foto" onclick="submitFoto()" disabled
-              class="flex-1 btn-p py-2.5 rounded-xl text-sm font-semibold">Upload & Proses</button>
+              class="flex-1 btn-p py-2.5 rounded-xl text-sm font-semibold">Upload &amp; Proses</button>
     </div>
   </div>
 </div>
 
+<!-- ===== MODAL: KONFIRMASI UMUM ===== -->
 <div id="modal-konfirm" class="overlay hidden">
   <div class="modal-box p-6 max-w-sm">
     <div class="text-center mb-5">
@@ -404,6 +702,7 @@
   </div>
 </div>
 
+<!-- ===== MODAL: SELESAIKAN TRANSAKSI ===== -->
 <div id="modal-selesai" class="overlay hidden">
   <div class="modal-box p-5 max-w-sm">
     <div class="flex items-center gap-3 mb-4">
@@ -411,14 +710,14 @@
            style="background:rgba(239,68,68,.12);">⚠️</div>
       <div>
         <div class="font-semibold text-white">Selesaikan Transaksi</div>
-        <div class="text-xs text-gray-500 mt-0.5">Isi biaya tambahan sebelum menutup transaksi</div>
+        <div class="text-xs text-gray-500 mt-0.5">Isi biaya tambahan sebelum menutup</div>
       </div>
     </div>
     <div class="space-y-3 mb-4">
       <div class="glass rounded-xl p-3">
         <div class="text-xs text-gray-500">Denda Keterlambatan (otomatis)</div>
         <div class="text-red-400 font-bold text-lg" id="ms-denda-t">Rp 0</div>
-        <div class="text-xs text-gray-600" id="ms-denda-detail">0 hari × 0 × 150%</div>
+        <div class="text-xs text-gray-600" id="ms-denda-detail">—</div>
       </div>
       <input type="number" id="ms-denda-k" min="0" value="0" placeholder="Denda kerusakan (Rp)"
              class="g-input w-full rounded-xl p-3 text-sm" oninput="recalcTotal()">
@@ -438,7 +737,8 @@
   </div>
 </div>
 
-<div id="toast" class="hidden fixed bottom-4 right-4 z-50 max-w-xs">
+<!-- ===== TOAST ===== -->
+<div id="toast" class="hidden fixed bottom-4 right-4 z-[60] max-w-xs">
   <div class="glass rounded-xl p-3.5 flex items-start gap-3 shadow-2xl slide-in">
     <span id="toast-ic" class="text-lg shrink-0">✅</span>
     <div class="flex-1">
@@ -449,13 +749,13 @@
   </div>
 </div>
 
+
 <script>
 'use strict';
 // ============================================================
-// KONFIGURASI & STATE
+// KONFIGURASI & GLOBAL STATE
 // ============================================================
-// Konfigurasi API diselaraskan dengan standar owner-dashboard (Localhost / Ngrok)
-const API = API_BASE;
+const API      = API_BASE;
 const AUTH_KEY = 'aerorent_auth';
 const IDB_NAME = 'aerorent-pos-idb';
 
@@ -467,35 +767,30 @@ let S = {
 };
 
 // ============================================================
-// INIT
+// INISIALISASI
 // ============================================================
 async function init() {
-  // Cek auth terlebih dahulu sebelum hal lain
   const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
-  if (!auth || !auth.access_token) { 
-    // Redirect otomatis ke halaman login jika token kosong
-    window.location.href = 'index.html'; 
-    return; 
-  }
-  S.token = auth.access_token; S.user = auth.user;
+  if (!auth?.access_token) { window.location.href = 'index.html'; return; }
+  S.token = auth.access_token;
+  S.user  = auth.user;
 
-  // Register Service Worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(() => {
-      navigator.serviceWorker.addEventListener('message', onSwMsg);
-    });
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => navigator.serviceWorker.addEventListener('message', onSwMsg))
+      .catch(e => console.warn('[SW] Gagal registrasi:', e));
   }
-  
-  // Inject PWA manifest dynamically
-  const manifest = { name:'AeroRent POS', short_name:'AeroPOS',
-    start_url:'./', display:'standalone', background_color:'#0A0A14',
-    theme_color:'#0A0A14', icons:[{src:'./icon-192.png',sizes:'192x192',type:'image/png'}] };
-  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
-  document.getElementById('pwa-m').href = URL.createObjectURL(blob);
+
+  document.head.insertAdjacentHTML('beforeend', '<link rel="manifest" id="pwa-m">');
+  const mblob = new Blob([JSON.stringify({
+    name:'AeroRent POS', short_name:'AeroPOS', start_url:'./',
+    display:'standalone', background_color:'#0A0A14', theme_color:'#7C3AED'
+  })], {type:'application/json'});
+  document.getElementById('pwa-m').href = URL.createObjectURL(mblob);
 
   document.getElementById('hdr-user').textContent = auth.user?.nama || '—';
   document.getElementById('hdr-date').textContent = new Date().toLocaleDateString('id-ID',
-    {weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    {weekday:'short', day:'numeric', month:'short', year:'numeric'});
 
   S.idb = await openIDB();
   window.addEventListener('online',  onConn);
@@ -503,62 +798,53 @@ async function init() {
   onConn();
   await loadList();
 }
+window.addEventListener('load', init);
 
-// ============================================================
-// PWA Manifest link (harus di head)
-// ============================================================
-document.head.insertAdjacentHTML('beforeend','<link rel="manifest" id="pwa-m">');
 
 // ============================================================
 // IndexedDB
 // ============================================================
 function openIDB() {
-  return new Promise((res, rej) => {
+  return new Promise((res,rej) => {
     const r = indexedDB.open(IDB_NAME, 1);
     r.onupgradeneeded = e => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains('transaksi')) {
-        const s = db.createObjectStore('transaksi',{keyPath:'id_transaksi'});
+        const s = db.createObjectStore('transaksi', {keyPath:'id_transaksi'});
         s.createIndex('by_nb','nomor_booking',{unique:false});
         s.createIndex('by_st','status',{unique:false});
       }
       if (!db.objectStoreNames.contains('offline_queue')) {
-        db.createObjectStore('offline_queue',{keyPath:'id',autoIncrement:true});
+        db.createObjectStore('offline_queue', {keyPath:'id', autoIncrement:true});
       }
     };
     r.onsuccess = e => res(e.target.result);
     r.onerror   = e => rej(e.target.error);
   });
 }
-const idbPut = (store, data)  => new Promise((res,rej) => { const tx=S.idb.transaction(store,'readwrite');const r=tx.objectStore(store).put(data);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});
-const idbGet = (store, key)   => new Promise((res,rej) => { const tx=S.idb.transaction(store,'readonly');const r=tx.objectStore(store).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
-const idbAll = (store)        => new Promise((res,rej) => { const tx=S.idb.transaction(store,'readonly');const r=tx.objectStore(store).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});
-const idbAdd = (store, data)  => new Promise((res,rej) => { const tx=S.idb.transaction(store,'readwrite');const r=tx.objectStore(store).add(data);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
-const idbDel = (store, key)   => new Promise((res,rej) => { const tx=S.idb.transaction(store,'readwrite');const r=tx.objectStore(store).delete(key);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});
+const idbPut = (st,d) => new Promise((res,rej) => {const tx=S.idb.transaction(st,'readwrite');const r=tx.objectStore(st).put(d);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});
+const idbGet = (st,k) => new Promise((res,rej) => {const tx=S.idb.transaction(st,'readonly');const r=tx.objectStore(st).get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+const idbAll = (st)   => new Promise((res,rej) => {const tx=S.idb.transaction(st,'readonly');const r=tx.objectStore(st).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});
+const idbAdd = (st,d) => new Promise((res,rej) => {const tx=S.idb.transaction(st,'readwrite');const r=tx.objectStore(st).add(d);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+const idbDel = (st,k) => new Promise((res,rej) => {const tx=S.idb.transaction(st,'readwrite');const r=tx.objectStore(st).delete(k);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});
+
 
 // ============================================================
-// KONEKSI
+// KONEKSI & SYNC
 // ============================================================
 function onConn() {
   S.online = navigator.onLine;
-  const dot = document.getElementById('conn-dot');
-  const lbl = document.getElementById('conn-lbl');
-  dot.style.background = S.online ? '#10B981' : '#EF4444';
-  lbl.textContent = S.online ? 'Online' : 'Offline';
+  el('conn-dot').style.background = S.online ? '#10B981' : '#EF4444';
+  el('conn-lbl').textContent = S.online ? 'Online' : 'Offline';
   if (S.online) syncQueue();
   refreshQueueBadge();
 }
 
 async function refreshQueueBadge() {
   const q = await idbAll('offline_queue');
-  const b = document.getElementById('queue-badge');
-  const s = document.getElementById('btn-sync');
-  if (q.length > 0) {
-    document.getElementById('queue-n').textContent = q.length;
-    b.classList.remove('hidden'); s.classList.remove('hidden');
-  } else {
-    b.classList.add('hidden'); s.classList.add('hidden');
-  }
+  el('queue-badge').classList.toggle('hidden', q.length === 0);
+  el('btn-sync').classList.toggle('hidden', q.length === 0);
+  if (q.length) el('queue-n').textContent = q.length;
 }
 
 async function syncQueue() {
@@ -567,69 +853,57 @@ async function syncQueue() {
     try {
       const r = await fetch(API + item.endpoint, {
         method: item.method,
-        headers: {
-          'Content-Type':'application/json',
-          'ngrok-skip-browser-warning': '69420',
-          'Authorization':'Bearer '+S.token
-        },
+        headers: {'Content-Type':'application/json','ngrok-skip-browser-warning':'69420','Authorization':'Bearer '+S.token},
         body: JSON.stringify(item.body)
       });
-      if (r.ok) {
-        await idbDel('offline_queue', item.id);
-        toast('✅','Sinkronisasi OK',`Transaksi ${item.nb||''} tersinkronisasi.`);
-      }
+      if (r.ok) { await idbDel('offline_queue', item.id); toast('✅','Sync OK',`${item.nb||item.endpoint} tersinkronisasi.`); }
     } catch(_) {}
   }
   refreshQueueBadge();
 }
-
 function manualSync() { syncQueue(); }
-function onSwMsg(ev) {
-  if (ev.data?.type === 'SYNC_SUCCESS') {
-    toast('✅','Sync OK',`${ev.data.nomor_booking} berhasil disinkronisasi.`);
-    loadList();
-  }
-}
+function onSwMsg(ev) { if (ev.data?.type==='SYNC_SUCCESS') { toast('✅','Sync OK',`${ev.data.nomor_booking} berhasil.`); loadList(); } }
+
 
 // ============================================================
-// API HELPER (DIPERBARUI DENGAN ANTI-LOOP)
+// API HELPER
 // ============================================================
 async function api(path, opts = {}) {
   const headers = {
-    'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': '69420',
-    ...(S.token ? {'Authorization': 'Bearer ' + S.token} : {}),
-    ...(opts.headers||{})
+    'Content-Type':'application/json',
+    'ngrok-skip-browser-warning':'69420',
+    ...(S.token ? {'Authorization':'Bearer '+S.token} : {}),
+    ...(opts.headers || {})
   };
-  
   try {
-    const r = await fetch(API+path, {...opts, headers});
-    if (r.status === 401) { 
+    const r = await fetch(API + path, {...opts, headers});
+    if (r.status === 401) {
       localStorage.removeItem(AUTH_KEY);
-      window.location.href = 'index.html'; // Tendang ke halaman login
-      return null; 
+      window.location.href = 'index.html';
+      return null;
     }
     return r;
   } catch(_) { return null; }
 }
 
+
 // ============================================================
-// LOAD LIST TRANSAKSI
+// LOAD & RENDER LIST TRANSAKSI (Panel Kiri)
 // ============================================================
 async function loadList() {
   el('list-loading').classList.remove('hidden');
   el('list-empty').classList.add('hidden');
-  clearListCards();
+  clearCards();
 
   let rows = [];
   if (S.online) {
     const param = S.filter !== 'semua' ? `?status=${S.filter}` : '';
     const r = await api(`/transaksi${param}`);
-    if (r && r.ok) {
+    if (r?.ok) {
       rows = await r.json();
-      for (const t of rows) await idbPut('transaksi', mapToIdb(t));
+      for (const t of rows) await idbPut('transaksi', mapToIdb(t)).catch(()=>{});
     } else {
-      toast('⚠️','Offline','Memuat dari cache lokal.');
+      toast('📡','Memuat dari cache','Tidak dapat menjangkau server.');
       rows = (await idbAll('transaksi')).map(idbToRow);
     }
   } else {
@@ -637,37 +911,53 @@ async function loadList() {
   }
 
   S.list = rows;
-  S.filtered = S.filter === 'semua' ? [...rows] : rows.filter(t => t.status === S.filter);
+  applyFilter();
   el('list-loading').classList.add('hidden');
   renderList(S.filtered);
   refreshQueueBadge();
 }
 
-function mapToIdb(t) {
-  return { id_transaksi: t.id, nomor_booking: t.booking,
-           pelanggan_nama: t.pelanggan, kendaraan_nama: t.kendaraan,
-           status: t.status, mulai: t.mulai, selesai: t.selesai_rencana,
-           durasi: t.durasi, total: t.total, foto: t.foto_kendaraan,
-           cached_at: new Date().toISOString() };
-}
-function idbToRow(c) {
-  return { id: c.id_transaksi, booking: c.nomor_booking, pelanggan: c.pelanggan_nama,
-           kendaraan: c.kendaraan_nama, status: c.status, mulai: c.mulai,
-           selesai_rencana: c.selesai, durasi: c.durasi, total: c.total,
-           foto_kendaraan: c.foto };
+function applyFilter() {
+  S.filtered = S.filter === 'semua'
+    ? [...S.list]
+    : S.list.filter(t => t.status === S.filter);
 }
 
-function clearListCards() {
+function mapToIdb(t) {
+  return {
+    id_transaksi: t.id || t.id_transaksi,
+    nomor_booking: t.booking || t.nomor_booking,
+    pelanggan_nama: t.pelanggan || t.pelanggan?.nama,
+    kendaraan_nama: t.kendaraan || t.kendaraan?.nama,
+    status: t.status, mulai: t.mulai || t.tanggal_mulai,
+    selesai: t.selesai_rencana || t.tanggal_selesai_rencana,
+    durasi: t.durasi || t.durasi_hari_rencana,
+    total: t.total || t.total_biaya,
+    foto: t.foto_kendaraan || t.kendaraan?.foto,
+    cached_at: new Date().toISOString()
+  };
+}
+function idbToRow(c) {
+  return {
+    id: c.id_transaksi, booking: c.nomor_booking,
+    pelanggan: c.pelanggan_nama, kendaraan: c.kendaraan_nama,
+    status: c.status, mulai: c.mulai, selesai_rencana: c.selesai,
+    durasi: c.durasi, total: c.total, foto_kendaraan: c.foto
+  };
+}
+
+function clearCards() {
   const l = el('trx-list');
   [...l.children].forEach(c => { if (c.id !== 'list-empty' && c.id !== 'list-loading') c.remove(); });
 }
 
 function renderList(list) {
-  clearListCards();
-  const l = el('trx-list');
+  clearCards();
   el('list-empty').classList.toggle('hidden', list.length > 0);
+  const l = el('trx-list');
+
   list.forEach(t => {
-    const late = t.status === 'AKTIF' && t.selesai_rencana && new Date(t.selesai_rencana) < new Date();
+    const isLate = t.status === 'AKTIF' && t.selesai_rencana && new Date(t.selesai_rencana) < new Date();
     const d = document.createElement('div');
     d.className = 'trx-card px-4 py-3 border-b border-white/5';
     d.dataset.id = t.id;
@@ -678,25 +968,26 @@ function renderList(list) {
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="font-mono font-bold text-sm">${t.booking||'—'}</span>
             ${badge(t.status)}
-            ${late?'<span class="badge b-dibatalkan">⚠ Terlambat</span>':''}
+            ${isLate ? '<span class="badge b-dibatalkan">⚠ Telat</span>' : ''}
           </div>
           <div class="text-sm font-medium text-gray-200 truncate mt-0.5">${t.kendaraan||'—'}</div>
           <div class="text-xs text-gray-500 mt-0.5 truncate">${t.pelanggan||'—'}</div>
         </div>
         <div class="text-right shrink-0">
-          <div class="text-xs font-bold" style="color:#F59E0B;">${rp(t.total)}</div>
-          <div class="text-xs text-gray-600">${fmtD(t.mulai)}</div>
+          <div class="text-xs font-bold" style="color:#F59E0B;">${rp(t.total||0)}</div>
+          <div class="text-xs text-gray-600 mt-0.5">${fmtD(t.mulai)}</div>
         </div>
       </div>`;
     l.appendChild(d);
   });
 }
 
+
 // ============================================================
-// SEARCH & FILTER
+// SEARCH & FILTER (Panel Kiri)
 // ============================================================
 function onSearchInput(v) {
-  if (!v.trim()) { S.filtered = S.filter === 'semua' ? [...S.list] : S.list.filter(t=>t.status===S.filter); renderList(S.filtered); return; }
+  if (!v.trim()) { applyFilter(); renderList(S.filtered); return; }
   const q = v.toLowerCase();
   S.filtered = S.list.filter(t =>
     (t.booking||'').toLowerCase().includes(q) ||
@@ -705,25 +996,22 @@ function onSearchInput(v) {
   );
   renderList(S.filtered);
 }
-
-function searchTrx() {
-  const v = el('search-in').value.trim();
-  if (!v) return;
-  onSearchInput(v);
-}
+function searchTrx() { onSearchInput(el('search-in').value); }
 
 function setFilter(f) {
   S.filter = f;
   document.querySelectorAll('.ftab').forEach(b => {
-    b.classList.toggle('active', b.dataset.f === f);
-    b.style.background = b.dataset.f === f ? '#7C3AED' : '';
-    b.style.color = (b.dataset.f === f) ? 'white' : '';
+    const active = b.dataset.f === f;
+    b.style.background = active ? '#7C3AED' : '';
+    b.style.color      = active ? 'white'   : '';
+    b.classList.toggle('active', active);
   });
   loadList();
 }
 
+
 // ============================================================
-// SELECT TRANSACTION
+// SELECT & RENDER DETAIL TRANSAKSI (Panel Kanan)
 // ============================================================
 async function selectTrx(id) {
   document.querySelectorAll('.trx-card').forEach(c => c.classList.remove('selected'));
@@ -732,12 +1020,15 @@ async function selectTrx(id) {
 
   el('det-empty').classList.add('hidden');
   el('det-content').classList.remove('hidden');
-  el('action-bar').innerHTML = `<div class="flex items-center justify-center gap-2 py-2 text-gray-600 text-sm"><div class="spin"></div> Memuat...</div>`;
+  el('action-bar').innerHTML = `<div class="flex items-center justify-center gap-2 py-2 text-gray-600 text-sm"><div class="spin"></div>Memuat...</div>`;
 
   let trx = null;
   if (S.online) {
     const r = await api(`/transaksi/${id}`);
-    if (r && r.ok) { trx = await r.json(); await idbPut('transaksi',{...trx, cached_at:new Date().toISOString()}); }
+    if (r?.ok) {
+      trx = await r.json();
+      await idbPut('transaksi', {...trx, cached_at: new Date().toISOString()}).catch(()=>{});
+    }
   }
   if (!trx) trx = await idbGet('transaksi', id);
   if (!trx) { el('action-bar').innerHTML = `<p class="text-red-400 text-sm text-center py-2">Data tidak ditemukan.</p>`; return; }
@@ -748,34 +1039,30 @@ async function selectTrx(id) {
   el('right-panel').classList.add('show');
 }
 
-function closeDetail() {
-  el('right-panel').classList.remove('show');
-}
+function closeDetail() { el('right-panel').classList.remove('show'); }
 
-// ============================================================
-// RENDER DETAIL
-// ============================================================
 function renderDetail(t) {
   const p = t.pelanggan || {}, k = t.kendaraan || {};
   el('det-nb').textContent    = t.nomor_booking || '—';
   el('det-badge').innerHTML   = badge(t.status);
-  el('det-created').textContent = t.created_at ? 'Dibuat: '+fmtDT(t.created_at) : '';
+  el('det-created').textContent = t.created_at ? 'Dibuat: ' + fmtDT(t.created_at) : '';
 
-  el('det-kend-foto').src     = k.foto || '';
-  el('det-kend-nama').textContent = k.nama || '—';
-  el('det-kend-plat').textContent = k.plat || '—';
-  el('det-kend-tipe').textContent = [(k.tipe||'').replace('_',' '), k.transmisi].filter(Boolean).join(' • ');
+  el('det-kend-foto').src = k.foto || k.foto_url || '';
+  el('det-kend-nama').textContent = k.nama || k.nama_kendaraan || '—';
+  el('det-kend-plat').textContent = k.plat || k.nomor_plat     || '—';
+  el('det-kend-tipe').textContent = [(k.tipe||k.tipe_kendaraan||'').replace('_',' '), k.transmisi].filter(Boolean).join(' • ');
 
-  el('det-plg-av').textContent    = (p.nama||'?')[0].toUpperCase();
-  el('det-plg-nama').textContent  = p.nama || '—';
-  el('det-plg-telp').textContent  = p.telepon || '—';
+  const initPlg = (p.nama||p.nama_lengkap||'?')[0].toUpperCase();
+  el('det-plg-av').textContent   = initPlg;
+  el('det-plg-nama').textContent = p.nama || p.nama_lengkap || '—';
+  el('det-plg-telp').textContent = p.telepon || p.no_telepon || '—';
   const ktpEl = el('det-plg-ktp');
-  if (p.foto_ktp) { ktpEl.classList.remove('hidden'); ktpEl.href = p.foto_ktp; }
+  if (p.foto_ktp || p.foto_ktp_url) { ktpEl.classList.remove('hidden'); ktpEl.href = p.foto_ktp || p.foto_ktp_url; }
   else ktpEl.classList.add('hidden');
 
   el('det-tgl-mulai').textContent   = fmtD(t.tanggal_mulai);
   el('det-tgl-selesai').textContent = fmtD(t.tanggal_selesai_rencana);
-  el('det-durasi').textContent      = (t.durasi_hari||t.durasi_hari_rencana||'?') + ' hari';
+  el('det-durasi').textContent      = (t.durasi_hari || t.durasi_hari_rencana || '?') + ' hari';
   el('det-supir').textContent       = t.gunakan_supir ? 'Dengan Supir' : 'Mandiri';
   el('det-supir').style.color       = t.gunakan_supir ? '#34D399' : '#9CA3AF';
 
@@ -786,7 +1073,7 @@ function renderDetail(t) {
     const n = new Date(); n.setHours(0,0,0,0);
     if (n > r) {
       const hari = Math.floor((n-r)/864e5);
-      const dend = hari * (k.harga_harian||0) * 1.5;
+      const dend = hari * (k.harga_harian || k.harga_sewa_harian || 0) * 1.5;
       S.dendaTLbt = dend;
       alertEl.classList.remove('hidden');
       el('alert-late-txt').textContent = `${hari} hari terlambat — estimasi denda: ${rp(dend)}`;
@@ -794,18 +1081,17 @@ function renderDetail(t) {
   } else { alertEl.classList.add('hidden'); S.dendaTLbt = 0; }
 
   // Biaya
-  el('lbl-sewa').textContent = `Biaya Sewa (${t.durasi_hari||t.durasi_hari_rencana||'?'} hari)`;
-  el('det-sewa').textContent = rp(t.biaya_sewa);
-  el('det-total').textContent= rp(t.total_biaya);
+  el('lbl-sewa').textContent        = `Biaya Sewa (${t.durasi_hari||t.durasi_hari_rencana||'?'} hari)`;
+  el('det-sewa').textContent        = rp(t.biaya_sewa);
+  el('det-total').textContent       = rp(t.total_biaya);
   show('row-supir',   t.gunakan_supir && (t.biaya_supir||0) > 0);
-  el('det-supir-cost').textContent = rp(t.biaya_supir);
-  show('row-denda-t', (t.denda_terlambat||0) > 0);
-  el('det-denda-t').textContent = rp(t.denda_terlambat);
-  show('row-denda-k', (t.denda_kerusakan||0) > 0);
-  el('det-denda-k').textContent = rp(t.denda_kerusakan);
-  el('det-metode').textContent = t.metode_bayar ? `Pembayaran: ${t.metode_bayar} · ${t.status_bayar||'—'}` : '';
+  el('det-supir-cost').textContent  = rp(t.biaya_supir);
+  show('row-denda-t', (t.denda_terlambat||t.biaya_denda_terlambat||0) > 0);
+  el('det-denda-t').textContent     = rp(t.denda_terlambat||t.biaya_denda_terlambat||0);
+  show('row-denda-k', (t.denda_kerusakan||t.biaya_denda_kerusakan||0) > 0);
+  el('det-denda-k').textContent     = rp(t.denda_kerusakan||t.biaya_denda_kerusakan||0);
+  el('det-metode').textContent      = t.metode_bayar || t.metode_pembayaran ? `Pembayaran: ${t.metode_bayar||t.metode_pembayaran} · ${t.status_bayar||t.status_pembayaran||'—'}` : '';
 
-  // Foto kondisi
   renderFotoGrid('foto-before', t.foto_sebelum||[]);
   renderFotoGrid('foto-after',  t.foto_sesudah||[]);
 }
@@ -817,60 +1103,54 @@ function renderFotoGrid(id, list) {
     return;
   }
   g.innerHTML = list.map(f =>
-    `<div class="rounded-lg overflow-hidden"><img src="${f.url}" alt="${f.posisi}"
-       class="w-full h-12 object-cover cursor-pointer" onclick="window.open('${f.url}','_blank')"
-       title="${f.posisi}"></div>`
+    `<div class="rounded-lg overflow-hidden cursor-pointer" onclick="window.open('${f.url}','_blank')">
+      <img src="${f.url}" alt="${f.posisi}" class="w-full h-12 object-cover" title="${f.posisi}">
+    </div>`
   ).join('');
 }
 
+
 // ============================================================
-// RENDER ACTION BAR
+// RENDER ACTION BUTTONS
 // ============================================================
 function renderActions(t) {
   const bar = el('action-bar');
   const id  = t.id_transaksi || t.id;
   const nb  = t.nomor_booking;
+  const cls = 'w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2';
   bar.innerHTML = '';
-
-  const btnCls = 'px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2';
 
   if (t.status === 'MENUNGGU') {
     bar.innerHTML = `
-      <button class="w-full btn-p ${btnCls}"
-        onclick="doKonfirm('Konfirmasi Booking?',
-          'Booking ${nb} akan dikonfirmasi dan pelanggan diberitahu.',
-          ()=>updateStatus('${id}','DIKONFIRMASI'))">
+      <button class="${cls} btn-p"
+        onclick="doKonfirm('Konfirmasi Booking?','Booking ${nb} akan dikonfirmasi.',()=>updateStatus('${id}','DIKONFIRMASI'))">
         ✓ Konfirmasi Booking
       </button>`;
   } else if (t.status === 'DIKONFIRMASI') {
     bar.innerHTML = `
-      <button class="w-full btn-g ${btnCls}" onclick="openFotoModal('sebelum')">
+      <button class="${cls} btn-g" onclick="openFotoModal('sebelum')">
         🚗 Serahkan Kendaraan (Upload Foto Kondisi)
       </button>`;
   } else if (t.status === 'AKTIF') {
     bar.innerHTML = `
-      <button class="w-full btn-a ${btnCls}" onclick="openFotoModal('sesudah')">
+      <button class="${cls} btn-a" onclick="openFotoModal('sesudah')">
         📦 Proses Pengembalian (Upload Foto Kondisi)
       </button>`;
-  } else if (t.status === 'SELESAI' || t.status === 'DIBATALKAN') {
-    bar.innerHTML = `
-      <div class="text-center text-gray-600 text-sm py-2">
-        ${t.status === 'SELESAI' ? '✅ Transaksi selesai' : '✕ Transaksi dibatalkan'}
-      </div>`;
+  } else if (['SELESAI','DIBATALKAN'].includes(t.status)) {
+    bar.innerHTML = `<div class="text-center text-gray-600 text-sm py-2">
+      ${t.status === 'SELESAI' ? '✅ Transaksi selesai' : '✕ Transaksi dibatalkan'}</div>`;
     return;
   }
 
-  // Tombol Batalkan (selalu ada kecuali sudah final)
   if (!['SELESAI','DIBATALKAN'].includes(t.status)) {
     const btn = document.createElement('button');
-    btn.className = `w-full btn-r ${btnCls} mt-1`;
+    btn.className = `${cls} btn-r mt-1`;
     btn.textContent = '✕ Batalkan Transaksi';
-    btn.onclick = () => doKonfirm('Batalkan Transaksi?',
-      `Booking ${nb} akan dibatalkan. Tindakan ini tidak dapat diurungkan.`,
-      () => updateStatus(id, 'DIBATALKAN'));
+    btn.onclick = () => doKonfirm('Batalkan Transaksi?',`Booking ${nb} akan dibatalkan secara permanen.`,() => updateStatus(id,'DIBATALKAN'));
     bar.appendChild(btn);
   }
 }
+
 
 // ============================================================
 // UPDATE STATUS TRANSAKSI
@@ -879,20 +1159,19 @@ async function updateStatus(id, statusBaru, extra = {}) {
   const payload = { status: statusBaru, ...extra };
   if (S.online) {
     const r = await api(`/transaksi/${id}/status`, {method:'PUT', body:JSON.stringify(payload)});
-    if (r && r.ok) {
+    if (r?.ok) {
       const res = await r.json();
-      toast('✅', 'Status Diperbarui', `${res.nomor_booking}: ${statusBaru}`);
+      toast('✅','Status Diperbarui',`${res.nomor_booking}: ${statusBaru}`);
       await loadList();
       if (S.selected) await selectTrx(S.selected.id_transaksi || id);
     } else {
-      toast('❌','Gagal','Tidak dapat memperbarui status.');
+      const err = r ? await r.json().catch(()=>({})) : {};
+      toast('❌','Gagal', err.detail || 'Tidak dapat memperbarui status.');
     }
   } else {
     await idbAdd('offline_queue', {
-      endpoint: `/transaksi/${id}/status`, method:'PUT',
-      body: payload, auth_token: S.token,
-      nb: S.selected?.nomor_booking || id,
-      action_type: 'update_status', created_at: new Date().toISOString()
+      endpoint:`/transaksi/${id}/status`, method:'PUT', body:payload,
+      nb: S.selected?.nomor_booking||id, created_at: new Date().toISOString()
     });
     toast('📡','Disimpan Offline','Aksi akan disinkronisasi saat online.');
     refreshQueueBadge();
@@ -900,12 +1179,12 @@ async function updateStatus(id, statusBaru, extra = {}) {
   closeKonfirm();
 }
 
+
 // ============================================================
-// MODAL: FOTO KONDISI
+// MODAL: FOTO KONDISI KENDARAAN
 // ============================================================
 function openFotoModal(jenis) {
-  S.fotoJenis = jenis;
-  S.files = {d:null, s:null, b:null};
+  S.fotoJenis = jenis; S.files = {d:null,s:null,b:null};
   ['d','s','b'].forEach(k => {
     el(`zone-${k}`).classList.remove('done');
     el(`zone-${k}-e`).classList.remove('hidden');
@@ -913,9 +1192,6 @@ function openFotoModal(jenis) {
     el(`inp-${k}`).value = '';
   });
   el('mfoto-title').textContent = jenis === 'sebelum' ? 'Upload Kondisi: Sebelum Diserahkan' : 'Upload Kondisi: Saat Dikembalikan';
-  el('mfoto-sub').textContent   = jenis === 'sebelum'
-    ? 'Dokumentasikan kondisi kendaraan sebelum diserahkan ke pelanggan.'
-    : 'Dokumentasikan kondisi kendaraan yang dikembalikan pelanggan.';
   el('sect-catatan').classList.toggle('hidden', jenis === 'sebelum');
   el('btn-submit-foto').disabled = true;
   el('modal-foto').classList.remove('hidden');
@@ -943,6 +1219,9 @@ async function submitFoto() {
   btn.disabled = true;
   el('up-status').classList.remove('hidden');
   const id = t.id_transaksi || t.id;
+
+  if (!S.online) { toast('❌','Offline','Upload foto memerlukan koneksi internet.'); btn.disabled=false; el('up-status').classList.add('hidden'); return; }
+
   const fd = new FormData();
   fd.append('jenis', jenis);
   fd.append('file_depan',   S.files.d);
@@ -950,27 +1229,18 @@ async function submitFoto() {
   fd.append('file_belakang',S.files.b);
   if (jenis === 'sesudah') {
     const cat = el('inp-catatan').value;
-    const dk  = parseFloat(el('inp-denda-k').value || '0');
+    const dk  = parseFloat(el('inp-denda-k').value||'0');
     if (cat) fd.append('catatan_kerusakan', cat);
     if (dk)  fd.append('biaya_denda_kerusakan', dk.toString());
   }
-  if (!S.online) {
-    toast('❌','Offline','Upload foto memerlukan koneksi internet.');
-    btn.disabled = false; el('up-status').classList.add('hidden'); return;
-  }
+
   try {
-    // Tambahkan header ngrok khusus untuk multipart form data (JANGAN set Content-Type secara manual untuk FormData)
     const r = await fetch(`${API}/transaksi/${id}/foto-kondisi`, {
-      method:'POST',
-      headers:{
-        'Authorization':'Bearer '+S.token,
-        'ngrok-skip-browser-warning': '69420'
-      },
-      body: fd
+      method:'POST', headers:{'ngrok-skip-browser-warning':'69420','Authorization':'Bearer '+S.token}, body:fd
     });
     if (r.ok) {
       closeFotoModal();
-      toast('📸','Foto Terupload','Foto kondisi kendaraan tersimpan.');
+      toast('📸','Foto Terupload','Dokumentasi kondisi kendaraan tersimpan.');
       if (jenis === 'sebelum') {
         await updateStatus(id, 'AKTIF', {catatan_kasir:'Kendaraan diserahkan ke pelanggan.'});
       } else {
@@ -978,29 +1248,28 @@ async function submitFoto() {
       }
     } else {
       const e = await r.json().catch(()=>({}));
-      toast('❌','Upload Gagal', e.detail || 'Terjadi kesalahan.');
+      toast('❌','Upload Gagal', e.detail || 'Terjadi kesalahan saat upload.');
       btn.disabled = false;
     }
-  } catch(_) {
-    toast('❌','Upload Gagal','Periksa koneksi internet.');
-    btn.disabled = false;
-  }
+  } catch(_) { toast('❌','Upload Gagal','Periksa koneksi internet Anda.'); btn.disabled=false; }
   el('up-status').classList.add('hidden');
 }
 
+
 // ============================================================
-// MODAL: SELESAIKAN
+// MODAL: SELESAIKAN TRANSAKSI (dengan denda)
 // ============================================================
 function openSelesaiModal() {
   const t = S.selected, k = t?.kendaraan||{};
   const rencana = new Date(t?.tanggal_selesai_rencana||0);
   const today   = new Date(); today.setHours(0,0,0,0); rencana.setHours(0,0,0,0);
   const hari    = Math.max(0, Math.floor((today-rencana)/864e5));
-  const dendaT  = hari * (k.harga_harian||0) * 1.5;
+  const hrgHarian = k.harga_harian || k.harga_sewa_harian || 0;
+  const dendaT  = hari * hrgHarian * 1.5;
   S.dendaTLbt   = dendaT;
 
   el('ms-denda-t').textContent    = rp(dendaT);
-  el('ms-denda-detail').textContent = `${hari} hari × ${rp(k.harga_harian||0)} × 150%`;
+  el('ms-denda-detail').textContent = `${hari} hari × ${rp(hrgHarian)} × 150%`;
   el('ms-denda-k').value  = '0';
   el('ms-tambahan').value = '0';
   el('ms-catatan').value  = '';
@@ -1009,20 +1278,21 @@ function openSelesaiModal() {
 }
 function closeSelesai() { el('modal-selesai').classList.add('hidden'); }
 function recalcTotal() {
-  const t = S.selected;
+  const t  = S.selected;
   const dk = parseFloat(el('ms-denda-k').value||0);
   const tb = parseFloat(el('ms-tambahan').value||0);
-  const tot = (t?.biaya_sewa||0)+(t?.biaya_supir||0)+S.dendaTLbt+dk+tb;
+  const tot= (t?.biaya_sewa||0)+(t?.biaya_supir||0)+S.dendaTLbt+dk+tb;
   el('ms-total').textContent = rp(tot);
 }
 async function submitSelesai() {
-  const t = S.selected, id = t.id_transaksi||t.id;
+  const t   = S.selected, id = t.id_transaksi||t.id;
   const dk  = parseFloat(el('ms-denda-k').value||0);
   const tb  = parseFloat(el('ms-tambahan').value||0);
   const cat = el('ms-catatan').value;
   closeSelesai();
-  await updateStatus(id,'SELESAI',{biaya_denda_kerusakan:dk,biaya_tambahan_lain:tb,catatan_kasir:cat});
+  await updateStatus(id,'SELESAI',{biaya_denda_kerusakan:dk,biaya_tambahan_lain:tb,catatan_kasir:cat||null});
 }
+
 
 // ============================================================
 // MODAL: KONFIRMASI UMUM
@@ -1035,41 +1305,458 @@ function doKonfirm(title, body, cb) {
 }
 function closeKonfirm() { el('modal-konfirm').classList.add('hidden'); }
 
+
 // ============================================================
-// PRINT KWITANSI (window.print)
+// ══════════════════════════════════════════════════════════
+// MODAL: BUAT TRANSAKSI BARU — MULTI-STEP WIZARD
+// ══════════════════════════════════════════════════════════
+// ============================================================
+const BT = {
+  step: 1,
+  pelanggan: null,   // {id, nama, telepon}
+  kendaraan: null,   // {id, nama, harga_harian, harga_supir, foto, ...}
+  daftarKend: [],    // hasil GET /kendaraan?status=TERSEDIA
+  filterTipe: 'semua',
+  _plgTimer: null,
+  _allPlg: [],       // cache daftar pelanggan
+};
+
+// ── Buka Modal ──────────────────────────────────────────────
+async function bukaModalTransaksi() {
+  // Reset state
+  BT.step = 1; BT.pelanggan = null; BT.kendaraan = null; BT.filterTipe = 'semua';
+
+  // Reset form
+  ['bt-plg-q','bt-np-nama','bt-np-telp','bt-np-alamat','bt-catatan'].forEach(id => {
+    const e = el(id); if (e) e.value = '';
+  });
+  el('bt-durasi').value   = '1';
+  el('bt-tgl-mulai').value= new Date().toISOString().split('T')[0];
+  el('bt-supir-chk').checked = false;
+  el('bt-metode').value   = 'TUNAI';
+  el('bt-new-plg-form').classList.add('hidden');
+
+  // Reset UI pelanggan
+  el('bt-plg-selected').classList.add('hidden');
+  el('bt-plg-results').innerHTML = '<div class="text-xs text-gray-600 text-center py-4">Ketik minimal 2 karakter untuk mencari.</div>';
+
+  el('bt-modal').classList.remove('hidden');
+  btGotoStep(1);
+
+  // Pre-load data paralel
+  const [rKend, rPlg] = await Promise.all([
+    api('/kendaraan?status=TERSEDIA'),
+    api('/pelanggan')
+  ]);
+  if (rKend?.ok) BT.daftarKend = await rKend.json();
+  if (rPlg?.ok)  BT._allPlg    = await rPlg.json();
+}
+
+function tutupBuatTrx() { el('bt-modal').classList.add('hidden'); }
+
+// ── Navigasi Step ───────────────────────────────────────────
+function btGotoStep(n) {
+  BT.step = n;
+  [1,2,3].forEach(i => el(`bt-s${i}`).classList.toggle('hidden', i !== n));
+
+  // Update step dots
+  [1,2,3].forEach(i => {
+    const d = el(`bt-sd${i}`);
+    if (!d) return;
+    if (i < n) {
+      d.className = 'bt-dot done'; d.innerHTML = '✓';
+    } else if (i === n) {
+      d.className = 'bt-dot active'; d.innerHTML = i;
+    } else {
+      d.className = 'bt-dot upcoming'; d.innerHTML = i;
+    }
+    // Line colors
+    const l = el(`bt-sl${i}`);
+    if (l) l.className = `bt-line ${i < n ? 'done' : 'upcoming'}`;
+  });
+
+  const labels = ['','Pilih Pelanggan','Pilih Kendaraan','Jadwal & Konfirmasi'];
+  el('bt-step-lbl').textContent = labels[n];
+  el('bt-subtitle').textContent = `Langkah ${n} dari 3 — ${labels[n]}`;
+
+  // Tombol kembali
+  el('bt-btn-back').style.display = n > 1 ? '' : 'none';
+
+  // Tombol lanjut / submit
+  const btnNext = el('bt-btn-next');
+  if (n === 3) {
+    btnNext.className = 'flex-1 btn-p py-2.5 rounded-xl text-sm font-bold';
+    btnNext.textContent = '✓ Buat Transaksi';
+  } else {
+    btnNext.className = 'flex-1 btn-a py-2.5 rounded-xl text-sm font-bold';
+    btnNext.textContent = 'Selanjutnya →';
+  }
+  btnNext.disabled = false;
+
+  if (n === 2) btRenderKendaraan();
+  if (n === 3) btRenderSummary();
+}
+
+function btNext() {
+  if (BT.step === 1) {
+    if (!BT.pelanggan) { toast('⚠️','Pilih Pelanggan','Cari dan pilih atau daftarkan pelanggan terlebih dahulu.'); return; }
+    btGotoStep(2);
+  } else if (BT.step === 2) {
+    if (!BT.kendaraan) { toast('⚠️','Pilih Kendaraan','Pilih salah satu kendaraan yang tersedia.'); return; }
+    btGotoStep(3); btHitung();
+  } else {
+    btSubmit();
+  }
+}
+function btPrev() { if (BT.step > 1) btGotoStep(BT.step - 1); }
+
+
+// ── STEP 1: PELANGGAN ───────────────────────────────────────
+function btCariPlg(q) {
+  clearTimeout(BT._plgTimer);
+  const res = el('bt-plg-results');
+
+  if (q.length < 2) {
+    res.innerHTML = '<div class="text-xs text-gray-600 text-center py-4">Ketik minimal 2 karakter untuk mencari.</div>';
+    return;
+  }
+
+  res.innerHTML = '<div class="text-xs text-gray-600 text-center py-3"><div class="spin mx-auto mb-1" style="width:14px;height:14px;border-width:2px;"></div>Mencari...</div>';
+
+  BT._plgTimer = setTimeout(() => {
+    const ql = q.toLowerCase();
+    // Cari dari cache _allPlg (sudah diload saat buka modal)
+    const found = BT._allPlg.filter(p =>
+      (p.nama||'').toLowerCase().includes(ql) ||
+      (p.telepon||p.no_telepon||'').includes(q)
+    ).slice(0, 6);
+
+    if (!found.length) {
+      res.innerHTML = `<div class="text-xs text-gray-600 text-center py-3">Tidak ditemukan. Silakan daftarkan di bawah.</div>`;
+      return;
+    }
+
+    res.innerHTML = found.map(p => {
+      const nama = p.nama || p.nama_lengkap || '?';
+      const telp = p.telepon || p.no_telepon || '—';
+      // Encode untuk onclick inline
+      const data = JSON.stringify({
+        id: p.id || p.id_pelanggan,
+        nama: nama, telepon: telp,
+        email: p.email||''
+      }).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      return `
+        <button onclick='btPilihPlg("${data.replace(/&quot;/g,'&quot;')}")'
+                class="w-full text-left p-3 rounded-xl transition-colors flex items-center gap-3"
+                style="border:1px solid rgba(255,255,255,.06);"
+                onmouseover="this.style.background='rgba(255,255,255,.05)'"
+                onmouseout="this.style.background=''">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-bold text-sm"
+               style="background:rgba(124,58,237,.2);color:#C084FC;">${nama[0].toUpperCase()}</div>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-sm text-white truncate">${nama}</div>
+            <div class="text-xs text-gray-500">${telp}</div>
+          </div>
+          ${p.is_verified ? '<span class="text-xs text-green-400 shrink-0">✓ KTP</span>' : ''}
+        </button>`;
+    }).join('');
+  }, 350);
+}
+
+function btPilihPlg(dataStr) {
+  // dataStr bisa berupa string JSON dari onclick inline
+  let p;
+  try { p = typeof dataStr === 'object' ? dataStr : JSON.parse(dataStr.replace(/&quot;/g,'"')); }
+  catch(e) { toast('❌','Error','Gagal memproses data pelanggan.'); return; }
+  BT.pelanggan = p;
+  btUpdatePlgUI();
+}
+
+function btUpdatePlgUI() {
+  const p = BT.pelanggan;
+  if (!p) { el('bt-plg-selected').classList.add('hidden'); return; }
+  el('bt-plg-av').textContent    = (p.nama||'?')[0].toUpperCase();
+  el('bt-plg-nama-sel').textContent = p.nama || '—';
+  el('bt-plg-telp-sel').textContent = p.telepon || '—';
+  el('bt-plg-selected').classList.remove('hidden');
+  el('bt-plg-results').innerHTML = '';
+  el('bt-plg-q').value = '';
+}
+
+function btClearPlg() {
+  BT.pelanggan = null;
+  el('bt-plg-selected').classList.add('hidden');
+  el('bt-plg-results').innerHTML = '<div class="text-xs text-gray-600 text-center py-4">Ketik minimal 2 karakter untuk mencari.</div>';
+}
+
+function btToggleNewPlg() { el('bt-new-plg-form').classList.toggle('hidden'); }
+
+async function btSimpanPlgBaru() {
+  const nama  = el('bt-np-nama').value.trim();
+  const telp  = el('bt-np-telp').value.trim();
+  const alamat= el('bt-np-alamat').value.trim();
+
+  if (!nama || !telp) { toast('⚠️','Data Tidak Lengkap','Nama lengkap dan nomor telepon wajib diisi.'); return; }
+
+  const btn = el('bt-np-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin mx-auto" style="width:16px;height:16px;border-width:2px;border-top-color:white;"></div>';
+
+  try {
+    const fd = new FormData();
+    fd.append('nama_lengkap', nama);
+    fd.append('no_telepon', telp);
+    if (alamat) fd.append('alamat', alamat);
+
+    const r = await fetch(`${API}/pelanggan`, {
+      method:'POST',
+      headers:{'ngrok-skip-browser-warning':'69420','Authorization':'Bearer '+S.token},
+      body: fd
+    });
+
+    if (r.ok) {
+      const res = await r.json();
+      BT.pelanggan = { id: res.id_pelanggan, nama, telepon: telp, email: '' };
+      // Tambahkan ke cache lokal
+      BT._allPlg.unshift({ id_pelanggan: res.id_pelanggan, nama_lengkap: nama, no_telepon: telp });
+      btUpdatePlgUI();
+      el('bt-new-plg-form').classList.add('hidden');
+      toast('✅','Pelanggan Ditambahkan',`${nama} berhasil didaftarkan.`);
+    } else {
+      const e = await r.json().catch(()=>({}));
+      toast('❌','Gagal Menyimpan', e.detail || 'Terjadi kesalahan saat mendaftarkan pelanggan.');
+    }
+  } catch(e) { toast('❌','Error Jaringan', e.message); }
+
+  btn.disabled = false;
+  btn.innerHTML = 'Simpan &amp; Pilih Pelanggan Ini';
+}
+
+
+// ── STEP 2: KENDARAAN ───────────────────────────────────────
+function btSetTipe(tipe) {
+  BT.filterTipe = tipe;
+  document.querySelectorAll('.bt-tab').forEach(b => {
+    const active = b.dataset.tipe === tipe;
+    b.classList.toggle('active', active);
+  });
+  btRenderKendaraan();
+}
+
+function btRenderKendaraan() {
+  const grid = el('bt-kend-grid');
+
+  if (!BT.daftarKend.length) {
+    grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-600 text-sm">
+      <div class="spin mx-auto mb-3" style="border-top-color:#F59E0B;width:22px;height:22px;border-width:2.5px;"></div>
+      Memuat armada tersedia...</div>`;
+    return;
+  }
+
+  const filtered = BT.filterTipe === 'semua'
+    ? BT.daftarKend
+    : BT.daftarKend.filter(k => (k.tipe || k.tipe_kendaraan) === BT.filterTipe);
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-600 text-sm">
+      Tidak ada kendaraan tersedia untuk kategori <strong>${BT.filterTipe.replace('_',' ')}</strong>.</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(k => {
+    const id      = k.id || k.id_kendaraan;
+    const nama    = k.nama || k.nama_kendaraan;
+    const harga   = k.harga_harian || k.harga_sewa_harian || 0;
+    const supir   = k.harga_supir || k.harga_supir_harian || 150000;
+    const tipe    = (k.tipe || k.tipe_kendaraan || '').replace('_',' ');
+    const plat    = k.plat || k.nomor_plat || '';
+    const foto    = k.foto_url || k.foto || '';
+    const transmisi = k.transmisi || 'AT';
+    const bbm     = k.bbm || k.bahan_bakar || 'Bensin';
+    const sel     = BT.kendaraan?.id === id;
+
+    // Buat payload untuk onclick (safe JSON encoding)
+    const payload = JSON.stringify({ id, nama, harga_harian: harga, harga_supir: supir, foto, tipe, plat, transmisi, bbm });
+
+    return `
+      <div class="bt-kend-card ${sel ? 'selected' : ''}" onclick='btPilihKend(${payload.replace(/'/g,"&#39;")})'>
+        <div class="relative" style="height:110px;overflow:hidden;background:rgba(255,255,255,.04);">
+          ${foto
+            ? `<img src="${foto}" alt="${nama}" class="w-full h-full object-cover" style="opacity:${sel?1:.8};">`
+            : `<div class="w-full h-full flex items-center justify-center text-5xl text-gray-700">🚗</div>`}
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 60%);"></div>
+          ${sel
+            ? `<div style="position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;
+                background:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;">✓</div>`
+            : ''}
+        </div>
+        <div style="padding:12px;">
+          <div class="font-semibold text-white text-sm leading-tight">${nama}</div>
+          <div class="text-xs text-gray-500 mt-0.5">${tipe} • ${transmisi} • ${bbm}</div>
+          ${plat ? `<div class="text-xs text-gray-600 mt-0.5">${plat}</div>` : ''}
+          <div class="mt-2 font-bold text-sm" style="color:#F59E0B;">
+            ${rp(harga)}<span class="text-xs font-normal text-gray-500">/hari</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function btPilihKend(payload) {
+  // payload bisa berupa object (dari onclick) atau string JSON
+  BT.kendaraan = typeof payload === 'object' ? payload : JSON.parse(payload);
+  btRenderKendaraan();
+  toast('✅','Kendaraan Dipilih', BT.kendaraan.nama);
+}
+
+
+// ── STEP 3: JADWAL & HITUNG BIAYA ───────────────────────────
+function btRenderSummary() {
+  const k = BT.kendaraan, p = BT.pelanggan;
+  if (!k || !p) return;
+
+  const fotoEl = el('bt-s3-foto');
+  if (k.foto) { fotoEl.src = k.foto; fotoEl.style.display = ''; el('bt-s3-emoji').classList.add('hidden'); }
+  else { fotoEl.style.display='none'; el('bt-s3-emoji').classList.remove('hidden'); }
+
+  el('bt-s3-kend').textContent  = k.nama;
+  el('bt-s3-plg').textContent   = `Pelanggan: ${p.nama}`;
+  el('bt-s3-harga').textContent = `${rp(k.harga_harian || 0)} / hari`;
+  el('bt-supir-info').textContent = `+ ${rp(k.harga_supir || 150000)} / hari`;
+
+  btHitung();
+}
+
+function btHitung() {
+  const tglStr = el('bt-tgl-mulai').value;
+  const durasi = Math.max(1, parseInt(el('bt-durasi').value) || 1);
+  const supir  = el('bt-supir-chk').checked;
+  const k      = BT.kendaraan;
+  if (!k || !tglStr) return;
+
+  // Kalkulasi tanggal selesai
+  const dtMulai   = new Date(tglStr);
+  const dtSelesai = new Date(dtMulai);
+  dtSelesai.setDate(dtSelesai.getDate() + durasi);
+  el('bt-tgl-selesai').textContent = fmtD(dtSelesai.toISOString().split('T')[0]);
+
+  // Kalkulasi biaya
+  const harga   = k.harga_harian || 0;
+  const bSewa   = harga * durasi;
+  const bSupir  = supir ? (k.harga_supir || 150000) * durasi : 0;
+  const total   = bSewa + bSupir;
+
+  el('bt-lbl-sewa').textContent = `Biaya Sewa (${durasi} hari)`;
+  el('bt-val-sewa').textContent = rp(bSewa);
+
+  const rowS = el('bt-row-supir');
+  rowS.style.display = supir ? '' : 'none';
+  if (supir) el('bt-val-supir').textContent = rp(bSupir);
+
+  el('bt-total').textContent = rp(total);
+}
+
+
+// ── Submit (Buat Transaksi ke API) ──────────────────────────
+async function btSubmit() {
+  const tglMulai = el('bt-tgl-mulai').value;
+  const durasi   = Math.max(1, parseInt(el('bt-durasi').value) || 1);
+  const supir    = el('bt-supir-chk').checked ? 1 : 0;
+  const metode   = el('bt-metode').value;
+  const catatan  = el('bt-catatan').value.trim();
+
+  if (!tglMulai) { toast('⚠️','Tanggal Wajib Diisi','Pilih tanggal mulai sewa.'); return; }
+  if (!BT.pelanggan || !BT.kendaraan) { toast('⚠️','Data Tidak Lengkap','Pelanggan dan kendaraan wajib dipilih.'); return; }
+
+  // Hitung tanggal selesai
+  const dtMulai   = new Date(tglMulai);
+  const dtSelesai = new Date(dtMulai);
+  dtSelesai.setDate(dtSelesai.getDate() + durasi);
+  const tglSelesai = dtSelesai.toISOString().split('T')[0];
+
+  const payload = {
+    id_pelanggan:             BT.pelanggan.id,
+    id_kendaraan:             BT.kendaraan.id,
+    tanggal_mulai:            tglMulai,
+    tanggal_selesai_rencana:  tglSelesai,
+    gunakan_supir:            supir,
+    metode_pembayaran:        metode,
+    catatan_kasir:            catatan || null,
+  };
+
+  const btn = el('bt-btn-next');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin mx-auto" style="width:16px;height:16px;border-width:2px;border-top-color:white;"></div>';
+
+  try {
+    const r = await api('/transaksi', { method:'POST', body: JSON.stringify(payload) });
+
+    if (r?.ok) {
+      const res = await r.json();
+      tutupBuatTrx();
+      toast('🎉','Transaksi Berhasil Dibuat!',`${res.nomor_booking} — ${rp(res.total_biaya)}`);
+      await loadList();
+      // Auto-pilih transaksi yang baru dibuat
+      if (res.id_transaksi) setTimeout(() => selectTrx(res.id_transaksi), 600);
+    } else {
+      const err = r ? await r.json().catch(()=>({})) : {};
+      toast('❌','Gagal Membuat Transaksi', err.detail || 'Terjadi kesalahan. Coba lagi.');
+      btn.disabled = false;
+      btn.textContent = '✓ Buat Transaksi';
+    }
+  } catch(e) {
+    toast('❌','Error Jaringan', e.message);
+    btn.disabled = false;
+    btn.textContent = '✓ Buat Transaksi';
+  }
+}
+// ══════════════════════════════════════════════════════════
+
+
+// ============================================================
+// PRINT KWITANSI
 // ============================================================
 function printReceipt() {
   const t = S.selected;
   if (!t) return;
-  const w = window.open('','_blank','width=400,height=600');
-  w.document.write(`<html><head><title>Kwitansi ${t.nomor_booking}</title>
-  <style>body{font-family:monospace;padding:20px;font-size:13px;}hr{border:1px dashed #000;}
-  .r{text-align:right;}.t{font-size:16px;font-weight:bold;}</style></head><body>
-  <div style="text-align:center"><b>AERORENT</b><br>Jl. Diponegoro No.123, Salatiga<br>
-  Telp: +62 812-3456-7890</div><hr>
-  <b>No. Booking:</b> ${t.nomor_booking}<br>
-  <b>Pelanggan:</b> ${t.pelanggan?.nama||'—'}<br>
-  <b>Kendaraan:</b> ${t.kendaraan?.nama||'—'}<br>
+  const p = t.pelanggan || {}, k = t.kendaraan || {};
+  const w = window.open('','_blank','width=400,height=650');
+  w.document.write(`<!DOCTYPE html><html><head><title>Kwitansi ${t.nomor_booking}</title>
+  <style>body{font-family:monospace;padding:20px;font-size:13px;}hr{border:1px dashed #999;}
+  .r{text-align:right;}.hd{text-align:center;font-weight:bold;font-size:15px;}</style></head>
+  <body><div class="hd">AERORENT — SALATIGA</div>
+  <div style="text-align:center;font-size:11px;">Jl. Diponegoro No. 123 · +62 812-3456-7890</div>
+  <hr>
+  <b>No. Booking:</b> ${t.nomor_booking||'—'}<br>
+  <b>Pelanggan:</b> ${p.nama||p.nama_lengkap||'—'}<br>
+  <b>Telepon:</b> ${p.telepon||p.no_telepon||'—'}<br>
+  <b>Kendaraan:</b> ${k.nama||k.nama_kendaraan||'—'}<br>
+  <b>Plat:</b> ${k.plat||k.nomor_plat||'—'}<br>
   <b>Periode:</b> ${fmtD(t.tanggal_mulai)} s/d ${fmtD(t.tanggal_selesai_rencana)}<br>
-  <b>Durasi:</b> ${t.durasi_hari||t.durasi_hari_rencana||'?'} hari<hr>
+  <b>Durasi:</b> ${t.durasi_hari||t.durasi_hari_rencana||'?'} hari · ${t.gunakan_supir?'Dengan Supir':'Mandiri'}<hr>
   Biaya Sewa: <span class="r">${rp(t.biaya_sewa)}</span><br>
-  ${t.gunakan_supir?'Biaya Supir: <span class="r">'+rp(t.biaya_supir)+'</span><br>':''}
-  ${(t.denda_terlambat||0)>0?'Denda Terlambat: <span class="r">'+rp(t.denda_terlambat)+'</span><br>':''}
+  ${t.gunakan_supir?`Biaya Supir: <span class="r">${rp(t.biaya_supir)}</span><br>`:''}
+  ${(t.denda_terlambat||t.biaya_denda_terlambat||0)>0?`Denda Terlambat: <span class="r">${rp(t.denda_terlambat||t.biaya_denda_terlambat)}</span><br>`:''}
   <hr><b>TOTAL: <span class="r">${rp(t.total_biaya)}</span></b><br>
-  <br>Status: ${t.status}<br><br>Terima kasih telah menggunakan AeroRent!
-  <\/body><\/html>`); // Menggunakan \/ agar peramban tidak salah paham
+  Metode: ${t.metode_bayar||t.metode_pembayaran||'—'}<br>
+  Status: <b>${t.status}</b><br><br>
+  Terima kasih telah menggunakan layanan AeroRent!<br>
+  <div style="text-align:center;font-size:11px;margin-top:10px;">— Dicetak: ${new Date().toLocaleString('id-ID')} —</div>
+  </body></html>`);
   w.print();
 }
+
 
 // ============================================================
 // LOGOUT
 // ============================================================
 function doLogout() {
-  if (confirm('Yakin ingin keluar dari sesi kasir?')) {
+  if (confirm('Yakin ingin keluar dari sesi POS?')) {
     localStorage.removeItem(AUTH_KEY);
-    location.href = 'index.html'; // Tendang kembali ke halaman login
+    window.location.href = 'index.html';
   }
 }
+
 
 // ============================================================
 // TOAST
@@ -1081,34 +1768,45 @@ function toast(icon, title, msg) {
   el('toast-msg').textContent = msg;
   el('toast').classList.remove('hidden');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(hideToast, 4000);
+  toastTimer = setTimeout(hideToast, 4500);
 }
 function hideToast() { el('toast').classList.add('hidden'); }
+
 
 // ============================================================
 // UTILITAS
 // ============================================================
-const el    = id  => document.getElementById(id);
-const show  = (id, v) => { el(id).style.display = v ? '' : 'none'; };
-const rp    = n   => 'Rp ' + Number(n||0).toLocaleString('id-ID');
-const fmtD  = d   => d ? new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : '—';
-const fmtDT = d   => d ? new Date(d).toLocaleString('id-ID') : '—';
+const el   = id => document.getElementById(id);
+const show = (id, v) => { const e=el(id); if(e) e.style.display=v?'':'none'; };
+const rp   = n => 'Rp ' + Number(n||0).toLocaleString('id-ID');
+const fmtD = d => {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+};
+const fmtDT = d => {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('id-ID');
+};
+
 function badge(st) {
-  const m = {MENUNGGU:'b-menunggu',DIKONFIRMASI:'b-dikonfirmasi',
-             AKTIF:'b-aktif',SELESAI:'b-selesai',DIBATALKAN:'b-dibatalkan'};
-  const label = {MENUNGGU:'Menunggu',DIKONFIRMASI:'Dikonfirmasi',
-                 AKTIF:'Aktif',SELESAI:'Selesai',DIBATALKAN:'Dibatalkan'};
-  return `<span class="badge ${m[st]||''}">${label[st]||st}</span>`;
+  const cls = {
+    MENUNGGU:'b-menunggu', DIKONFIRMASI:'b-dikonfirmasi',
+    AKTIF:'b-aktif', SELESAI:'b-selesai', DIBATALKAN:'b-dibatalkan'
+  };
+  const lbl = {
+    MENUNGGU:'Menunggu', DIKONFIRMASI:'Dikonfirmasi',
+    AKTIF:'Aktif', SELESAI:'Selesai', DIBATALKAN:'Dibatalkan'
+  };
+  return `<span class="badge ${cls[st]||''}">${lbl[st]||st}</span>`;
 }
 
-// Filter tab initial style
+// Inisialisasi style filter tab pada load
 document.querySelectorAll('.ftab').forEach(b => {
   b.style.transition = 'all .15s';
-  if (b.dataset.f === 'semua') { b.style.background = '#7C3AED'; b.style.color = 'white'; }
-  else { b.style.background = 'rgba(255,255,255,0.04)'; }
+  if (b.dataset.f === 'semua') { b.style.background='#7C3AED'; b.style.color='white'; }
+  else { b.style.background='rgba(255,255,255,.04)'; }
 });
-
-window.addEventListener('load', init);
 </script>
 </body>
 </html>
