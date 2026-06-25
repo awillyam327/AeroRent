@@ -25,6 +25,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AeroRent API", version="1.0.0", lifespan=lifespan)
 
+@app.get("/", tags=["Health"])
+async def root():
+    return {"message": "AeroRent API is running successfully on Vercel! 🚀", "status": "active"}
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
