@@ -113,7 +113,10 @@ async function apiLoginStaff(email, password) {
 
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'ngrok-skip-browser-warning': '69420'
+    },
     body,
   });
   if (!res.ok) {
@@ -132,7 +135,10 @@ async function apiLoginStaff(email, password) {
 async function apiLoginCustomer(email, password) {
   const res = await fetch(`${API_BASE}/auth/login-customer`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': '69420'
+    },
     body: JSON.stringify({ email, password }),
   });
   if (!res.ok) throw new Error('Endpoint login customer belum tersedia di backend.');
