@@ -14,8 +14,7 @@
  * ==============================================================================
  */
 
-// const API_BASE = 'https://pope-bolster-gallon.ngrok-free.dev';
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'https://aero-rent-twvb.vercel.app';
 const AUTH_KEY = 'aerorent_auth';
 
 /* ---------- Sesi & Token ---------- */

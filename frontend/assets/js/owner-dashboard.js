@@ -6,7 +6,7 @@
 // Gunakan localhost untuk pengujian di laptop sendiri
 // ✅ BENAR — baca dari localStorage agar sinkron dengan index.html
 // Tidak perlu update manual setiap kali URL Ngrok berubah
-const API = 'http://localhost:8000';
+const API = localStorage.getItem('aerorent_api_base') || 'https://aero-rent-twvb.vercel.app';
 const AUTH_KEY = 'aerorent_auth';
 
 // ============================================================
