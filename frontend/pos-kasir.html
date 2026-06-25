@@ -866,7 +866,7 @@ function onSwMsg(ev) { if (ev.data?.type==='SYNC_SUCCESS') { toast('✅','Sync O
 
 
 // ============================================================
-// API HELPER
+// API HELPER (ANTI-CACHE VERSION)
 // ============================================================
 async function api(path, opts = {}) {
   const headers = {
@@ -876,7 +876,8 @@ async function api(path, opts = {}) {
     ...(opts.headers || {})
   };
   try {
-    const r = await fetch(API + path, {...opts, headers});
+    // Tambahan cache: 'no-store' agar browser selalu meminta data segar ke server
+    const r = await fetch(API + path, {...opts, headers, cache: 'no-store'});
     if (r.status === 401) {
       localStorage.removeItem(AUTH_KEY);
       window.location.href = 'index.html';
@@ -885,7 +886,6 @@ async function api(path, opts = {}) {
     return r;
   } catch(_) { return null; }
 }
-
 
 // ============================================================
 // LOAD & RENDER LIST TRANSAKSI (Panel Kiri)
