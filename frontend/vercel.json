@@ -1,12 +1,6 @@
 {
-  "version": 2,
-  "name": "aerorent-frontend",
-  "comment": "Konfigurasi Vercel untuk frontend statis AeroRent",
-
   "buildCommand": null,
-  "outputDirectory": "frontend",
   "installCommand": null,
-
   "rewrites": [
     {
       "source": "/",
@@ -25,7 +19,6 @@
       "destination": "/pos-kasir.html"
     }
   ],
-
   "headers": [
     {
       "source": "/sw.js",
