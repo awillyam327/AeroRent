@@ -1,19 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File
 from typing import Optional
 from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 import aiomysql
 from database import get_db
 from config import cfg, log
-from dependencies import verify_pwd, make_token, get_current_user, hash_pwd
+from dependencies import verify_pwd, make_token, decode_token, hash_pwd
+from utils import imgbb_upload
 from models import TokenPair
 from pydantic import BaseModel
 import uuid
 
-class RegisterCustomerReq(BaseModel):
-    nama_lengkap: str
+class LoginCustomerReq(BaseModel):
     email: str
-    no_telepon: str
     password: str
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -50,21 +49,20 @@ async def login(
     )
 
 
-@router.post("/login/customer", tags=["🔐 Auth"])
+@router.post("/login-customer", tags=["Auth"])
 async def login_customer(
-    form: OAuth2PasswordRequestForm = Depends(),
+    body: LoginCustomerReq,
     cur: aiomysql.DictCursor = Depends(get_db),
 ):
     await cur.execute(
         "SELECT id_pelanggan, nama_lengkap, email, password_hash "
         "FROM PELANGGAN WHERE email = %(e)s",
-        {"e": form.username},
+        {"e": body.email},
     )
     row = await cur.fetchone()
 
-    if not row or not row["password_hash"] or not verify_pwd(form.password, row["password_hash"]):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Email atau password salah.",
-                            headers={"WWW-Authenticate": "Bearer"})
+    if not row or not row["password_hash"] or not verify_pwd(body.password, row["password_hash"]):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Email atau password salah.")
 
     token_data = {"sub": row["id_pelanggan"], "nama": row["nama_lengkap"], "email": row["email"], "role": "PELANGGAN"}
     access_tok  = make_token(token_data, timedelta(minutes=cfg.ACCESS_EXPIRE_MIN))
@@ -77,32 +75,41 @@ async def login_customer(
     }
 
 
-@router.post("/register", tags=["🔐 Auth"])
+@router.post("/register-customer", tags=["Auth"])
 async def register_customer(
-    req: RegisterCustomerReq,
+    nama_lengkap: str = Form(...),
+    email: str = Form(...),
+    no_telepon: str = Form(...),
+    password: str = Form(...),
+    foto_ktp: Optional[UploadFile] = File(None),
     cur: aiomysql.DictCursor = Depends(get_db),
 ):
     # Cek apakah email sudah dipakai
-    await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE email = %(e)s", {"e": req.email})
+    await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE email = %(e)s", {"e": email})
     if await cur.fetchone():
         raise HTTPException(400, "Email sudah terdaftar.")
 
     new_id = "p-" + uuid.uuid4().hex[:12]
-    hashed = hash_pwd(req.password)
+    hashed = hash_pwd(password)
+    
+    ktp_url = None
+    if foto_ktp:
+        ktp_url = await imgbb_upload(foto_ktp)
 
     await cur.execute(
-        "INSERT INTO PELANGGAN (id_pelanggan, nama_lengkap, email, no_telepon, password_hash) "
-        "VALUES (%(id)s, %(nama)s, %(email)s, %(telp)s, %(pwd)s)",
+        "INSERT INTO PELANGGAN (id_pelanggan, nama_lengkap, email, no_telepon, password_hash, foto_ktp_url) "
+        "VALUES (%(id)s, %(nama)s, %(email)s, %(telp)s, %(pwd)s, %(ktp)s)",
         {
             "id": new_id,
-            "nama": req.nama_lengkap,
-            "email": req.email,
-            "telp": req.no_telepon,
-            "pwd": hashed
+            "nama": nama_lengkap,
+            "email": email,
+            "telp": no_telepon,
+            "pwd": hashed,
+            "ktp": ktp_url
         }
     )
     
-    token_data = {"sub": new_id, "nama": req.nama_lengkap, "email": req.email, "role": "PELANGGAN"}
+    token_data = {"sub": new_id, "nama": nama_lengkap, "email": email, "role": "PELANGGAN"}
     access_tok = make_token(token_data, timedelta(minutes=cfg.ACCESS_EXPIRE_MIN))
 
     return {

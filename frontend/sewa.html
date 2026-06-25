@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0A14">
+<title>Proses Transaksi — AeroRent</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/checkout.css">
+</head>
+<body>
+
+<header id="navbar"></header>
+
+<main class="checkout-wrap">
+
+  <!-- Loading -->
+  <div id="co-loading" class="text-center" style="padding:60px 0;">
+    <div class="spinner" style="margin:0 auto 12px;"></div>
+    <p class="text-dim">Memuat data kendaraan...</p>
+  </div>
+
+  <!-- Error -->
+  <div id="co-error" class="checkout-error glass-card hidden">
+    <div style="font-size:36px;margin-bottom:14px;">⚠️</div>
+    <h2 class="mb-3">TIDAK DAPAT MELANJUTKAN</h2>
+    <p id="co-error-msg" class="text-dim" style="font-size:14px;"></p>
+    <a href="armada.html" class="btn btn-outline mt-6" style="display:inline-flex;">Kembali ke Armada</a>
+  </div>
+
+  <!-- Content -->
+  <div id="co-content" class="hidden">
+    <h1 class="checkout-title">PROSES <span class="text-purple">TRANSAKSI</span></h1>
+
+    <div class="step-indicator">
+      <div class="step-pill step-active" data-step="1"><span class="dot">1</span> Jadwal</div>
+      <div class="step-connector"></div>
+      <div class="step-pill" data-step="2"><span class="dot">2</span> Data Diri</div>
+      <div class="step-connector"></div>
+      <div class="step-pill" data-step="3"><span class="dot">✓</span> Selesai</div>
+    </div>
+
+    <div class="checkout-grid">
+      <!-- ===== KOLOM KIRI: FORM ===== -->
+      <div>
+
+        <!-- STEP 1: Jadwal & Layanan -->
+        <div id="panel-step1" class="checkout-panel glass-card">
+          <div class="checkout-panel-title">📅 Detail Waktu &amp; Layanan</div>
+          <div class="form-group">
+            <label class="form-label" for="jadwal-tanggal">Tanggal Mulai Sewa</label>
+            <input type="date" id="jadwal-tanggal" class="form-input" onchange="onJadwalChange()">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="jadwal-durasi">Durasi (Hari)</label>
+            <input type="number" id="jadwal-durasi" class="form-input" min="1" value="1" oninput="onJadwalChange()">
+          </div>
+          <div class="driver-toggle-row">
+            <div>
+              <div class="label">Gunakan Jasa Supir?</div>
+              <div class="sub">+ Rp 150.000 / hari</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="jadwal-supir" onchange="toggleDriver()">
+              <span class="toggle-track"></span><span class="toggle-thumb"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- STEP 2: Data Diri -->
+        <div id="panel-step2" class="checkout-panel glass-card hidden">
+          <div class="checkout-panel-title">👤 Lengkapi Data Diri</div>
+          <p class="text-dim mb-4" style="font-size:12px;margin-top:-12px;">Pastikan data sesuai dengan kartu identitas.</p>
+
+          <div class="form-group">
+            <label class="form-label" for="dd-nama">Nama Lengkap</label>
+            <input type="text" id="dd-nama" class="form-input" placeholder="Sesuai KTP" oninput="onDataDiriChange()">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dd-telp">Nomor Telepon / WhatsApp</label>
+            <input type="tel" id="dd-telp" class="form-input" placeholder="0812xxxxxxxx" oninput="onDataDiriChange()">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dd-alamat">Alamat Lengkap Saat Ini</label>
+            <textarea id="dd-alamat" class="form-textarea" oninput="onDataDiriChange()"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Upload KTP</label>
+            <label class="upload-zone" id="ktp-zone">
+              <input type="file" id="dd-ktp" accept="image/*" onchange="onKtpUpload(this); document.getElementById('ktp-zone').classList.toggle('has-file', !!this.files.length)">
+              <div id="ktp-empty">
+                <div style="font-size:20px;">📤</div>
+                <div style="font-size:12px;color:var(--color-text-dim);">Klik untuk upload atau drag and drop</div>
+                <div class="hint">SVG, PNG, JPG (MAX. 2MB)</div>
+              </div>
+              <div id="ktp-done" class="hidden">
+                <div style="font-size:20px;color:var(--color-green);">✓</div>
+                <div style="font-size:12px;color:var(--color-green);">KTP Berhasil Diupload</div>
+                <div class="hint" id="ktp-filename">—</div>
+              </div>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Metode Pembayaran</label>
+            <div class="payment-toggle">
+              <button type="button" id="btn-cash" class="btn btn-primary" onclick="setMetodeBayar('TUNAI')">
+                Cash <span class="pm-sub">Bayar di Tempat</span>
+              </button>
+              <button type="button" id="btn-cashless" class="btn btn-ghost" onclick="setMetodeBayar('MIDTRANS')">
+                Cashless <span class="pm-sub">Pelunasan Web</span>
+              </button>
+            </div>
+          </div>
+          <label class="flex items-start gap-2" style="font-size:12px;color:var(--color-text-dim);cursor:pointer;margin-top:14px;">
+            <input type="checkbox" id="dd-agree" onchange="onDataDiriChange()" style="margin-top:2px;">
+            Saya menyetujui Syarat &amp; Ketentuan yang berlaku, termasuk denda keterlambatan dan kebijakan pembatalan sewa.
+          </label>
+        </div>
+
+        <!-- STEP 3: Berhasil -->
+        <div id="panel-step3" class="success-wrap glass-card hidden">
+          <div class="success-icon">✓</div>
+          <h2 class="mb-3">PEMESANAN BERHASIL!</h2>
+          <p class="text-dim" style="font-size:14px;line-height:1.7;">
+            Terima kasih <strong id="success-nama" style="color:#fff;">—</strong>, pemesanan Anda
+            (<span id="success-booking" style="color:var(--color-amber);font-weight:700;">—</span>)
+            telah diterima sistem AeroRent Salatiga. Tim admin kami akan mengirimkan rincian invoice
+            dan info supir via WhatsApp dalam waktu maksimal 10 menit.
+          </p>
+          <a href="pages/customer/dashboard.html" class="btn btn-primary mt-6" style="display:inline-flex;padding:14px 28px;">
+            Lihat Dashboard Saya
+          </a>
+        </div>
+
+      </div>
+
+      <!-- ===== KOLOM KANAN: RINGKASAN ===== -->
+      <div id="summary-panel" class="summary-panel glass-card">
+        <div class="summary-vehicle">
+          <div class="photo" id="sum-foto"></div>
+          <div>
+            <div class="name" id="sum-nama">—</div>
+            <div class="spec" id="sum-spec">—</div>
+          </div>
+        </div>
+
+        <div class="summary-line hidden" id="sum-tanggal-row">
+          <span>Tanggal Sewa</span><span id="sum-tanggal">—</span>
+        </div>
+        <div class="summary-line">
+          <span id="sum-sewa-label">Biaya Sewa</span><span id="sum-sewa-val">—</span>
+        </div>
+        <div class="summary-line hidden" id="sum-supir-row">
+          <span>Biaya Supir</span><span id="sum-supir-val">—</span>
+        </div>
+        <div class="summary-line" id="sum-metode-row">
+          <span>Metode Bayar</span><span id="sum-metode">Bayar di Tempat (Cash)</span>
+        </div>
+
+        <div class="summary-total-row">
+          <span class="label">TOTAL BAYAR</span>
+          <span class="value" id="sum-total">Rp 0</span>
+        </div>
+
+        <div id="summary-step1-actions" class="mt-4">
+          <button id="btn-step1-next" class="btn btn-primary btn-block" onclick="goToStep2()" disabled>
+            Mulai Isi Data Diri →
+          </button>
+          <a href="armada.html" class="btn btn-ghost btn-block mt-2">Batal Pemesanan</a>
+        </div>
+
+        <div id="summary-step2-actions" class="mt-4 hidden">
+          <button id="btn-step2-submit" class="btn btn-primary btn-block" onclick="submitBooking()" disabled>
+            Konfirmasi &amp; Sewa →
+          </button>
+          <button class="btn btn-ghost btn-block mt-2" onclick="backToStep1()">← Kembali</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="toast-root"></div>
+
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/components.js"></script>
+<script src="js/vehicle.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => renderNavbar('navbar', { rootPath: '' }));
+</script>
+<script src="js/booking.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0A14">
+<title>Dashboard — AeroRent</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../../css/global.css">
+<link rel="stylesheet" href="../../css/customer.css">
+</head>
+<body>
+
+<div class="cs-shell">
+  <aside id="cs-sidebar" class="cs-sidebar"></aside>
+
+  <main class="cs-main">
+    <h1 id="cs-greeting" class="font-display" style="font-size:clamp(1.8rem,4vw,2.6rem);">HALO, CUSTOMER! 👋</h1>
+    <p class="text-dim mt-2" style="font-size:14px;">Selamat datang di dashboard perjalanan Anda.</p>
+
+    <div class="cs-stat-grid">
+      <div class="cs-stat-card glass-card" style="border-left:3px solid var(--color-purple);">
+        <div class="cs-stat-label">🕘 Total Sewa</div>
+        <div class="cs-stat-value text-purple" id="stat-total">— Kali</div>
+      </div>
+      <div class="cs-stat-card glass-card" style="border-left:3px solid var(--color-amber);">
+        <div class="cs-stat-label">⏱ Pemesanan Aktif / Menunggu</div>
+        <div class="cs-stat-value text-amber" id="stat-aktif">— Transaksi</div>
+      </div>
+    </div>
+
+    <div id="booking-table-wrap" class="cs-table-wrap glass-card">
+      <div style="padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);font-weight:700;font-size:14px;">
+        Pemesanan Aktif Terbaru
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="cs-table">
+          <thead>
+            <tr><th>No. Booking</th><th>Kendaraan</th><th>Tanggal</th><th>Status</th><th style="text-align:right;">Total</th></tr>
+          </thead>
+          <tbody id="booking-tbody">
+            <tr><td colspan="5" class="text-center text-dim" style="padding:30px;">
+              <div class="spinner" style="margin:0 auto 8px;"></div> Memuat data pemesanan...
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="booking-empty" class="glass-card text-center hidden" style="padding:40px;color:var(--color-text-dim);">
+      Belum ada pemesanan aktif.
+      <div class="mt-3"><a href="../../armada.html" class="btn btn-amber">Sewa Kendaraan Sekarang</a></div>
+    </div>
+
+    <div class="cs-cta-banner glass-card">
+      <div>
+        <div style="font-weight:700;font-size:14px;">Butuh bantuan darurat di jalan?</div>
+        <div class="text-dim" style="font-size:12px;margin-top:2px;">Layanan customer service AeroRent Salatiga siap 24 jam menemani perjalanan rental Anda.</div>
+      </div>
+      <a href="tel:+6281234567890" class="btn btn-primary" style="flex-shrink:0;">📞 Hubungi CS</a>
+    </div>
+  </main>
+</div>
+
+<div id="toast-root"></div>
+
+<script src="../../js/utils.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/components.js"></script>
+<script src="../../js/customer.js"></script>
+<script>document.addEventListener('DOMContentLoaded', initDashboard);</script>
+</body>
+</html>

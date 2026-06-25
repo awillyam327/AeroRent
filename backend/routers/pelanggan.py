@@ -5,8 +5,14 @@ import aiomysql
 from database import get_db
 from dependencies import req_kasir_or_owner, get_current_account
 from models import PelangganIn
+from pydantic import BaseModel
 from utils import imgbb_upload
 import uuid
+
+class PelangganUpdateSaya(BaseModel):
+    nama: str
+    telp: str
+    alamat: Optional[str] = None
 
 router = APIRouter(prefix="/pelanggan", tags=["Pelanggan"])
 @router.get("", tags=["👥 Pelanggan"])
@@ -19,6 +25,21 @@ async def list_pelanggan(user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
     for r in rows: r["created_at"] = fmt_date(r["created_at"])
     return rows
 
+@router.put("/saya", tags=["Pelanggan"])
+async def update_pelanggan_saya(
+    body: PelangganUpdateSaya,
+    user=Depends(get_current_account),
+    cur=Depends(get_db)
+):
+    if user["role"] != "PELANGGAN":
+        raise HTTPException(403, "Akses ditolak. Khusus pelanggan.")
+        
+    await cur.execute(
+        "UPDATE PELANGGAN SET nama_lengkap = %(n)s, no_telepon = %(t)s, alamat = %(a)s "
+        "WHERE id_pelanggan = %(id)s",
+        {"n": body.nama, "t": body.telp, "a": body.alamat, "id": user["id"]}
+    )
+    return {"message": "Profil berhasil diperbarui."}
 
 @router.get("/{pid}", tags=["👥 Pelanggan"])
 async def detail_pelanggan(pid: str, user=Depends(get_current_account), cur=Depends(get_db)):

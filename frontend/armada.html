@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0A14">
+<title>Eksplorasi Armada — AeroRent</title>
+<meta name="description" content="Jelajahi seluruh armada AeroRent: mobil reguler, SUV, hingga minibus untuk perjalanan Anda di Salatiga.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/public.css">
+</head>
+<body>
+
+<header id="navbar"></header>
+
+<section class="armada-header container">
+  <h1>EKSPLORASI <span class="text-purple">ARMADA</span> KAMI</h1>
+  <p class="text-dim mt-3" style="max-width:560px;margin-left:auto;margin-right:auto;">
+    Pilih kendaraan favorit Anda di Salatiga dengan kondisi prima, AC dingin, dan kebersihan yang selalu terjaga.
+  </p>
+
+  <div class="search-box glass-card" style="margin-top:30px;">
+    <input type="text" id="armada-search" class="form-input" placeholder="Cari kategori: '5 Seater', 'Avanza'...">
+    <input type="date" id="armada-tanggal" class="form-input">
+    <button class="btn btn-amber" onclick="applyFilters()">🔍 Cari</button>
+  </div>
+
+  <div class="filter-tabs" id="filter-tabs">
+    <button class="filter-tab active" data-tipe="">Semua Kategori</button>
+    <button class="filter-tab" data-tipe="5_SEATER">5 Seater</button>
+    <button class="filter-tab" data-tipe="7_SEATER">7 Seater</button>
+    <button class="filter-tab" data-tipe="MICROBUS">Microbus</button>
+  </div>
+  <div class="filter-tabs" id="filter-tabs-transmisi">
+    <button class="filter-tab active" data-transmisi="">Semua Transmisi</button>
+    <button class="filter-tab" data-transmisi="AT">Matic (Otomatis)</button>
+    <button class="filter-tab" data-transmisi="MT">Manual</button>
+  </div>
+</section>
+
+<section class="container" style="padding-bottom:80px;">
+  <div id="armada-grid" class="vehicle-grid">
+    <div class="glass-card" style="grid-column:1/-1;text-align:center;padding:50px;color:var(--color-text-faint);">
+      <div class="spinner" style="margin:0 auto 10px;"></div> Memuat armada...
+    </div>
+  </div>
+</section>
+
+<footer id="footer"></footer>
+<div id="toast-root"></div>
+
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/components.js"></script>
+<script src="js/vehicle.js"></script>
+<script>
+  let currentTipe = '';
+  let currentTransmisi = '';
+  let currentSearch = '';
+  let allVehicles = [];
+
+  async function loadArmada() {
+    allVehicles = await fetchVehicles();
+    renderGrid();
+  }
+
+  function renderGrid() {
+    const grid = qs('armada-grid');
+    let list = allVehicles;
+    if (currentTipe) list = list.filter((v) => v.tipe_kendaraan === currentTipe);
+    if (currentTransmisi) list = list.filter((v) => v.transmisi === currentTransmisi);
+    if (currentSearch) {
+      const q = currentSearch.toLowerCase();
+      list = list.filter((v) =>
+        v.nama_kendaraan.toLowerCase().includes(q) ||
+        v.merk.toLowerCase().includes(q) ||
+        (TIPE_LABEL[v.tipe_kendaraan] || '').toLowerCase().includes(q)
+      );
+    }
+    if (!list.length) {
+      grid.innerHTML = `<div class="glass-card text-center text-dim" style="grid-column:1/-1;padding:50px;">
+        Tidak ada kendaraan yang cocok dengan pencarian Anda.</div>`;
+      return;
+    }
+    grid.innerHTML = list.map((v) => renderVehicleCard(v)).join('');
+  }
+
+  function applyFilters() {
+    currentSearch = qs('armada-search').value.trim();
+    renderGrid();
+  }
+
+  function setTipeFilter(tipe, btn) {
+    currentTipe = tipe;
+    document.querySelectorAll('#filter-tabs .filter-tab').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderGrid();
+  }
+
+  function setTransmisiFilter(transmisi, btn) {
+    currentTransmisi = transmisi;
+    document.querySelectorAll('#filter-tabs-transmisi .filter-tab').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderGrid();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderNavbar('navbar', { active: 'armada', rootPath: '' });
+    renderFooter('footer', '');
+    renderToastMarkup('toast-root');
+
+    // Baca query param dari Beranda (?tipe=...&q=...&tanggal=...)
+    const params = new URLSearchParams(location.search);
+    const tipeParam = params.get('tipe') || '';
+    const qParam = params.get('q') || '';
+    if (params.get('tanggal')) qs('armada-tanggal').value = params.get('tanggal');
+    if (qParam) qs('armada-search').value = qParam;
+
+    document.querySelectorAll('#filter-tabs .filter-tab').forEach((btn) => {
+      if (btn.dataset.tipe === tipeParam) btn.classList.add('active'); else btn.classList.remove('active');
+      btn.addEventListener('click', () => setTipeFilter(btn.dataset.tipe, btn));
+    });
+    document.querySelectorAll('#filter-tabs-transmisi .filter-tab').forEach((btn) => {
+      btn.addEventListener('click', () => setTransmisiFilter(btn.dataset.transmisi, btn));
+    });
+    currentTipe = tipeParam;
+    currentSearch = qParam;
+
+    qs('armada-search').addEventListener('input', debounce(applyFilters, 300));
+
+    loadArmada();
+  });
+</script>
+</body>
+</html>

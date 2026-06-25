@@ -1,0 +1,266 @@
+/**
+ * ==============================================================================
+ * AeroRent — Logika Checkout (sewa.html)
+ * Alur: Step 1 Jadwal -> Step 2 Data Diri -> Step 3 Selesai
+ *
+ * KETERBATASAN YANG DISADARI (lihat README_STRUKTUR.md & laporan Phase 1-2):
+ * - Validasi bentrok tanggal sewa TIDAK diimplementasikan di sini. Backend
+ *   tidak punya endpoint untuk mengecek jadwal kendaraan lain (endpoint yang
+ *   ada untuk itu, GET /transaksi, dikunci untuk role KASIR/OWNER saja), jadi
+ *   frontend tidak punya cara jujur untuk memvalidasi ini. Pesan error
+ *   "tanggal bentrok" yang muncul di mockup TIDAK direplikasi secara palsu.
+ * - Upload foto KTP hanya disimpan di memori untuk preview UI, tidak benar-benar
+ *   diunggah ke server (tidak ada endpoint registrasi customer yang menerimanya).
+ * ==============================================================================
+ */
+
+let S = {
+  step: 1,
+  vehicleId: null,
+  vehicle: null,
+  startDate: '',
+  duration: 1,
+  useDriver: false,
+  nama: '',
+  telp: '',
+  alamat: '',
+  ktpFile: null,
+  metodeBayar: 'TUNAI', // 'TUNAI' (Cash) | 'MIDTRANS' (Cashless)
+  agreed: false,
+  bookingResult: null,
+};
+
+async function initCheckout() {
+  const auth = requireAuth(['CUSTOMER'], 'login.html');
+  if (!auth) return; // requireAuth sudah redirect
+
+  const params = new URLSearchParams(location.search);
+  S.vehicleId = params.get('id');
+  if (!S.vehicleId) {
+    showCheckoutError('Tidak ada kendaraan yang dipilih. Silakan kembali ke halaman Armada.');
+    return;
+  }
+
+  S.vehicle = await fetchVehicleById(S.vehicleId);
+  if (!S.vehicle) {
+    showCheckoutError('Kendaraan tidak ditemukan.');
+    return;
+  }
+  if (S.vehicle.status !== 'TERSEDIA') {
+    showCheckoutError(`${S.vehicle.nama_kendaraan} sedang tidak tersedia untuk disewa saat ini.`);
+    return;
+  }
+
+  // Default tanggal mulai = besok
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  S.startDate = tomorrow.toISOString().split('T')[0];
+  qs('jadwal-tanggal').value = S.startDate;
+  qs('jadwal-durasi').value = S.duration;
+
+  qs('co-loading').classList.add('hidden');
+  qs('co-content').classList.remove('hidden');
+  renderSummary();
+  validateStep1();
+
+  // Auto-isi Data Diri dari profil Customer yang sudah login, supaya tidak
+  // perlu mengetik ulang nama/telepon/alamat yang sudah pernah diisi
+  // (lihat profil.html). Field tetap bisa diedit manual jika perlu.
+  const profile = getDemoProfile();
+  qs('dd-nama').value = profile?.nama || auth.user.nama || '';
+  qs('dd-telp').value = profile?.telp || '';
+  qs('dd-alamat').value = profile?.alamat || '';
+  onDataDiriChange();
+}
+
+function showCheckoutError(msg) {
+  qs('co-loading').classList.add('hidden');
+  qs('co-error').classList.remove('hidden');
+  qs('co-error-msg').textContent = msg;
+}
+
+/* ---------- Kalkulasi biaya ---------- */
+function calcBiayaSewa() { return (S.vehicle?.harga_sewa_harian || 0) * S.duration; }
+function calcBiayaSupir() { return S.useDriver ? (S.vehicle?.harga_supir_harian || 150000) * S.duration : 0; }
+function calcTotal() { return calcBiayaSewa() + calcBiayaSupir(); }
+
+/* ---------- Render ringkasan kanan (dipakai step 1 & 2) ---------- */
+function renderSummary() {
+  const v = S.vehicle;
+  qs('sum-foto').innerHTML = v.foto_url
+    ? `<img src="${v.foto_url}" alt="${v.nama_kendaraan}">`
+    : `<div class="vehicle-photo-placeholder" style="font-size:24px;">🚗</div>`;
+  qs('sum-nama').textContent = v.nama_kendaraan;
+  qs('sum-spec').textContent = `${TIPE_LABEL[v.tipe_kendaraan] || v.tipe_kendaraan} • ${rp(v.harga_sewa_harian)}/hari`;
+
+  qs('sum-sewa-label').textContent = `Biaya Sewa (${S.duration} hari)`;
+  qs('sum-sewa-val').textContent = rp(calcBiayaSewa());
+  qs('sum-supir-row').classList.toggle('hidden', !S.useDriver);
+  qs('sum-supir-val').textContent = rp(calcBiayaSupir());
+  qs('sum-total').textContent = rp(calcTotal());
+
+  // Elemen khusus step 2 (mungkin belum ada saat step 1)
+  const tglEl = qs('sum-tanggal');
+  if (tglEl) tglEl.textContent = fmtD(S.startDate);
+  const metodeEl = qs('sum-metode');
+  if (metodeEl) metodeEl.textContent = S.metodeBayar === 'TUNAI' ? 'Bayar di Tempat (Cash)' : 'Pelunasan Web (Cashless)';
+}
+
+/* ---------- STEP 1: Jadwal & Layanan ---------- */
+function onJadwalChange() {
+  S.startDate = qs('jadwal-tanggal').value;
+  S.duration = Math.max(1, parseInt(qs('jadwal-durasi').value || '1', 10));
+  renderSummary();
+  validateStep1();
+}
+function toggleDriver() {
+  S.useDriver = qs('jadwal-supir').checked;
+  renderSummary();
+}
+function validateStep1() {
+  const valid = !!S.startDate && S.duration >= 1;
+  qs('btn-step1-next').disabled = !valid;
+  return valid;
+}
+function goToStep2() {
+  if (!validateStep1()) return;
+  S.step = 2;
+  updateStepIndicator();
+  qs('panel-step1').classList.add('hidden');
+  qs('panel-step2').classList.remove('hidden');
+  qs('summary-step1-actions').classList.add('hidden');
+  qs('summary-step2-actions').classList.remove('hidden');
+  renderSummary();
+}
+
+/* ---------- STEP 2: Data Diri ---------- */
+function onDataDiriChange() {
+  S.nama = qs('dd-nama').value.trim();
+  S.telp = qs('dd-telp').value.trim();
+  S.alamat = qs('dd-alamat').value.trim();
+  S.agreed = qs('dd-agree').checked;
+  validateStep2();
+}
+function onKtpUpload(input) {
+  S.ktpFile = input.files[0] || null;
+  qs('ktp-empty').classList.toggle('hidden', !!S.ktpFile);
+  qs('ktp-done').classList.toggle('hidden', !S.ktpFile);
+  if (S.ktpFile) qs('ktp-filename').textContent = S.ktpFile.name;
+  validateStep2();
+}
+function setMetodeBayar(metode) {
+  S.metodeBayar = metode;
+  qs('btn-cash').classList.toggle('btn-primary', metode === 'TUNAI');
+  qs('btn-cash').classList.toggle('btn-ghost', metode !== 'TUNAI');
+  qs('btn-cashless').classList.toggle('btn-primary', metode === 'MIDTRANS');
+  qs('btn-cashless').classList.toggle('btn-ghost', metode !== 'MIDTRANS');
+  renderSummary();
+}
+function validateStep2() {
+  const valid = !!(S.nama && S.telp && S.alamat && S.ktpFile && S.agreed);
+  qs('btn-step2-submit').disabled = !valid;
+  return valid;
+}
+function backToStep1() {
+  S.step = 1;
+  updateStepIndicator();
+  qs('panel-step2').classList.add('hidden');
+  qs('panel-step1').classList.remove('hidden');
+  qs('summary-step2-actions').classList.add('hidden');
+  qs('summary-step1-actions').classList.remove('hidden');
+}
+
+function updateStepIndicator() {
+  document.querySelectorAll('.step-pill').forEach((el) => {
+    const n = parseInt(el.dataset.step, 10);
+    el.classList.toggle('step-done', n < S.step);
+    el.classList.toggle('step-active', n === S.step);
+  });
+}
+
+/* ---------- SUBMIT BOOKING ---------- */
+async function submitBooking() {
+  if (!validateStep2()) return;
+  const btn = qs('btn-step2-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Memproses...';
+
+  const auth = getAuth();
+  const tglMulai = S.startDate;
+  const tglSelesai = addDays(S.startDate, S.duration);
+
+  const payload = {
+    id_pelanggan: auth.user.id,
+    id_kendaraan: S.vehicleId,
+    tanggal_mulai: tglMulai,
+    tanggal_selesai_rencana: tglSelesai,
+    gunakan_supir: S.useDriver ? 1 : 0,
+    metode_pembayaran: S.metodeBayar,
+    catatan_kasir: null,
+  };
+
+  try {
+    // POST /transaksi SUDAH ADA & nyata di backend (tidak butuh token sama sekali
+    // saat ini — lihat catatan keamanan di laporan Phase 1-2). Akan berhasil
+    // sungguhan jika id_pelanggan adalah baris PELANGGAN yang benar-benar ada.
+    const res = await fetch(`${API_BASE}/transaksi`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Backend menolak permintaan (kemungkinan id_pelanggan demo tidak terdaftar di database asli).');
+    const result = await res.json();
+    S.bookingResult = { nomorBooking: result.nomor_booking, total: result.total_biaya, demo: false };
+  } catch (err) {
+    // Fallback demo: tetap tampilkan alur sukses supaya bisa didemokan utuh,
+    // dengan nomor booking format AR-#### yang konsisten dengan schema.sql
+    // (BUKAN format BKG-... yang dipakai main.py saat ini — lihat catatan
+    // inkonsistensi format nomor booking di laporan Phase 1-2).
+    const fakeSeq = Math.floor(1000 + Math.random() * 8999);
+    S.bookingResult = {
+      nomorBooking: `AR-${new Date().getFullYear()}${fakeSeq}`,
+      total: calcTotal(),
+      demo: true,
+    };
+    // Simpan ke localStorage supaya muncul di Dashboard Customer (lihat utils.js)
+    addDemoBooking({
+      id: 'demo-' + Date.now(),
+      booking: S.bookingResult.nomorBooking,
+      kendaraan: S.vehicle.nama_kendaraan,
+      foto_kendaraan: S.vehicle.foto_url || '',
+      mulai: tglMulai,
+      selesai_rencana: tglSelesai,
+      durasi: S.duration,
+      total: S.bookingResult.total,
+      status: 'MENUNGGU',
+      created_at: new Date().toISOString(),
+    });
+  }
+
+  goToStep3();
+}
+
+function addDays(dateStr, days) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+function goToStep3() {
+  S.step = 3;
+  updateStepIndicator();
+  qs('panel-step2').classList.add('hidden');
+  qs('panel-step3').classList.remove('hidden');
+  qs('summary-panel').classList.add('hidden');
+
+  const user = getCurrentUser();
+  qs('success-nama').textContent = user?.nama || S.nama;
+  qs('success-booking').textContent = S.bookingResult.nomorBooking;
+  if (S.bookingResult.demo) {
+    showToast('🧪', 'Mode Demo', 'Booking ini tidak benar-benar tersimpan ke server (lihat catatan di kode).');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderToastMarkup('toast-root');
+  initCheckout();
+});

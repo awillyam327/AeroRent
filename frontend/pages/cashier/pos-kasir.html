@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0A0A14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="description" content="AeroRent POS Terminal — Kasir">
+  <title>AeroRent POS — Kasir</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="cashier.css">
+</head>
+
+<body class="flex flex-col h-screen overflow-hidden">
+
+<!-- ===== TOP HEADER ===== -->
+<header class="flex items-center justify-between px-4 py-2.5 shrink-0 border-b border-white/10 z-30"
+        style="background:#05050A;">
+  <!-- Logo -->
+  <div class="flex items-center gap-2.5">
+    <svg width="30" height="30" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#F59E0B"/>
+        </linearGradient>
+      </defs>
+      <polygon points="20,3 37,34 3,34" fill="url(#lg)"/>
+      <line x1="20" y1="3" x2="9" y2="24" stroke="white" stroke-width="1.5" opacity=".7"/>
+      <line x1="20" y1="3" x2="14" y2="30" stroke="white" stroke-width="1" opacity=".4"/>
+    </svg>
+    <div class="leading-none">
+      <div class="font-bebas text-xl tracking-widest">AERO<span style="color:#7C3AED;">RENT</span></div>
+      <div class="text-xs text-gray-600">POS Terminal</div>
+    </div>
+  </div>
+
+  <!-- Info Sesi -->
+  <div class="hidden md:flex items-center gap-5 text-xs text-gray-500">
+    <span id="hdr-date">—</span>
+    <span>Kasir: <strong class="text-gray-300" id="hdr-user">—</strong></span>
+  </div>
+
+  <!-- Status + Logout -->
+  <div class="flex items-center gap-2">
+    <!-- Indikator Koneksi -->
+    <div id="conn-wrap" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-xs font-semibold">
+      <span id="conn-dot" class="w-2 h-2 rounded-full" style="background:#10B981;"></span>
+      <span id="conn-lbl">Online</span>
+    </div>
+    <!-- Badge antrian offline -->
+    <div id="queue-badge" class="hidden px-2 py-1 rounded-full text-xs font-bold"
+        style="background:rgba(239,68,68,.15);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);">
+      <span id="queue-n">0</span> pending
+    </div>
+    <button id="btn-sync" class="hidden btn-p px-3 py-1.5 rounded-lg text-xs" onclick="manualSync()">Sync</button>
+    <button onclick="doLogout()" class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-red-400
+            hover:bg-red-500/10 border border-red-500/20 transition-all">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>Keluar
+    </button>
+  </div>
+</header>
+
+<!-- ===== MAIN SPLIT LAYOUT ===== -->
+<main class="flex flex-1 overflow-hidden">
+
+  <!-- === PANEL KIRI === -->
+  <div id="left-panel" class="w-full md:w-80 lg:w-96 flex flex-col shrink-0 border-r border-white/10"
+      style="background:#07070F;">
+
+    <!-- Cari Booking -->
+    <div class="p-3 border-b border-white/5">
+      <div class="relative">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600"
+            xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input id="search-in" type="text" placeholder="No. Booking (AR-XXXX) / Nama..."
+              class="g-input w-full rounded-xl pl-9 pr-12 py-2.5 text-sm"
+              oninput="onSearchInput(this.value)"
+              onkeydown="if(event.key==='Enter')searchTrx()">
+        <button onclick="searchTrx()" class="absolute right-2 top-1/2 -translate-y-1/2 btn-p p-1.5 rounded-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex gap-1 px-3 py-2 border-b border-white/5 overflow-x-auto no-scrollbar">
+      <button data-f="semua"        onclick="setFilter('semua')"        class="ftab active px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap">Semua</button>
+      <button data-f="MENUNGGU"     onclick="setFilter('MENUNGGU')"     class="ftab px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap text-yellow-400">Menunggu</button>
+      <button data-f="DIKONFIRMASI" onclick="setFilter('DIKONFIRMASI')" class="ftab px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap text-blue-400">Konfirmasi</button>
+      <button data-f="AKTIF"        onclick="setFilter('AKTIF')"        class="ftab px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap text-green-400">Aktif</button>
+    </div>
+
+    <!-- List Transaksi -->
+    <div id="trx-list" class="flex-1 overflow-y-auto">
+      <div id="list-empty" class="flex flex-col items-center justify-center h-64 gap-3 text-gray-600">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <p class="text-sm text-center px-4">Ketik nomor booking<br>atau muat ulang daftar</p>
+      </div>
+      <div id="list-loading" class="hidden flex items-center justify-center py-10">
+        <div class="spin"></div>
+      </div>
+    </div>
+
+    <!-- Reload Button -->
+    <div class="p-3 border-t border-white/5">
+      <button onclick="loadList()" class="w-full btn-o py-2 rounded-xl text-xs font-semibold">
+        ↻ Muat Ulang
+      </button>
+    </div>
+  </div>
+
+  <!-- === PANEL KANAN === -->
+  <div id="right-panel" class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Empty state -->
+    <div id="det-empty" class="flex-1 flex flex-col items-center justify-center gap-4 text-gray-700">
+      <div class="w-20 h-20 rounded-2xl glass flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+          <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+      </div>
+      <div class="text-center">
+        <div class="font-bebas text-2xl text-gray-600 tracking-wider">PILIH TRANSAKSI</div>
+        <p class="text-sm text-gray-700 mt-1">Pilih nomor booking dari daftar kiri</p>
+      </div>
+    </div>
+
+    <!-- Detail view (hidden by default) -->
+    <div id="det-content" class="hidden flex-1 flex flex-col overflow-hidden">
+
+      <!-- Detail header -->
+      <div class="flex items-center justify-between px-5 py-3.5 shrink-0 border-b border-white/10" style="background:#05050A;">
+        <div class="flex items-center gap-3">
+          <button class="md:hidden p-1.5 rounded-lg hover:bg-white/5" onclick="closeDetail()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bebas text-2xl tracking-wider" id="det-nb">—</span>
+              <span id="det-badge"></span>
+            </div>
+            <div class="text-xs text-gray-600" id="det-created">—</div>
+          </div>
+        </div>
+        <button onclick="printReceipt()" class="btn-o px-3 py-1.5 rounded-lg text-xs">🖨 Kwitansi</button>
+      </div>
+
+      <!-- Scrollable body -->
+      <div id="det-body" class="flex-1 overflow-y-auto p-4 lg:p-5 space-y-3">
+
+        <!-- Kendaraan + Pelanggan -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div class="glass rounded-2xl p-4">
+            <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Kendaraan</div>
+            <div class="flex gap-3">
+              <div class="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-white/5">
+                <img id="det-kend-foto" src="" alt="" class="w-full h-full object-cover"
+                    onerror="this.style.display='none'">
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-white truncate" id="det-kend-nama">—</div>
+                <div class="text-xs text-gray-400 mt-0.5" id="det-kend-plat">—</div>
+                <div class="text-xs text-gray-500 mt-1" id="det-kend-tipe">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-4">
+            <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Pelanggan</div>
+            <div class="flex gap-3 items-start">
+              <div id="det-plg-av" class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-base"
+                  style="background:rgba(124,58,237,.2);color:#C084FC;">B</div>
+              <div>
+                <div class="font-semibold text-white" id="det-plg-nama">—</div>
+                <div class="text-xs text-gray-400 mt-0.5" id="det-plg-telp">—</div>
+                <a id="det-plg-ktp" href="#" target="_blank"
+                  class="hidden text-xs text-purple-400 hover:text-purple-300 underline mt-1 block">
+                  Lihat Foto KTP
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jadwal -->
+        <div class="glass rounded-2xl p-4">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Jadwal Sewa</div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div><div class="text-xs text-gray-500">Mulai</div><div class="font-semibold text-sm mt-0.5" id="det-tgl-mulai">—</div></div>
+            <div><div class="text-xs text-gray-500">Selesai (Rencana)</div><div class="font-semibold text-sm mt-0.5" id="det-tgl-selesai">—</div></div>
+            <div><div class="text-xs text-gray-500">Durasi</div><div class="font-semibold text-sm mt-0.5" id="det-durasi">—</div></div>
+            <div><div class="text-xs text-gray-500">Supir</div><div class="font-semibold text-sm mt-0.5" id="det-supir">—</div></div>
+          </div>
+          <div id="alert-late" class="hidden mt-3 rounded-xl p-3 flex items-start gap-2"
+              style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);">
+            <span class="text-red-400 shrink-0">⚠</span>
+            <div>
+              <div class="text-red-400 text-xs font-semibold">Keterlambatan Terdeteksi</div>
+              <div class="text-red-400/70 text-xs mt-0.5" id="alert-late-txt">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Biaya -->
+        <div class="glass rounded-2xl p-4">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Rincian Biaya</div>
+          <div class="space-y-1.5 text-sm">
+            <div class="flex justify-between"><span class="text-gray-400" id="lbl-sewa">Biaya Sewa</span><span id="det-sewa">—</span></div>
+            <div class="flex justify-between" id="row-supir"><span class="text-gray-400">Biaya Supir</span><span id="det-supir-cost">—</span></div>
+            <div class="flex justify-between" id="row-denda-t"><span class="text-red-400">Denda Terlambat</span><span class="text-red-400 font-bold" id="det-denda-t">—</span></div>
+            <div class="flex justify-between" id="row-denda-k"><span class="text-red-400">Denda Kerusakan</span><span class="text-red-400 font-bold" id="det-denda-k">—</span></div>
+            <div class="border-t border-white/10 pt-2 flex justify-between items-center">
+              <span class="font-semibold text-white">TOTAL</span>
+              <span class="text-xl font-bold" style="color:#F59E0B;" id="det-total">—</span>
+            </div>
+          </div>
+          <div class="mt-2 text-xs text-gray-600" id="det-metode">—</div>
+        </div>
+
+        <!-- Foto kondisi -->
+        <div class="glass rounded-2xl p-4">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-3">Dokumentasi Kondisi</div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <div class="text-xs text-gray-500 mb-2">Sebelum Diserahkan</div>
+              <div id="foto-before" class="grid grid-cols-3 gap-1"></div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500 mb-2">Setelah Dikembalikan</div>
+              <div id="foto-after" class="grid grid-cols-3 gap-1"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /det-body -->
+
+      <!-- ACTION BAR -->
+      <div id="action-bar" class="shrink-0 px-4 lg:px-5 py-3.5 border-t border-white/10 space-y-2"
+          style="background:#05050A;"></div>
+
+    </div><!-- /det-content -->
+  </div><!-- /right-panel -->
+</main>
+
+<!-- ===== MODAL: UPLOAD FOTO KONDISI ===== -->
+<div id="modal-foto" class="overlay hidden">
+  <div class="modal-box p-5">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <div class="font-semibold text-white" id="mfoto-title">Upload Foto Kondisi</div>
+        <div class="text-xs text-gray-500 mt-0.5" id="mfoto-sub">Wajib 3 foto: Depan, Samping, Belakang</div>
+      </div>
+      <button onclick="closeFotoModal()" class="text-gray-600 hover:text-white p-1.5 rounded-lg hover:bg-white/5">✕</button>
+    </div>
+
+    <!-- Upload zones (3 kolom) -->
+    <div class="grid grid-cols-3 gap-2 mb-4">
+      <div id="zone-d" class="up-zone p-3 text-center" onclick="pickFile('inp-d')">
+        <div id="zone-d-e" class="flex flex-col items-center gap-1 text-gray-600">
+          <span class="text-2xl">📷</span><span class="text-xs">Depan</span>
+        </div>
+        <div id="zone-d-p" class="hidden">
+          <img id="img-d" src="" alt="" class="w-full h-14 object-cover rounded-lg">
+          <div class="text-xs text-green-400 mt-1">✓ Depan</div>
+        </div>
+        <input type="file" id="inp-d" accept="image/*" class="hidden" onchange="onFile('d',this)">
+      </div>
+      <div id="zone-s" class="up-zone p-3 text-center" onclick="pickFile('inp-s')">
+        <div id="zone-s-e" class="flex flex-col items-center gap-1 text-gray-600">
+          <span class="text-2xl">📷</span><span class="text-xs">Samping</span>
+        </div>
+        <div id="zone-s-p" class="hidden">
+          <img id="img-s" src="" alt="" class="w-full h-14 object-cover rounded-lg">
+          <div class="text-xs text-green-400 mt-1">✓ Samping</div>
+        </div>
+        <input type="file" id="inp-s" accept="image/*" class="hidden" onchange="onFile('s',this)">
+      </div>
+      <div id="zone-b" class="up-zone p-3 text-center" onclick="pickFile('inp-b')">
+        <div id="zone-b-e" class="flex flex-col items-center gap-1 text-gray-600">
+          <span class="text-2xl">📷</span><span class="text-xs">Belakang</span>
+        </div>
+        <div id="zone-b-p" class="hidden">
+          <img id="img-b" src="" alt="" class="w-full h-14 object-cover rounded-lg">
+          <div class="text-xs text-green-400 mt-1">✓ Belakang</div>
+        </div>
+        <input type="file" id="inp-b" accept="image/*" class="hidden" onchange="onFile('b',this)">
+      </div>
+    </div>
+
+    <!-- Catatan kerusakan (hanya sesudah) -->
+    <div id="sect-catatan" class="hidden mb-4 space-y-2">
+      <textarea id="inp-catatan" rows="2" placeholder="Catatan kerusakan (jika ada)..."
+                class="g-input w-full rounded-xl p-3 text-sm resize-none"></textarea>
+      <input type="number" id="inp-denda-k" min="0" placeholder="Biaya denda kerusakan (Rp)"
+            class="g-input w-full rounded-xl p-3 text-sm">
+    </div>
+
+    <div id="up-status" class="hidden text-center py-2">
+      <div class="spin mx-auto mb-2"></div>
+      <div class="text-xs text-gray-500">Mengupload foto...</div>
+    </div>
+
+    <div class="flex gap-2">
+      <button onclick="closeFotoModal()" class="flex-1 btn-o py-2.5 rounded-xl text-sm font-semibold">Batal</button>
+      <button id="btn-submit-foto" onclick="submitFoto()" disabled
+              class="flex-1 btn-p py-2.5 rounded-xl text-sm font-semibold">Upload & Proses</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: KONFIRMASI UMUM ===== -->
+<div id="modal-konfirm" class="overlay hidden">
+  <div class="modal-box p-6 max-w-sm">
+    <div class="text-center mb-5">
+      <div id="mk-icon" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-4 text-3xl">✅</div>
+      <div class="font-bebas text-2xl tracking-wider" id="mk-title">KONFIRMASI</div>
+      <p class="text-sm text-gray-400 mt-2" id="mk-body">—</p>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="closeKonfirm()" class="flex-1 btn-o py-2.5 rounded-xl text-sm font-semibold">Batal</button>
+      <button id="btn-ok" class="flex-1 btn-p py-2.5 rounded-xl text-sm font-semibold">Ya, Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: SELESAIKAN (Denda) ===== -->
+<div id="modal-selesai" class="overlay hidden">
+  <div class="modal-box p-5 max-w-sm">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+          style="background:rgba(239,68,68,.12);">⚠️</div>
+      <div>
+        <div class="font-semibold text-white">Selesaikan Transaksi</div>
+        <div class="text-xs text-gray-500 mt-0.5">Isi biaya tambahan sebelum menutup transaksi</div>
+      </div>
+    </div>
+    <div class="space-y-3 mb-4">
+      <div class="glass rounded-xl p-3">
+        <div class="text-xs text-gray-500">Denda Keterlambatan (otomatis)</div>
+        <div class="text-red-400 font-bold text-lg" id="ms-denda-t">Rp 0</div>
+        <div class="text-xs text-gray-600" id="ms-denda-detail">0 hari × 0 × 150%</div>
+      </div>
+      <input type="number" id="ms-denda-k" min="0" value="0" placeholder="Denda kerusakan (Rp)"
+            class="g-input w-full rounded-xl p-3 text-sm" oninput="recalcTotal()">
+      <input type="number" id="ms-tambahan" min="0" value="0" placeholder="Biaya tambahan lain (Rp)"
+            class="g-input w-full rounded-xl p-3 text-sm" oninput="recalcTotal()">
+      <textarea id="ms-catatan" rows="2" placeholder="Catatan kasir..."
+                class="g-input w-full rounded-xl p-3 text-sm resize-none"></textarea>
+      <div class="glass rounded-xl p-3 flex justify-between">
+        <span class="text-sm text-gray-400">Total Akhir</span>
+        <span class="font-bold text-xl" style="color:#F59E0B;" id="ms-total">—</span>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="closeSelesai()" class="flex-1 btn-o py-2.5 rounded-xl text-sm font-semibold">Batal</button>
+      <button onclick="submitSelesai()" class="flex-1 btn-p py-2.5 rounded-xl text-sm font-semibold">Selesaikan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast" class="hidden fixed bottom-4 right-4 z-50 max-w-xs">
+  <div class="glass rounded-xl p-3.5 flex items-start gap-3 shadow-2xl slide-in">
+    <span id="toast-ic" class="text-lg shrink-0">✅</span>
+    <div class="flex-1">
+      <div class="font-semibold text-sm" id="toast-ttl">—</div>
+      <div class="text-xs text-gray-400 mt-0.5" id="toast-msg">—</div>
+    </div>
+    <button onclick="hideToast()" class="text-gray-600 hover:text-white text-xs">✕</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ============================================================
+// KONFIGURASI & STATE
+// ============================================================
+const API  = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+            ? 'http://localhost:8000' : '';
+const AUTH_KEY = 'aerorent_auth';
+const IDB_NAME = 'aerorent-pos-idb';
+
+let S = {
+  user: null, token: null, online: navigator.onLine,
+  list: [], filtered: [], selected: null,
+  filter: 'semua', files: { d:null, s:null, b:null },
+  fotoJenis: null, idb: null, dendaTLbt: 0,
+};
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').then(() => {
+      navigator.serviceWorker.addEventListener('message', onSwMsg);
+    });
+  }
+  // Inject PWA manifest dynamically
+  const manifest = { name:'AeroRent POS', short_name:'AeroPOS',
+    start_url:'./', display:'standalone', background_color:'#0A0A14',
+    theme_color:'#0A0A14', icons:[{src:'./icon-192.png',sizes:'192x192',type:'image/png'}] };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  document.getElementById('pwa-m').href = URL.createObjectURL(blob);
+
+  // Cek auth
+  const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+  if (!auth) { location.href = '../../login.html'; return; }
+  S.token = auth.access_token; S.user = auth.user;
+
+  document.getElementById('hdr-user').textContent = auth.user?.nama || '—';
+  document.getElementById('hdr-date').textContent = new Date().toLocaleDateString('id-ID',
+    {weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+  S.idb = await openIDB();
+  window.addEventListener('online',  onConn);
+  window.addEventListener('offline', onConn);
+  onConn();
+  await loadList();
+}
+
+// ============================================================
+// PWA Manifest link (harus di head)
+// ============================================================
+document.head.insertAdjacentHTML('beforeend','<link rel="manifest" id="pwa-m">');
+
+// ============================================================
+// IndexedDB
+// ============================================================
+function openIDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(IDB_NAME, 1);
+    r.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('transaksi')) {
+        const s = db.createObjectStore('transaksi',{keyPath:'id_transaksi'});
+        s.createIndex('by_nb','nomor_booking',{unique:false});
+        s.createIndex('by_st','status',{unique:false});
+      }
+      if (!db.objectStoreNames.contains('offline_queue')) {
+        db.createObjectStore('offline_queue',{keyPath:'id',autoIncrement:true});
+      }
+    };
+    r.onsuccess = e => res(e.target.result);
+    r.onerror   = e => rej(e.target.error);
+  });
+}
+const idbPut = (store, data)  => new Promise((res,rej) => { const tx=S.idb.transaction(store,'readwrite');const r=tx.objectStore(store).put(data);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});
+const idbGet = (store, key)   => new Promise((res,rej) => { const tx=S.idb.transaction(store,'readonly');const r=tx.objectStore(store).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+const idbAll = (store)        => new Promise((res,rej) => { const tx=S.idb.transaction(store,'readonly');const r=tx.objectStore(store).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});
+const idbAdd = (store, data)  => new Promise((res,rej) => { const tx=S.idb.transaction(store,'readwrite');const r=tx.objectStore(store).add(data);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+const idbDel = (store, key)   => new Promise((res,rej) => { const tx=S.idb.transaction(store,'readwrite');const r=tx.objectStore(store).delete(key);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});
+
+// ============================================================
+// KONEKSI
+// ============================================================
+function onConn() {
+  S.online = navigator.onLine;
+  const dot = document.getElementById('conn-dot');
+  const lbl = document.getElementById('conn-lbl');
+  dot.style.background = S.online ? '#10B981' : '#EF4444';
+  lbl.textContent = S.online ? 'Online' : 'Offline';
+  if (S.online) syncQueue();
+  refreshQueueBadge();
+}
+
+async function refreshQueueBadge() {
+  const q = await idbAll('offline_queue');
+  const b = document.getElementById('queue-badge');
+  const s = document.getElementById('btn-sync');
+  if (q.length > 0) {
+    document.getElementById('queue-n').textContent = q.length;
+    b.classList.remove('hidden'); s.classList.remove('hidden');
+  } else {
+    b.classList.add('hidden'); s.classList.add('hidden');
+  }
+}
+
+async function syncQueue() {
+  const q = await idbAll('offline_queue');
+  for (const item of q) {
+    try {
+      const r = await fetch(API + item.endpoint, {
+        method: item.method,
+        headers: {'Content-Type':'application/json','Authorization':'Bearer '+S.token},
+        body: JSON.stringify(item.body)
+      });
+      if (r.ok) {
+        await idbDel('offline_queue', item.id);
+        toast('✅','Sinkronisasi OK',`Transaksi ${item.nb||''} tersinkronisasi.`);
+      }
+    } catch(_) {}
+  }
+  refreshQueueBadge();
+}
+
+function manualSync() { syncQueue(); }
+function onSwMsg(ev) {
+  if (ev.data?.type === 'SYNC_SUCCESS') {
+    toast('✅','Sync OK',`${ev.data.nomor_booking} berhasil disinkronisasi.`);
+    loadList();
+  }
+}
+
+// ============================================================
+// API HELPER
+// ============================================================
+async function api(path, opts = {}) {
+  const headers = {'Content-Type':'application/json',
+                  'Authorization':'Bearer '+S.token, ...(opts.headers||{})};
+  try {
+    const r = await fetch(API+path, {...opts, headers});
+    if (r.status === 401) { localStorage.removeItem(AUTH_KEY); location.href = '../../login.html'; return null; }
+    return r;
+  } catch(_) { return null; }
+}
+
+// ============================================================
+// LOAD LIST TRANSAKSI
+// ============================================================
+async function loadList() {
+  el('list-loading').classList.remove('hidden');
+  el('list-empty').classList.add('hidden');
+  clearListCards();
+
+  let rows = [];
+  if (S.online) {
+    const param = S.filter !== 'semua' ? `?status=${S.filter}` : '';
+    const r = await api(`/transaksi${param}`);
+    if (r && r.ok) {
+      rows = await r.json();
+      for (const t of rows) await idbPut('transaksi', mapToIdb(t));
+    } else {
+      toast('⚠️','Offline','Memuat dari cache lokal.');
+      rows = (await idbAll('transaksi')).map(idbToRow);
+    }
+  } else {
+    rows = (await idbAll('transaksi')).map(idbToRow);
+  }
+
+  S.list = rows;
+  S.filtered = S.filter === 'semua' ? [...rows] : rows.filter(t => t.status === S.filter);
+  el('list-loading').classList.add('hidden');
+  renderList(S.filtered);
+  refreshQueueBadge();
+}
+
+function mapToIdb(t) {
+  return { id_transaksi: t.id, nomor_booking: t.booking,
+          pelanggan_nama: t.pelanggan, kendaraan_nama: t.kendaraan,
+          status: t.status, mulai: t.mulai, selesai: t.selesai_rencana,
+          durasi: t.durasi, total: t.total, foto: t.foto_kendaraan,
+          cached_at: new Date().toISOString() };
+}
+function idbToRow(c) {
+  return { id: c.id_transaksi, booking: c.nomor_booking, pelanggan: c.pelanggan_nama,
+          kendaraan: c.kendaraan_nama, status: c.status, mulai: c.mulai,
+          selesai_rencana: c.selesai, durasi: c.durasi, total: c.total,
+          foto_kendaraan: c.foto };
+}
+
+function clearListCards() {
+  const l = el('trx-list');
+  [...l.children].forEach(c => { if (c.id !== 'list-empty' && c.id !== 'list-loading') c.remove(); });
+}
+
+function renderList(list) {
+  clearListCards();
+  const l = el('trx-list');
+  el('list-empty').classList.toggle('hidden', list.length > 0);
+  list.forEach(t => {
+    const late = t.status === 'AKTIF' && t.selesai_rencana && new Date(t.selesai_rencana) < new Date();
+    const d = document.createElement('div');
+    d.className = 'trx-card px-4 py-3 border-b border-white/5';
+    d.dataset.id = t.id;
+    d.onclick = () => selectTrx(t.id);
+    d.innerHTML = `
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="font-mono font-bold text-sm">${t.booking||'—'}</span>
+            ${badge(t.status)}
+            ${late?'<span class="badge b-dibatalkan">⚠ Terlambat</span>':''}
+          </div>
+          <div class="text-sm font-medium text-gray-200 truncate mt-0.5">${t.kendaraan||'—'}</div>
+          <div class="text-xs text-gray-500 mt-0.5 truncate">${t.pelanggan||'—'}</div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="text-xs font-bold" style="color:#F59E0B;">${rp(t.total)}</div>
+          <div class="text-xs text-gray-600">${fmtD(t.mulai)}</div>
+        </div>
+      </div>`;
+    l.appendChild(d);
+  });
+}
+
+// ============================================================
+// SEARCH & FILTER
+// ============================================================
+function onSearchInput(v) {
+  if (!v.trim()) { S.filtered = S.filter === 'semua' ? [...S.list] : S.list.filter(t=>t.status===S.filter); renderList(S.filtered); return; }
+  const q = v.toLowerCase();
+  S.filtered = S.list.filter(t =>
+    (t.booking||'').toLowerCase().includes(q) ||
+    (t.pelanggan||'').toLowerCase().includes(q) ||
+    (t.kendaraan||'').toLowerCase().includes(q)
+  );
+  renderList(S.filtered);
+}
+
+function searchTrx() {
+  const v = el('search-in').value.trim();
+  if (!v) return;
+  onSearchInput(v);
+}
+
+function setFilter(f) {
+  S.filter = f;
+  document.querySelectorAll('.ftab').forEach(b => {
+    b.classList.toggle('active', b.dataset.f === f);
+    b.style.background = b.dataset.f === f ? '#7C3AED' : '';
+    b.style.color = (b.dataset.f === f) ? 'white' : '';
+  });
+  loadList();
+}
+
+// ============================================================
+// SELECT TRANSACTION
+// ============================================================
+async function selectTrx(id) {
+  document.querySelectorAll('.trx-card').forEach(c => c.classList.remove('selected'));
+  const card = document.querySelector(`.trx-card[data-id="${id}"]`);
+  if (card) card.classList.add('selected');
+
+  el('det-empty').classList.add('hidden');
+  el('det-content').classList.remove('hidden');
+  el('action-bar').innerHTML = `<div class="flex items-center justify-center gap-2 py-2 text-gray-600 text-sm"><div class="spin"></div> Memuat...</div>`;
+
+  let trx = null;
+  if (S.online) {
+    const r = await api(`/transaksi/${id}`);
+    if (r && r.ok) { trx = await r.json(); await idbPut('transaksi',{...trx, cached_at:new Date().toISOString()}); }
+  }
+  if (!trx) trx = await idbGet('transaksi', id);
+  if (!trx) { el('action-bar').innerHTML = `<p class="text-red-400 text-sm text-center py-2">Data tidak ditemukan.</p>`; return; }
+
+  S.selected = trx;
+  renderDetail(trx);
+  renderActions(trx);
+  el('right-panel').classList.add('show');
+}
+
+function closeDetail() {
+  el('right-panel').classList.remove('show');
+}
+
+// ============================================================
+// RENDER DETAIL
+// ============================================================
+function renderDetail(t) {
+  const p = t.pelanggan || {}, k = t.kendaraan || {};
+  el('det-nb').textContent    = t.nomor_booking || '—';
+  el('det-badge').innerHTML   = badge(t.status);
+  el('det-created').textContent = t.created_at ? 'Dibuat: '+fmtDT(t.created_at) : '';
+
+  el('det-kend-foto').src     = k.foto || '';
+  el('det-kend-nama').textContent = k.nama || '—';
+  el('det-kend-plat').textContent = k.plat || '—';
+  el('det-kend-tipe').textContent = [(k.tipe||'').replace('_',' '), k.transmisi].filter(Boolean).join(' • ');
+
+  el('det-plg-av').textContent    = (p.nama||'?')[0].toUpperCase();
+  el('det-plg-nama').textContent  = p.nama || '—';
+  el('det-plg-telp').textContent  = p.telepon || '—';
+  const ktpEl = el('det-plg-ktp');
+  if (p.foto_ktp) { ktpEl.classList.remove('hidden'); ktpEl.href = p.foto_ktp; }
+  else ktpEl.classList.add('hidden');
+
+  el('det-tgl-mulai').textContent   = fmtD(t.tanggal_mulai);
+  el('det-tgl-selesai').textContent = fmtD(t.tanggal_selesai_rencana);
+  el('det-durasi').textContent      = (t.durasi_hari||t.durasi_hari_rencana||'?') + ' hari';
+  el('det-supir').textContent       = t.gunakan_supir ? 'Dengan Supir' : 'Mandiri';
+  el('det-supir').style.color       = t.gunakan_supir ? '#34D399' : '#9CA3AF';
+
+  // Alert keterlambatan
+  const alertEl = el('alert-late');
+  if (t.status === 'AKTIF' && t.tanggal_selesai_rencana) {
+    const r = new Date(t.tanggal_selesai_rencana); r.setHours(0,0,0,0);
+    const n = new Date(); n.setHours(0,0,0,0);
+    if (n > r) {
+      const hari = Math.floor((n-r)/864e5);
+      const dend = hari * (k.harga_harian||0) * 1.5;
+      S.dendaTLbt = dend;
+      alertEl.classList.remove('hidden');
+      el('alert-late-txt').textContent = `${hari} hari terlambat — estimasi denda: ${rp(dend)}`;
+    } else { alertEl.classList.add('hidden'); S.dendaTLbt = 0; }
+  } else { alertEl.classList.add('hidden'); S.dendaTLbt = 0; }
+
+  // Biaya
+  el('lbl-sewa').textContent = `Biaya Sewa (${t.durasi_hari||t.durasi_hari_rencana||'?'} hari)`;
+  el('det-sewa').textContent = rp(t.biaya_sewa);
+  el('det-total').textContent= rp(t.total_biaya);
+  show('row-supir',   t.gunakan_supir && (t.biaya_supir||0) > 0);
+  el('det-supir-cost').textContent = rp(t.biaya_supir);
+  show('row-denda-t', (t.denda_terlambat||0) > 0);
+  el('det-denda-t').textContent = rp(t.denda_terlambat);
+  show('row-denda-k', (t.denda_kerusakan||0) > 0);
+  el('det-denda-k').textContent = rp(t.denda_kerusakan);
+  el('det-metode').textContent = t.metode_bayar ? `Pembayaran: ${t.metode_bayar} · ${t.status_bayar||'—'}` : '';
+
+  // Foto kondisi
+  renderFotoGrid('foto-before', t.foto_sebelum||[]);
+  renderFotoGrid('foto-after',  t.foto_sesudah||[]);
+}
+
+function renderFotoGrid(id, list) {
+  const g = el(id);
+  if (!list.length) {
+    g.innerHTML = `<div class="col-span-3 h-12 rounded-lg bg-white/5 flex items-center justify-center text-xs text-gray-600">Belum ada foto</div>`;
+    return;
+  }
+  g.innerHTML = list.map(f =>
+    `<div class="rounded-lg overflow-hidden"><img src="${f.url}" alt="${f.posisi}"
+      class="w-full h-12 object-cover cursor-pointer" onclick="window.open('${f.url}','_blank')"
+      title="${f.posisi}"></div>`
+  ).join('');
+}
+
+// ============================================================
+// RENDER ACTION BAR
+// ============================================================
+function renderActions(t) {
+  const bar = el('action-bar');
+  const id  = t.id_transaksi || t.id;
+  const nb  = t.nomor_booking;
+  bar.innerHTML = '';
+
+  const btnCls = 'px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2';
+
+  if (t.status === 'MENUNGGU') {
+    bar.innerHTML = `
+      <button class="w-full btn-p ${btnCls}"
+        onclick="doKonfirm('Konfirmasi Booking?',
+          'Booking ${nb} akan dikonfirmasi dan pelanggan diberitahu.',
+          ()=>updateStatus('${id}','DIKONFIRMASI'))">
+        ✓ Konfirmasi Booking
+      </button>`;
+  } else if (t.status === 'DIKONFIRMASI') {
+    bar.innerHTML = `
+      <button class="w-full btn-g ${btnCls}" onclick="openFotoModal('sebelum')">
+        🚗 Serahkan Kendaraan (Upload Foto Kondisi)
+      </button>`;
+  } else if (t.status === 'AKTIF') {
+    bar.innerHTML = `
+      <button class="w-full btn-a ${btnCls}" onclick="openFotoModal('sesudah')">
+        📦 Proses Pengembalian (Upload Foto Kondisi)
+      </button>`;
+  } else if (t.status === 'SELESAI' || t.status === 'DIBATALKAN') {
+    bar.innerHTML = `
+      <div class="text-center text-gray-600 text-sm py-2">
+        ${t.status === 'SELESAI' ? '✅ Transaksi selesai' : '✕ Transaksi dibatalkan'}
+      </div>`;
+    return;
+  }
+
+  // Tombol Batalkan (selalu ada kecuali sudah final)
+  if (!['SELESAI','DIBATALKAN'].includes(t.status)) {
+    const btn = document.createElement('button');
+    btn.className = `w-full btn-r ${btnCls} mt-1`;
+    btn.textContent = '✕ Batalkan Transaksi';
+    btn.onclick = () => doKonfirm('Batalkan Transaksi?',
+      `Booking ${nb} akan dibatalkan. Tindakan ini tidak dapat diurungkan.`,
+      () => updateStatus(id, 'DIBATALKAN'));
+    bar.appendChild(btn);
+  }
+}
+
+// ============================================================
+// UPDATE STATUS TRANSAKSI
+// ============================================================
+async function updateStatus(id, statusBaru, extra = {}) {
+  const payload = { status: statusBaru, ...extra };
+  if (S.online) {
+    const r = await api(`/transaksi/${id}/status`, {method:'PUT', body:JSON.stringify(payload)});
+    if (r && r.ok) {
+      const res = await r.json();
+      toast('✅', 'Status Diperbarui', `${res.nomor_booking}: ${statusBaru}`);
+      await loadList();
+      if (S.selected) await selectTrx(S.selected.id_transaksi || id);
+    } else {
+      toast('❌','Gagal','Tidak dapat memperbarui status.');
+    }
+  } else {
+    await idbAdd('offline_queue', {
+      endpoint: `/transaksi/${id}/status`, method:'PUT',
+      body: payload, auth_token: S.token,
+      nb: S.selected?.nomor_booking || id,
+      action_type: 'update_status', created_at: new Date().toISOString()
+    });
+    toast('📡','Disimpan Offline','Aksi akan disinkronisasi saat online.');
+    refreshQueueBadge();
+  }
+  closeKonfirm();
+}
+
+// ============================================================
+// MODAL: FOTO KONDISI
+// ============================================================
+function openFotoModal(jenis) {
+  S.fotoJenis = jenis;
+  S.files = {d:null, s:null, b:null};
+  ['d','s','b'].forEach(k => {
+    el(`zone-${k}`).classList.remove('done');
+    el(`zone-${k}-e`).classList.remove('hidden');
+    el(`zone-${k}-p`).classList.add('hidden');
+    el(`inp-${k}`).value = '';
+  });
+  el('mfoto-title').textContent = jenis === 'sebelum' ? 'Upload Kondisi: Sebelum Diserahkan' : 'Upload Kondisi: Saat Dikembalikan';
+  el('mfoto-sub').textContent   = jenis === 'sebelum'
+    ? 'Dokumentasikan kondisi kendaraan sebelum diserahkan ke pelanggan.'
+    : 'Dokumentasikan kondisi kendaraan yang dikembalikan pelanggan.';
+  el('sect-catatan').classList.toggle('hidden', jenis === 'sebelum');
+  el('btn-submit-foto').disabled = true;
+  el('modal-foto').classList.remove('hidden');
+}
+function closeFotoModal() { el('modal-foto').classList.add('hidden'); }
+function pickFile(id) { el(id).click(); }
+function onFile(k, inp) {
+  if (!inp.files.length) return;
+  S.files[k] = inp.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    el(`img-${k}`).src = e.target.result;
+    el(`zone-${k}-e`).classList.add('hidden');
+    el(`zone-${k}-p`).classList.remove('hidden');
+    el(`zone-${k}`).classList.add('done');
+    el('btn-submit-foto').disabled = !(S.files.d && S.files.s && S.files.b);
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+
+async function submitFoto() {
+  const jenis = S.fotoJenis, t = S.selected;
+  if (!jenis || !t) return;
+  const btn = el('btn-submit-foto');
+  btn.disabled = true;
+  el('up-status').classList.remove('hidden');
+  const id = t.id_transaksi || t.id;
+  const fd = new FormData();
+  fd.append('jenis', jenis);
+  fd.append('file_depan',   S.files.d);
+  fd.append('file_samping', S.files.s);
+  fd.append('file_belakang',S.files.b);
+  if (jenis === 'sesudah') {
+    const cat = el('inp-catatan').value;
+    const dk  = parseFloat(el('inp-denda-k').value || '0');
+    if (cat) fd.append('catatan_kerusakan', cat);
+    if (dk)  fd.append('biaya_denda_kerusakan', dk.toString());
+  }
+  if (!S.online) {
+    toast('❌','Offline','Upload foto memerlukan koneksi internet.');
+    btn.disabled = false; el('up-status').classList.add('hidden'); return;
+  }
+  try {
+    const r = await fetch(`${API}/transaksi/${id}/foto-kondisi`, {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+S.token},
+      body: fd
+    });
+    if (r.ok) {
+      closeFotoModal();
+      toast('📸','Foto Terupload','Foto kondisi kendaraan tersimpan.');
+      if (jenis === 'sebelum') {
+        await updateStatus(id, 'AKTIF', {catatan_kasir:'Kendaraan diserahkan ke pelanggan.'});
+      } else {
+        openSelesaiModal();
+      }
+    } else {
+      const e = await r.json().catch(()=>({}));
+      toast('❌','Upload Gagal', e.detail || 'Terjadi kesalahan.');
+      btn.disabled = false;
+    }
+  } catch(_) {
+    toast('❌','Upload Gagal','Periksa koneksi internet.');
+    btn.disabled = false;
+  }
+  el('up-status').classList.add('hidden');
+}
+
+// ============================================================
+// MODAL: SELESAIKAN
+// ============================================================
+function openSelesaiModal() {
+  const t = S.selected, k = t?.kendaraan||{};
+  const rencana = new Date(t?.tanggal_selesai_rencana||0);
+  const today   = new Date(); today.setHours(0,0,0,0); rencana.setHours(0,0,0,0);
+  const hari    = Math.max(0, Math.floor((today-rencana)/864e5));
+  const dendaT  = hari * (k.harga_harian||0) * 1.5;
+  S.dendaTLbt   = dendaT;
+
+  el('ms-denda-t').textContent    = rp(dendaT);
+  el('ms-denda-detail').textContent = `${hari} hari × ${rp(k.harga_harian||0)} × 150%`;
+  el('ms-denda-k').value  = '0';
+  el('ms-tambahan').value = '0';
+  el('ms-catatan').value  = '';
+  recalcTotal();
+  el('modal-selesai').classList.remove('hidden');
+}
+function closeSelesai() { el('modal-selesai').classList.add('hidden'); }
+function recalcTotal() {
+  const t = S.selected;
+  const dk = parseFloat(el('ms-denda-k').value||0);
+  const tb = parseFloat(el('ms-tambahan').value||0);
+  const tot = (t?.biaya_sewa||0)+(t?.biaya_supir||0)+S.dendaTLbt+dk+tb;
+  el('ms-total').textContent = rp(tot);
+}
+async function submitSelesai() {
+  const t = S.selected, id = t.id_transaksi||t.id;
+  const dk  = parseFloat(el('ms-denda-k').value||0);
+  const tb  = parseFloat(el('ms-tambahan').value||0);
+  const cat = el('ms-catatan').value;
+  closeSelesai();
+  await updateStatus(id,'SELESAI',{biaya_denda_kerusakan:dk,biaya_tambahan_lain:tb,catatan_kasir:cat});
+}
+
+// ============================================================
+// MODAL: KONFIRMASI UMUM
+// ============================================================
+function doKonfirm(title, body, cb) {
+  el('mk-title').textContent = title;
+  el('mk-body').textContent  = body;
+  el('btn-ok').onclick = cb;
+  el('modal-konfirm').classList.remove('hidden');
+}
+function closeKonfirm() { el('modal-konfirm').classList.add('hidden'); }
+
+// ============================================================
+// PRINT KWITANSI (window.print)
+// ============================================================
+function printReceipt() {
+  const t = S.selected;
+  if (!t) return;
+  const w = window.open('','_blank','width=400,height=600');
+  w.document.write(`<html><head><title>Kwitansi ${t.nomor_booking}</title>
+  <style>body{font-family:monospace;padding:20px;font-size:13px;}hr{border:1px dashed #000;}
+  .r{text-align:right;}.t{font-size:16px;font-weight:bold;}</style></head><body>
+  <div style="text-align:center"><b>AERORENT</b><br>Jl. Diponegoro No.123, Salatiga<br>
+  Telp: +62 812-3456-7890</div><hr>
+  <b>No. Booking:</b> ${t.nomor_booking}<br>
+  <b>Pelanggan:</b> ${t.pelanggan?.nama||'—'}<br>
+  <b>Kendaraan:</b> ${t.kendaraan?.nama||'—'}<br>
+  <b>Periode:</b> ${fmtD(t.tanggal_mulai)} s/d ${fmtD(t.tanggal_selesai_rencana)}<br>
+  <b>Durasi:</b> ${t.durasi_hari||t.durasi_hari_rencana||'?'} hari<hr>
+  Biaya Sewa: <span class="r">${rp(t.biaya_sewa)}</span><br>
+  ${t.gunakan_supir?'Biaya Supir: <span class="r">'+rp(t.biaya_supir)+'</span><br>':''}
+  ${(t.denda_terlambat||0)>0?'Denda Terlambat: <span class="r">'+rp(t.denda_terlambat)+'</span><br>':''}
+  <hr><b>TOTAL: <span class="r">${rp(t.total_biaya)}</span></b><br>
+  <br>Status: ${t.status}<br><br>Terima kasih telah menggunakan AeroRent!
+  \x3c/body\x3e\x3c/html\x3e`);
+  w.print();
+}
+
+// ============================================================
+// LOGOUT
+// ============================================================
+function doLogout() {
+  if (confirm('Yakin ingin keluar dari sesi kasir?')) {
+    localStorage.removeItem(AUTH_KEY);
+    location.href = '/';
+  }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function toast(icon, title, msg) {
+  el('toast-ic').textContent  = icon;
+  el('toast-ttl').textContent = title;
+  el('toast-msg').textContent = msg;
+  el('toast').classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 4000);
+}
+function hideToast() { el('toast').classList.add('hidden'); }
+
+// ============================================================
+// UTILITAS
+// ============================================================
+const el    = id  => document.getElementById(id);
+const show  = (id, v) => { el(id).style.display = v ? '' : 'none'; };
+const rp    = n   => 'Rp ' + Number(n||0).toLocaleString('id-ID');
+const fmtD  = d   => d ? new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : '—';
+const fmtDT = d   => d ? new Date(d).toLocaleString('id-ID') : '—';
+function badge(st) {
+  const m = {MENUNGGU:'b-menunggu',DIKONFIRMASI:'b-dikonfirmasi',
+            AKTIF:'b-aktif',SELESAI:'b-selesai',DIBATALKAN:'b-dibatalkan'};
+  const label = {MENUNGGU:'Menunggu',DIKONFIRMASI:'Dikonfirmasi',
+                AKTIF:'Aktif',SELESAI:'Selesai',DIBATALKAN:'Dibatalkan'};
+  return `<span class="badge ${m[st]||''}">${label[st]||st}</span>`;
+}
+
+// Filter tab initial style
+document.querySelectorAll('.ftab').forEach(b => {
+  b.style.transition = 'all .15s';
+  if (b.dataset.f === 'semua') { b.style.background = '#7C3AED'; b.style.color = 'white'; }
+  else { b.style.background = 'rgba(255,255,255,0.04)'; }
+});
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

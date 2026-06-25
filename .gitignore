@@ -17,3 +17,7 @@ backend/.pytest_cache/
 # Batasi berkas pengaturan VS Code lokal
 .vscode/
 .DS_Store
+# Backup UI Lama
+UI-NEW.zip
+temp_ui/
+frontend_old/

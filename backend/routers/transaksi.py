@@ -47,6 +47,21 @@ async def list_transaksi(
         r["created_at"]      = fmt_date(r["created_at"])
     return rows
 
+@router.get("/saya", tags=["Transaksi"])
+async def list_transaksi_saya(
+    status: Optional[str] = None,
+    dari:   Optional[date] = None,
+    sampai: Optional[date] = None,
+    limit:  int = 100,
+    user=Depends(get_current_account),
+    cur=Depends(get_db),
+):
+    if user["role"] != "PELANGGAN":
+        raise HTTPException(403, "Endpoint ini khusus untuk Customer.")
+        
+    return await list_transaksi(status, dari, sampai, limit, user, cur)
+
+
 
 @router.get("/{tid}", tags=["📋 Transaksi"])
 async def detail_transaksi(tid: str, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):

@@ -1,0 +1,81 @@
+/* ==============================================================================
+   AeroRent — Auth Page (login.html) — style spesifik halaman ini
+   Bergantung pada css/global.css untuk token & komponen dasar.
+   ============================================================================== */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 100px 16px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glow dekoratif latar belakang */
+.auth-page::before, .auth-page::after {
+  content: ''; position: absolute; border-radius: 50%; pointer-events: none; filter: blur(90px);
+}
+.auth-page::before { width: 420px; height: 420px; background: rgba(124,58,237,.22); top: -100px; left: -120px; }
+.auth-page::after  { width: 380px; height: 380px; background: rgba(245,158,11,.14); bottom: -100px; right: -100px; }
+
+.auth-card {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 440px;
+  padding: 36px 32px;
+  background: rgba(10,10,20,.8);
+}
+
+.auth-logo-row { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 22px; }
+.auth-logo-row svg { width: 52px; height: 52px; }
+.auth-logo-text { font-family: var(--font-display); font-size: 30px; letter-spacing: 1px; }
+
+.auth-header { text-align: center; margin-bottom: 24px; }
+.auth-header h2 { font-size: 28px; }
+.auth-header p { color: var(--color-text-dim); font-size: 13px; margin-top: 6px; }
+
+/* Tab switcher */
+.tab-switcher {
+  display: flex; background: var(--color-darker); padding: 6px; border-radius: var(--radius-md);
+  margin-bottom: 26px; border: 1px solid rgba(255,255,255,.05);
+}
+.tab-btn {
+  flex: 1; background: none; border: none; color: var(--color-text-dim);
+  padding: 10px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+  transition: all .2s var(--ease);
+}
+.tab-btn.tab-active { background: var(--color-purple); color: #fff; }
+.tab-btn:hover:not(.tab-active) { color: #fff; }
+
+/* Error banner */
+.auth-error {
+  background: rgba(239,68,68,.1); border-left: 3px solid var(--color-red);
+  color: #FCA5A5; font-size: 13px; padding: 12px 14px; border-radius: var(--radius-sm);
+  margin-bottom: 16px; animation: error-pulse 1.6s ease-in-out infinite;
+}
+@keyframes error-pulse { 0%,100% { opacity: 1; } 50% { opacity: .75; } }
+
+/* File input styling */
+.file-input-wrap {
+  position: relative; border: 1px dashed rgba(255,255,255,.18); border-radius: var(--radius-md);
+  padding: 12px 14px; font-size: 13px; color: var(--color-text-dim);
+  display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+}
+.file-input-wrap input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.file-input-wrap .browse-label { color: var(--color-purple-light); font-weight: 600; flex-shrink: 0; }
+
+/* Demo accounts */
+.demo-section { border-top: 1px solid rgba(255,255,255,.08); margin-top: 24px; padding-top: 20px; text-align: center; }
+.demo-label { font-size: 10px; color: var(--color-text-faint); letter-spacing: 1.2px; margin-bottom: 12px; }
+.demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.demo-grid > .demo-card:last-child:nth-child(odd) { grid-column: span 2; }
+.demo-card {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+  border-radius: var(--radius-sm); padding: 10px; cursor: pointer; transition: background .15s;
+  text-align: center;
+}
+.demo-card:hover { background: rgba(255,255,255,.09); }
+.demo-card .role { font-size: 12px; font-weight: 700; }
+.demo-card .email { font-size: 11px; color: var(--color-text-faint); margin-top: 2px; }
+.demo-card.role-owner .role   { color: var(--color-green); }
+.demo-card.role-kasir .role   { color: var(--color-amber); }
+.demo-card.role-customer .role{ color: var(--color-purple-light); }

@@ -1,0 +1,59 @@
+/* ==============================================================================
+   AeroRent — Customer Portal Layout (dashboard.html, riwayat.html, profil.html)
+   Bergantung pada css/global.css untuk token & komponen dasar.
+   ============================================================================== */
+
+.cs-shell { display: flex; min-height: 100vh; }
+
+/* Sidebar */
+.cs-sidebar {
+  width: 256px; flex-shrink: 0; background: var(--color-darker);
+  border-right: 1px solid rgba(255,255,255,.08);
+  display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.cs-logo { display: flex; align-items: center; gap: 10px; padding: 20px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.cs-userbox { margin: 16px; padding: 14px; border-radius: var(--radius-md); background: var(--glass-bg); border: 1px solid var(--glass-border); }
+.cs-userbox-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-faint); margin-bottom: 10px; }
+.cs-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(124,58,237,.2); color: var(--color-purple-light); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+
+.cs-nav { flex: 1; padding: 8px 14px; display: flex; flex-direction: column; gap: 4px; }
+.cs-nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-md);
+  font-size: 14px; font-weight: 500; color: var(--color-text-dim); transition: all .15s; border: 1px solid transparent;
+  background: none; width: 100%; text-align: left; cursor: pointer;
+}
+.cs-nav-item:hover { background: rgba(255,255,255,.05); color: #fff; }
+.cs-nav-item.active { background: rgba(124,58,237,.12); color: var(--color-purple-light); border-color: rgba(124,58,237,.25); }
+.cs-nav-bottom { padding: 14px; border-top: 1px solid rgba(255,255,255,.06); }
+.cs-logout { color: #FCA5A5; }
+.cs-logout:hover { background: rgba(239,68,68,.1); color: #FCA5A5; }
+
+/* Main content */
+.cs-main { flex: 1; min-width: 0; padding: 32px clamp(20px, 4vw, 40px); }
+.cs-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0 32px; }
+@media (max-width: 760px) { .cs-stat-grid { grid-template-columns: 1fr; } }
+.cs-stat-card { padding: 20px; border-radius: var(--radius-lg); }
+.cs-stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--color-text-dimmer); margin-bottom: 8px; }
+.cs-stat-value { font-size: 26px; font-weight: 700; }
+
+.cs-table-wrap { border-radius: var(--radius-lg); overflow: hidden; }
+.cs-table { width: 100%; border-collapse: collapse; }
+.cs-table th { padding: 12px 18px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--color-text-dimmer); border-bottom: 1px solid rgba(255,255,255,.06); }
+.cs-table td { padding: 14px 18px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.04); }
+.cs-table tr:last-child td { border-bottom: none; }
+.cs-table tr:hover td { background: rgba(255,255,255,.02); }
+
+.cs-cta-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-radius: var(--radius-lg); margin-top: 20px; flex-wrap: wrap; }
+
+@media (max-width: 860px) {
+  .cs-sidebar { display: none; }
+}
+
+/* -- Riwayat Pemesanan cards -- */
+.riwayat-card { padding: 18px 20px; margin-bottom: 14px; }
+.riwayat-list { display: flex; flex-direction: column; }
+
+/* -- Profil Saya -- */
+.profil-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.profil-avatar-lg { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, rgba(124,58,237,.3), rgba(245,158,11,.25)); color: var(--color-purple-light); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; flex-shrink: 0; }
+.doc-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: rgba(255,255,255,.03); border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,.06); margin-bottom: 8px; }

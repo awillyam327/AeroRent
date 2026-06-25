@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0A14">
+<title>Profil Saya — AeroRent</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../../css/global.css">
+<link rel="stylesheet" href="../../css/customer.css">
+</head>
+<body>
+
+<div class="cs-shell">
+  <aside id="cs-sidebar" class="cs-sidebar"></aside>
+
+  <main class="cs-main" style="max-width:680px;">
+    <h1 class="font-display" style="font-size:clamp(1.8rem,4vw,2.6rem);">PROFIL <span class="text-purple">SAYA</span></h1>
+    <p class="text-dim mt-2" style="font-size:14px;margin-bottom:24px;">Kelola informasi data diri akun Anda.</p>
+
+    <div class="glass-card" style="padding:26px;">
+      <div class="profil-header">
+        <div class="profil-avatar-lg" id="pf-avatar">?</div>
+        <div>
+          <div style="font-weight:700;font-size:16px;" id="pf-nama-display">—</div>
+          <div class="text-dim" style="font-size:13px;" id="pf-email-display">—</div>
+          <span class="badge badge-aktif mt-2" style="margin-top:6px;">Terverifikasi</span>
+        </div>
+      </div>
+
+      <form id="form-profil">
+        <div class="form-group">
+          <label class="form-label" for="pf-nama">Nama Lengkap</label>
+          <input type="text" id="pf-nama" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pf-email">Email (tidak dapat diubah)</label>
+          <input type="email" id="pf-email" class="form-input" disabled style="opacity:.6;">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pf-telp">Nomor Telepon / WhatsApp</label>
+          <input type="tel" id="pf-telp" class="form-input" placeholder="0812xxxxxxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pf-alamat">Alamat Domisili Lengkap</label>
+          <textarea id="pf-alamat" class="form-textarea"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dokumen Verifikasi (KTP / SIM)</label>
+          <div class="doc-row">
+            <span style="font-size:13px;">🪪 KTP Nasional</span>
+            <span class="badge badge-aktif">Terverifikasi</span>
+          </div>
+          <div class="doc-row">
+            <span style="font-size:13px;">🚗 SIM A Aktif</span>
+            <span class="badge badge-menunggu">Belum Diunggah</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-4" style="padding:12px 26px;">💾 Simpan Perubahan</button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<div id="toast-root"></div>
+
+<script src="../../js/utils.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/components.js"></script>
+<script src="../../js/customer.js"></script>
+<script>document.addEventListener('DOMContentLoaded', initProfil);</script>
+</body>
+</html>
