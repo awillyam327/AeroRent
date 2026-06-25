@@ -22,7 +22,7 @@
   <script>
     'use strict';
     // Ambil URL API dari localStorage (diset oleh index.html)
-    const API_BASE = localStorage.getItem('aerorent_api_base') || 'http://localhost:8000';
+    const API_BASE = localStorage.getItem('aerorent_api_base') || 'https://pope-bolster-gallon.ngrok-free.dev';
     const FETCH_HEADERS = {
       'Content-Type': 'application/json',
       'ngrok-skip-browser-warning': '69420'
@@ -309,8 +309,8 @@
       <div class="flex items-center justify-between px-5 py-3.5 shrink-0 border-b border-white/10"
            style="background:#05050A;">
         <div class="flex items-center gap-3">
-          <button class="md:hidden p-1.5 rounded-lg hover:bg-white/5" onclick="closeDetail()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
+          <button class="relative z-50 md:hidden p-1.5 rounded-lg hover:bg-white/5" onclick="closeDetail()">
+            <svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
                  stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
           </button>
           <div>
@@ -430,8 +430,8 @@
         <div class="text-xs text-gray-500 mt-0.5" id="bt-subtitle">Langkah 1 dari 3 — Pilih Pelanggan</div>
       </div>
       <button onclick="tutupBuatTrx()"
-              class="text-gray-500 hover:text-white w-9 h-9 rounded-xl hover:bg-white/8 transition-colors flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor"
+              class="relative z-50 text-gray-500 hover:text-white w-9 h-9 rounded-xl hover:bg-white/8 transition-colors flex items-center justify-center">
+        <svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor"
              stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
@@ -473,7 +473,7 @@
             <div class="text-xs text-gray-400" id="bt-plg-telp-sel">—</div>
           </div>
           <span class="text-xs text-green-400 font-semibold">✓ Dipilih</span>
-          <button onclick="btClearPlg()" class="text-gray-500 hover:text-red-400 ml-1 p-1 transition-colors">✕</button>
+          <button onclick="btClearPlg()" class="relative z-50 text-gray-500 hover:text-red-400 ml-1 p-1 transition-colors">✕</button>
         </div>
       </div>
 
@@ -650,7 +650,7 @@
         <div class="font-semibold text-white" id="mfoto-title">Upload Foto Kondisi</div>
         <div class="text-xs text-gray-500 mt-0.5" id="mfoto-sub">Wajib 3 foto: Depan, Samping, Belakang</div>
       </div>
-      <button onclick="closeFotoModal()" class="text-gray-600 hover:text-white p-1.5 rounded-lg hover:bg-white/5">✕</button>
+      <button onclick="closeFotoModal()" class="relative z-50 text-gray-600 hover:text-white p-1.5 rounded-lg hover:bg-white/5">✕</button>
     </div>
     <div class="grid grid-cols-3 gap-2 mb-4">
       <div id="zone-d" class="up-zone p-3 text-center" onclick="pickFile('inp-d')">
@@ -745,7 +745,7 @@
       <div class="font-semibold text-sm" id="toast-ttl">—</div>
       <div class="text-xs text-gray-400 mt-0.5" id="toast-msg">—</div>
     </div>
-    <button onclick="hideToast()" class="text-gray-600 hover:text-white text-xs">✕</button>
+    <button onclick="hideToast()" class="relative z-50 text-gray-600 hover:text-white text-xs p-1">✕</button>
   </div>
 </div>
 
