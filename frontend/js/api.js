@@ -21,7 +21,14 @@ const AUTH_KEY = 'aerorent_auth';
 
 /** Ambil objek sesi tersimpan: { access_token, refresh_token, token_type, user } atau null */
 function getAuth() {
-  try { return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); }
+  try { 
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); 
+    if (auth && auth.user && auth.user.role === 'PELANGGAN') {
+      auth.user.role = 'CUSTOMER';
+      localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+    }
+    return auth;
+  }
   catch (_) { return null; }
 }
 
