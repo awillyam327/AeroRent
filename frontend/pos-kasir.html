@@ -1425,10 +1425,11 @@ function btCariPlg(q) {
 
   BT._plgTimer = setTimeout(() => {
     const ql = q.toLowerCase();
-    // Cari dari cache _allPlg (sudah diload saat buka modal)
+    
+    // PERBAIKAN DI SINI: Sistem sekarang membaca 'p.nama_lengkap' dari pangkalan data!
     const found = BT._allPlg.filter(p =>
-      (p.nama||'').toLowerCase().includes(ql) ||
-      (p.telepon||p.no_telepon||'').includes(q)
+      (p.nama || p.nama_lengkap || '').toLowerCase().includes(ql) ||
+      (p.telepon || p.no_telepon || '').includes(q)
     ).slice(0, 6);
 
     if (!found.length) {
@@ -1439,12 +1440,12 @@ function btCariPlg(q) {
     res.innerHTML = found.map(p => {
       const nama = p.nama || p.nama_lengkap || '?';
       const telp = p.telepon || p.no_telepon || '—';
-      // Encode untuk onclick inline
       const data = JSON.stringify({
         id: p.id || p.id_pelanggan,
         nama: nama, telepon: telp,
         email: p.email||''
       }).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      
       return `
         <button onclick='btPilihPlg("${data.replace(/&quot;/g,'&quot;')}")'
                 class="w-full text-left p-3 rounded-xl transition-colors flex items-center gap-3"
