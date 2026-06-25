@@ -189,7 +189,7 @@ async function submitBooking() {
   const tglSelesai = addDays(S.startDate, S.duration);
 
   const payload = {
-    id_pelanggan: auth.user.id,
+    id_pelanggan: auth.user.sub || auth.user.id,
     id_kendaraan: S.vehicleId,
     tanggal_mulai: tglMulai,
     tanggal_selesai_rencana: tglSelesai,
