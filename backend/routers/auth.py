@@ -94,7 +94,8 @@ async def register_customer(
     
     ktp_url = None
     if foto_ktp:
-        ktp_url = await imgbb_upload(foto_ktp)
+        img_bytes = await foto_ktp.read()
+        ktp_url = await imgbb_upload(img_bytes, foto_ktp.filename)
 
     await cur.execute(
         "INSERT INTO PELANGGAN (id_pelanggan, nama_lengkap, email, no_telepon, password_hash, foto_ktp_url) "
