@@ -14,8 +14,8 @@
  * ==============================================================================
  */
 
-const API_BASE = 'https://pope-bolster-gallon.ngrok-free.dev';
-
+// const API_BASE = 'https://pope-bolster-gallon.ngrok-free.dev';
+const API_BASE = 'http://localhost:8000';
 const AUTH_KEY = 'aerorent_auth';
 
 /* ---------- Sesi & Token ---------- */
@@ -114,8 +114,7 @@ async function apiLoginStaff(email, password) {
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'ngrok-skip-browser-warning': '69420'
+      'Content-Type': 'application/x-www-form-urlencoded'
     },
     body,
   });
@@ -136,8 +135,7 @@ async function apiLoginCustomer(email, password) {
   const res = await fetch(`${API_BASE}/auth/login-customer`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'ngrok-skip-browser-warning': '69420'
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({ email, password }),
   });

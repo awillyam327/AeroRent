@@ -6,7 +6,7 @@
 // Gunakan localhost untuk pengujian di laptop sendiri
 // ✅ BENAR — baca dari localStorage agar sinkron dengan index.html
 // Tidak perlu update manual setiap kali URL Ngrok berubah
-const API = localStorage.getItem('aerorent_api_base') || 'https://pope-bolster-gallon.ngrok-free.dev';
+const API = localStorage.getItem('aerorent_api_base') || 'http://localhost:8000';
 const AUTH_KEY = 'aerorent_auth';
 
 // ============================================================
@@ -65,18 +65,19 @@ async function init() {
 }
 
 // ============================================================
-// API HELPER (DIPERBARUI UNTUK NGROK)
+// API HELPER
 // ============================================================
-async function api(path, opts = {}) {
-  const headers = {
+function apiHeaders(opts = {}) {
+  return {
     'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': '69420',
     ...(S.token ? { 'Authorization': 'Bearer ' + S.token } : {}),
     ...(opts.headers || {})
   };
+}
 
+async function api(path, opts = {}) {
   try {
-    const r = await fetch(API + path, { ...opts, headers });
+    const r = await fetch(API + path, { ...opts, headers: apiHeaders(opts) });
 
     if (r.status === 401) {
       localStorage.removeItem(AUTH_KEY);
@@ -340,7 +341,6 @@ async function savePengeluaran() {
       const r = await fetch(API + '/pengeluaran', {
         method: 'POST',
         headers: {
-          'ngrok-skip-browser-warning': '69420',
           'Authorization': 'Bearer ' + S.token
         },
         body: fd

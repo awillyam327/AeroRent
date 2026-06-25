@@ -100,7 +100,7 @@
         try {
           const r = await fetch(API + item.endpoint, {
             method: item.method,
-            headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '69420', 'Authorization': 'Bearer ' + S.token },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + S.token },
             body: JSON.stringify(item.body)
           });
           if (r.ok) { await idbDel('offline_queue', item.id); toast('✅', 'Sync OK', `${item.nb || item.endpoint} tersinkronisasi.`); }
@@ -118,7 +118,6 @@
     async function api(path, opts = {}) {
       const headers = {
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': '69420',
         ...(S.token ? { 'Authorization': 'Bearer ' + S.token } : {}),
         ...(opts.headers || {})
       };
@@ -486,7 +485,7 @@
 
       try {
         const r = await fetch(`${API}/transaksi/${id}/foto-kondisi`, {
-          method: 'POST', headers: { 'ngrok-skip-browser-warning': '69420', 'Authorization': 'Bearer ' + S.token }, body: fd
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + S.token }, body: fd
         });
         if (r.ok) {
           closeFotoModal();
@@ -765,7 +764,7 @@
 
         const r = await fetch(`${API}/pelanggan`, {
           method: 'POST',
-          headers: { 'ngrok-skip-browser-warning': '69420', 'Authorization': 'Bearer ' + S.token },
+          headers: { 'Authorization': 'Bearer ' + S.token },
           body: fd
         });
 
