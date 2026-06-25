@@ -24,8 +24,8 @@ const DEMO_ACCOUNTS = {
 // ikuti schema.sql supaya tombol demo tetap valid kalau dicoba ke backend asli.
 
 const REDIRECT_BY_ROLE = {
-  OWNER:    'pages/owner/owner-dashboard.html',
-  KASIR:    'pages/cashier/pos-kasir.html',
+  OWNER:    'owner-dashboard.html',
+  KASIR:    'pos-kasir.html',
   CUSTOMER: 'index.html', // Customer mendarat di Beranda setelah login, BUKAN langsung Dashboard
 };
 

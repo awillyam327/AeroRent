@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroRent — Owner Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        fontFamily: { bebas:['"Bebas Neue"','cursive'], dm:['"DM Sans"','sans-serif'] },
+        colors:{ dark:'#0A0A14', darker:'#05050A' }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="assets/css/owner-dashboard.css">
+</head>
+
+<body class="flex h-screen overflow-hidden">
+
+<div id="mobile-overlay" onclick="closeMobileSidebar()"></div>
+
+<aside id="sidebar" class="w-64 flex flex-col shrink-0 h-full overflow-y-auto"
+       style="background:#0D0D1C;border-right:1px solid rgba(255,255,255,.07);">
+
+  <div class="flex items-center gap-3 px-5 py-5 border-b border-white/5">
+    <svg width="36" height="36" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#F59E0B"/>
+        </linearGradient>
+      </defs>
+      <polygon points="20,3 37,34 3,34" fill="url(#lg)"/>
+      <line x1="20" y1="3" x2="9" y2="24" stroke="white" stroke-width="1.5" opacity=".7"/>
+      <line x1="20" y1="3" x2="14" y2="30" stroke="white" stroke-width="1" opacity=".4"/>
+    </svg>
+    <div>
+      <div class="font-bebas text-2xl tracking-widest leading-none">
+        AERO<span style="color:#7C3AED;">RENT</span>
+      </div>
+      <div class="text-xs text-gray-600 leading-none mt-1">Owner Panel</div>
+    </div>
+  </div>
+
+  <div class="mx-4 my-3 p-3 rounded-2xl glass">
+    <div class="text-xs text-gray-600 uppercase tracking-widest mb-2">Owner Panel</div>
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold shrink-0"
+           style="background:rgba(245,158,11,.15);color:#F59E0B;" id="sb-avatar">B</div>
+      <div class="flex-1 min-w-0">
+        <div class="font-semibold text-white text-sm truncate" id="sb-nama">Bapak Owner</div>
+        <div class="badge b-aktif-kary mt-0.5">Status Aktif</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="flex-1 px-3 py-2 space-y-1">
+    <div class="nav-item active" data-section="dashboard" onclick="goSection('dashboard')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" data-section="karyawan" onclick="goSection('karyawan')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Manajemen Karyawan
+    </div>
+    <div class="nav-item" data-section="kendaraan" onclick="goSection('kendaraan')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a2 2 0 0 0-1.6-.8H6.5a2 2 0 0 0-2 2v7.5h3m3 3a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm10 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+      Manajemen Kendaraan
+    </div>
+    <div class="nav-item" data-section="laporan" onclick="goSection('laporan')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Laporan Keuangan
+    </div>
+    <div class="nav-item" data-section="operasional" onclick="goSection('operasional')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Pencatatan Operasional
+    </div>
+    <div class="nav-item" data-section="statistik" onclick="goSection('statistik')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Statistik Kendaraan
+    </div>
+    <div class="nav-item" data-section="pesanan" onclick="goSection('pesanan')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Semua Pesanan
+    </div>
+  </nav>
+
+  <div class="px-3 pb-4 space-y-1 border-t border-white/5 pt-3">
+    <a href="/" class="nav-item text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Kembali ke Beranda
+    </a>
+    <div class="nav-item" onclick="doLogout()" style="color:#EF4444;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:#EF4444;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Selesai / Log Out
+    </div>
+  </div>
+</aside>
+
+<div class="flex-1 flex flex-col overflow-hidden">
+
+  <div class="md:hidden flex items-center gap-3 px-4 py-3 border-b border-white/10 shrink-0"
+       style="background:#0D0D1C;">
+    <button onclick="openMobileSidebar()" class="p-2 rounded-lg hover:bg-white/5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <span class="font-bebas text-xl tracking-widest">AERO<span style="color:#7C3AED;">RENT</span></span>
+  </div>
+
+  <div class="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
+
+    <div id="sec-dashboard" class="section active">
+      <div class="mb-6">
+        <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+          IKHTISAR <span style="color:#F59E0B;">DIREKTUR</span>
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">Performa ringkasan eksekutif armada Salatiga.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="stat-card glass" style="border-left:3px solid #10B981;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Omset Keuangan</div>
+          <div class="text-2xl font-bold" style="color:#10B981;" id="dk-omset">Rp 0</div>
+          <div class="text-xs text-gray-600 mt-1">↑ Akumulasi semua sewa lunas</div>
+        </div>
+        <div class="stat-card glass" style="border-left:3px solid #F59E0B;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Okupansi Mobil</div>
+          <div class="text-2xl font-bold" style="color:#F59E0B;" id="dk-okupansi">0%</div>
+          <div class="text-xs text-gray-600 mt-1">% unit sedang disewa saat ini</div>
+        </div>
+        <div class="stat-card glass" style="border-left:3px solid #7C3AED;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Rental Sukses</div>
+          <div class="text-2xl font-bold" style="color:#C084FC;" id="dk-sukses">0 Sewa</div>
+          <div class="text-xs text-gray-600 mt-1">Total transaksi selesai bulan ini</div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/6">
+          <div class="font-semibold text-white">Penyewaan Selesai Terbaru</div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead>
+              <tr><th>ID</th><th>Pelanggan</th><th>Kendaraan</th><th>Total</th><th>Tanggal</th></tr>
+            </thead>
+            <tbody id="dk-table">
+              <tr><td colspan="5" class="text-center text-gray-600 py-8">Memuat data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-laporan" class="section">
+      <div class="flex items-start justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+            LAPORAN REKAPITULASI <span style="color:#F59E0B;">KEUANGAN</span>
+          </h1>
+          <p class="text-gray-500 text-sm mt-1">Struktur pemasukan kotor, biaya operasional staf, dan profit bersih.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="exportExcel()" class="btn-a px-5 py-2.5 flex items-center gap-2 text-sm">
+            📊 Download Excel
+          </button>
+          <button onclick="exportPDF()" class="px-5 py-2.5 flex items-center gap-2 text-sm rounded-xl font-semibold hover:opacity-80 transition" style="background:#EF4444; color:white; border: 1px solid rgba(255,255,255,.1);">
+            📄 Download PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-4 mb-5 flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-gray-500 uppercase tracking-widest whitespace-nowrap">Dari</label>
+          <input type="date" id="lk-dari" class="g-input px-3 py-2 text-sm">
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-gray-500 uppercase tracking-widest whitespace-nowrap">Sampai</label>
+          <input type="date" id="lk-sampai" class="g-input px-3 py-2 text-sm">
+        </div>
+        <button onclick="loadLaporan()" class="btn-a px-5 py-2 text-sm">Tampilkan</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <div class="stat-card glass" style="border-left:3px solid #10B981;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Total Pendapatan Kotor</div>
+          <div class="text-2xl font-bold" style="color:#10B981;" id="lk-pend">Rp 0</div>
+          <div class="text-xs text-gray-600 mt-1">↑ Akumulasi sewa selesai</div>
+        </div>
+        <div class="stat-card glass" style="border-left:3px solid #EF4444;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Total Biaya Operasional</div>
+          <div class="text-2xl font-bold" style="color:#FCA5A5;" id="lk-peng">Rp 0</div>
+          <div class="text-xs text-gray-600 mt-1" id="lk-peng-sub">Pengeluaran tercatat</div>
+        </div>
+        <div class="stat-card glass" style="border-left:3px solid #7C3AED;">
+          <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Profit Bersih (Net Profit)</div>
+          <div class="text-2xl font-bold" style="color:#C084FC;" id="lk-profit">Rp 0</div>
+          <div class="text-xs text-gray-600 mt-1" id="lk-margin">—</div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-5 mb-5">
+        <div class="font-semibold text-white mb-4">Tren Pendapatan Bulanan</div>
+        <div style="height:240px;">
+          <canvas id="chart-revenue"></canvas>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl overflow-hidden mb-5">
+        <div class="px-6 py-4 border-b border-white/6">
+          <div class="font-semibold text-white">Tren Riwayat Bulanan (Simulasi)</div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead>
+              <tr>
+                <th>Bulan Operasi</th><th>Target Finansial</th>
+                <th>Pemasukan Kotor</th><th>Biaya Pengeluaran</th><th>Profit Bersih</th>
+              </tr>
+            </thead>
+            <tbody id="lk-table">
+              <tr><td colspan="5" class="text-center text-gray-600 py-8">Klik "Tampilkan" untuk memuat data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/6">
+          <div class="font-semibold text-white">Top 5 Kendaraan — Pendapatan Tertinggi</div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead><tr><th>#</th><th>Nama Kendaraan</th><th>Total Sewa</th><th>Pendapatan</th></tr></thead>
+            <tbody id="lk-top-kend">
+              <tr><td colspan="4" class="text-center text-gray-600 py-6">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-operasional" class="section">
+      <div class="mb-6">
+        <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+          PENCATATAN <span style="color:#F59E0B;">OPERASIONAL</span>
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">Catat biaya bahan bakar, servis mobil, cuci mobil, dan pengeluaran lainnya. Akumulasi otomatis masuk ke laporan keuangan.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="glass rounded-2xl p-5">
+          <div class="font-semibold text-white mb-4 flex items-center gap-2">
+            <span class="text-lg">💸</span> Tambah Pengeluaran
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Tanggal</label>
+              <input type="date" id="po-tanggal" class="g-input w-full px-3 py-2.5 text-sm">
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Kategori</label>
+              <select id="po-kategori" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+                <option value="BBM">BBM (Bahan Bakar)</option>
+                <option value="SERVIS">Servis / Perbaikan</option>
+                <option value="PERAWATAN">Perawatan Rutin</option>
+                <option value="GAJI">Gaji Karyawan</option>
+                <option value="ASURANSI">Asuransi</option>
+                <option value="PAJAK">Pajak / STNK</option>
+                <option value="OPERASIONAL">Operasional Lain</option>
+                <option value="LAINNYA">Lainnya</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nominal (Rp)</label>
+              <input type="number" id="po-nominal" min="0" placeholder="Contoh: 500000"
+                     class="g-input w-full px-3 py-2.5 text-sm">
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Keterangan</label>
+              <input type="text" id="po-ket" placeholder="Contoh: Cuci AC kend AB-123 CD"
+                     class="g-input w-full px-3 py-2.5 text-sm">
+            </div>
+            <button onclick="savePengeluaran()" class="w-full btn-a py-2.5 font-semibold text-sm">
+              Simpan Biaya
+            </button>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl overflow-hidden flex flex-col">
+          <div class="px-5 py-4 border-b border-white/6 flex items-center justify-between">
+            <div class="font-semibold text-white">Riwayat Pengeluaran</div>
+            <div class="text-sm text-gray-500">Total: <span class="font-bold" style="color:#F59E0B;" id="po-total">Rp 0</span></div>
+          </div>
+          <div class="overflow-y-auto flex-1" style="max-height:420px;">
+            <table class="tbl w-full">
+              <thead><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Nominal</th><th>Aksi</th></tr></thead>
+              <tbody id="po-table">
+                <tr><td colspan="5" class="text-center text-gray-600 py-8">Belum ada riwayat pengeluaran yang dicatat.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-statistik" class="section">
+      <div class="mb-6">
+        <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+          PERFORMA POPULARITAS BULANAN <span style="color:#F59E0B;">ARMADA</span>
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">Peringkat mobil dengan frekuensi penyewaan tertinggi dan sumbangsi omset.</p>
+      </div>
+
+      <div id="stat-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="col-span-full text-center text-gray-600 py-12">Memuat data armada...</div>
+      </div>
+    </div>
+
+    <div id="sec-kendaraan" class="section">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+            MANAJEMEN <span style="color:#F59E0B;">KENDARAAN</span>
+          </h1>
+          <p class="text-gray-500 text-sm mt-1">Kelola armada kendaraan dan integrasi Traccar GPS.</p>
+        </div>
+        <button onclick="openKendaraanModal()" class="btn-g px-5 py-2.5 flex items-center gap-2 text-sm font-semibold">
+          + Tambah Kendaraan
+        </button>
+      </div>
+
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead>
+              <tr>
+                <th>ID</th><th>Nama Kendaraan</th><th>Plat</th>
+                <th>Sewa/Hari</th><th>Supir/Hari</th><th>Traccar ID</th><th>Status</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="kend-table">
+              <tr><td colspan="8" class="text-center text-gray-600 py-8">Memuat data kendaraan...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-karyawan" class="section">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+            MANAJEMEN <span style="color:#F59E0B;">KARYAWAN</span>
+          </h1>
+          <p class="text-gray-500 text-sm mt-1">Kelola staf administratif, kasir dan driver.</p>
+        </div>
+        <button onclick="openKaryawanModal()" class="btn-g px-5 py-2.5 flex items-center gap-2 text-sm font-semibold">
+          + Tambah Karyawan
+        </button>
+      </div>
+
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead>
+              <tr>
+                <th>ID / NIP</th><th>Nama Lengkap</th><th>Jabatan</th>
+                <th>Tanggal Masuk</th><th>Gaji / Bulan</th><th>Status Perjanjian</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="kary-table">
+              <tr><td colspan="7" class="text-center text-gray-600 py-8">Memuat data karyawan...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-pesanan" class="section">
+      <div class="mb-6">
+        <h1 class="font-bebas text-4xl lg:text-5xl tracking-wider">
+          SEMUA PESANAN <span style="color:#F59E0B;">&amp; PERSETUJUAN</span>
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">Lacak seluruh pemesanan armada secara transparan dan verifikasi tugas staf yang memberikan persetujuan (act.).</p>
+      </div>
+
+      <div class="glass rounded-2xl p-4 mb-5 flex flex-wrap items-center gap-3">
+        <input id="sp-search" type="text" placeholder="Cari ID transaksi, nama pelanggan, atau mobil..."
+               class="g-input flex-1 min-w-48 px-3 py-2.5 text-sm" oninput="filterPesanan()">
+        <div class="flex gap-1 flex-wrap">
+          <button data-sf="semua"        onclick="setPesananFilter('semua')"        class="sf-btn active px-3 py-1.5 rounded-xl text-xs font-semibold">Semua</button>
+          <button data-sf="MENUNGGU"     onclick="setPesananFilter('MENUNGGU')"     class="sf-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-yellow-400">Menunggu</button>
+          <button data-sf="DIKONFIRMASI" onclick="setPesananFilter('DIKONFIRMASI')" class="sf-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-blue-400">Dikonfirmasi</button>
+          <button data-sf="AKTIF"        onclick="setPesananFilter('AKTIF')"        class="sf-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-green-400">Aktif</button>
+          <button data-sf="SELESAI"      onclick="setPesananFilter('SELESAI')"      class="sf-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-400">Selesai</button>
+        </div>
+      </div>
+
+      <div id="sp-grid" class="space-y-3">
+        <div class="text-center text-gray-600 py-12">Memuat semua pesanan...</div>
+      </div>
+    </div>
+
+  </div></div>
+  
+  <div id="modal-kendaraan" class="overlay hidden">
+  <div class="modal-box p-6" style="max-width:600px;">
+    <div class="flex items-center justify-between mb-5">
+      <div class="font-semibold text-white text-lg" id="mkend-title">Tambah Kendaraan</div>
+      <button onclick="closeKendaraanModal()" class="text-gray-600 hover:text-white p-1.5 rounded-lg hover:bg-white/5">✕</button>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nama Kendaraan</label>
+        <input type="text" id="mkend-nama" placeholder="Contoh: Toyota Avanza 2024" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Merk</label>
+        <input type="text" id="mkend-merk" placeholder="Toyota" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Model</label>
+        <input type="text" id="mkend-model" placeholder="Avanza" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Tahun</label>
+        <input type="number" id="mkend-tahun" placeholder="2024" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nomor Plat</label>
+        <input type="text" id="mkend-plat" placeholder="H 1234 AB" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Tipe Kendaraan</label>
+        <select id="mkend-tipe" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+          <option value="5_SEATER">5 Seater</option>
+          <option value="7_SEATER">7 Seater</option>
+          <option value="MICROBUS">Microbus</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Status</label>
+        <select id="mkend-status" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+          <option value="TERSEDIA">Tersedia</option>
+          <option value="DISEWA">Disewa</option>
+          <option value="PERAWATAN">Perawatan</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Harga Sewa Harian (Rp)</label>
+        <input type="number" id="mkend-sewa" placeholder="300000" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Harga Supir Harian (Rp)</label>
+        <input type="number" id="mkend-supir" placeholder="150000" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Traccar Device ID</label>
+        <input type="text" id="mkend-traccar" placeholder="Internal ID di Web Traccar (contoh: 1)" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="closeKendaraanModal()" class="flex-1 btn-o py-2.5 text-sm font-semibold">Batal</button>
+      <button onclick="saveKendaraan()" class="flex-1 btn-g py-2.5 text-sm font-semibold">Simpan Kendaraan</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-kary" class="overlay hidden">
+  <div class="modal-box p-6">
+    <div class="flex items-center justify-between mb-5">
+      <div class="font-semibold text-white text-lg" id="mk-title">Tambah Karyawan</div>
+      <button onclick="closeKaryawanModal()" class="text-gray-600 hover:text-white p-1.5 rounded-lg hover:bg-white/5">✕</button>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nomor Induk Pegawai (NIP)</label>
+        <input type="text" id="mk-nip" placeholder="EMP-003" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nama Lengkap</label>
+        <input type="text" id="mk-nama" placeholder="Budi Hermawan" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Jabatan</label>
+        <select id="mk-role" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+          <option value="KASIR">Kasir (bisa Admin)</option>
+          <option value="OWNER">Owner</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Tanggal Masuk</label>
+        <input type="date" id="mk-tgl" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Status</label>
+        <select id="mk-status" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+          <option value="1">Aktif</option><option value="0">Nonaktif</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Gaji per Bulan (Rp)</label>
+        <input type="number" id="mk-gaji" placeholder="3000000" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Email</label>
+        <input type="email" id="mk-email" placeholder="kasir@aerorent.id" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="col-span-2">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Password Awal</label>
+        <input type="password" id="mk-pass" placeholder="Min. 8 karakter" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="col-span-2">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="mk-buatakun" class="w-4 h-4 rounded" checked>
+          <span class="text-sm text-gray-300">Buat akun login (role KASIR / ADMIN)</span>
+        </label>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeKaryawanModal()" class="flex-1 btn-o py-2.5 text-sm font-semibold">Batal</button>
+      <button onclick="saveKaryawan()" class="flex-1 btn-g py-2.5 text-sm font-semibold">Simpan Karyawan</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="hidden fixed bottom-4 right-4 z-50 max-w-xs">
+  <div class="glass rounded-xl p-3.5 flex items-start gap-3 shadow-2xl toast-anim">
+    <span id="t-ic" class="text-lg shrink-0">✅</span>
+    <div class="flex-1">
+      <div class="font-semibold text-sm" id="t-ttl">—</div>
+      <div class="text-xs text-gray-400 mt-0.5" id="t-msg">—</div>
+    </div>
+    <button onclick="hideToast()" class="text-gray-600 hover:text-white text-xs">✕</button>
+  </div>
+</div>
+
+<script src="assets/js/owner-dashboard.js"></script>
+</body>
+</html>
