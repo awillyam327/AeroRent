@@ -204,7 +204,10 @@ async function submitBooking() {
     // sungguhan jika id_pelanggan adalah baris PELANGGAN yang benar-benar ada.
     const res = await fetch(`${API_BASE}/transaksi`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${auth.access_token}`
+      },
       body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error('Backend menolak permintaan (kemungkinan id_pelanggan demo tidak terdaftar di database asli).');
