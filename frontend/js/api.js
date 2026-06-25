@@ -152,6 +152,9 @@ async function apiRegisterCustomer(formData) {
     method: 'POST',
     body: formData, // multipart/form-data (ada upload foto KTP)
   });
-  if (!res.ok) throw new Error('Endpoint registrasi customer belum tersedia di backend.');
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || 'Pendaftaran gagal (Terjadi kesalahan server)');
+  }
   return res.json();
 }

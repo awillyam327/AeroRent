@@ -179,16 +179,9 @@ async function handleRegisterSubmit(e) {
     location.href = getPostLoginRedirect('CUSTOMER');
     return;
   } catch (err) {
-    // Fallback mode demo: buat sesi customer sementara (tidak benar-benar
-    // tersimpan ke server) supaya alur tetap bisa didemokan.
-    const fakeAuth = {
-      access_token: 'demo-token-new-' + Date.now(),
-      token_type: 'bearer',
-      user: { id: 'plg-demo-' + Date.now(), nama, email, role: 'CUSTOMER' },
-    };
-    setAuth(fakeAuth);
-    showToast('🧪', 'Mode Demo', 'Pendaftaran belum tersambung ke server — sesi sementara dibuat secara lokal.');
-    setTimeout(() => { location.href = getPostLoginRedirect('CUSTOMER'); }, 800);
+    btn.disabled = false;
+    btn.textContent = 'Daftar Akun';
+    showError(err.message || 'Terjadi kesalahan saat mendaftar.');
   }
 }
 
