@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, R
 from utils import fmt_float, fmt_date
 from typing import Optional
 import aiomysql
-from datetime import date
+from datetime import date, datetime
 from database import get_db
 from dependencies import req_kasir_or_owner, req_owner, get_current_account
 from models import TransaksiIn, StatusUpd
@@ -142,13 +142,16 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
     nomor_booking = f"AR-{tahun_ini}-{unique_suffix}" 
 
     tid = f"trx-{uuid.uuid4()}"
+    kid_kasir = user["id"] if user["role"] in ("KASIR", "OWNER") else None
+
     await cur.execute(
         "INSERT INTO TRANSAKSI_SEWA (id_transaksi, nomor_booking, id_pelanggan, id_kendaraan, "
-        "tanggal_mulai, tanggal_selesai_rencana, durasi_hari_rencana, "
+        "id_karyawan_kasir, tanggal_mulai, tanggal_selesai_rencana, durasi_hari_rencana, "
         "gunakan_supir, biaya_sewa, biaya_supir, total_biaya, "
         "metode_pembayaran, catatan_kasir, status) "
-        "VALUES (%(id)s, %(nb)s, %(pid)s, %(kid)s, %(tmu)s, %(tse)s, %(dur)s, %(sup)s, %(bs)s, %(bsu)s, %(tot)s, %(met)s, %(cat)s, 'MENUNGGU')",
+        "VALUES (%(id)s, %(nb)s, %(pid)s, %(kid)s, %(kid_kasir)s, %(tmu)s, %(tse)s, %(dur)s, %(sup)s, %(bs)s, %(bsu)s, %(tot)s, %(met)s, %(cat)s, 'MENUNGGU')",
         {"id": tid, "nb": nomor_booking, "pid": body.id_pelanggan, "kid": body.id_kendaraan,
+         "kid_kasir": kid_kasir,
          "tmu": body.tanggal_mulai, "tse": body.tanggal_selesai_rencana, "dur": durasi,
          "sup": body.gunakan_supir, "bs": b_sewa, "bsu": b_supir, "tot": total,
          "met": body.metode_pembayaran, "cat": body.catatan_kasir},
