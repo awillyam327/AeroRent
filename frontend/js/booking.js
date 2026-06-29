@@ -70,6 +70,21 @@ async function initCheckout() {
   qs('dd-telp').value = profile?.telp || '';
   qs('dd-alamat').value = profile?.alamat || '';
   onDataDiriChange();
+  // Load Midtrans Snap JS dynamically
+  try {
+    const res = await fetch(`${API_BASE}/config/midtrans`);
+    if (res.ok) {
+        const data = await res.json();
+        if (data.client_key) {
+            const script = document.createElement('script');
+            script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+            script.setAttribute('data-client-key', data.client_key);
+            document.head.appendChild(script);
+        }
+    }
+  } catch (e) {
+    console.warn("Gagal memuat config midtrans", e);
+  }
 }
 
 function showCheckoutError(msg) {
@@ -199,9 +214,6 @@ async function submitBooking() {
   };
 
   try {
-    // POST /transaksi SUDAH ADA & nyata di backend (tidak butuh token sama sekali
-    // saat ini — lihat catatan keamanan di laporan Phase 1-2). Akan berhasil
-    // sungguhan jika id_pelanggan adalah baris PELANGGAN yang benar-benar ada.
     const res = await fetch(`${API_BASE}/transaksi`, {
       method: 'POST',
       headers: { 
@@ -212,21 +224,23 @@ async function submitBooking() {
     });
     if (!res.ok) throw new Error('Backend menolak permintaan (kemungkinan id_pelanggan demo tidak terdaftar di database asli).');
     const result = await res.json();
-    S.bookingResult = { nomorBooking: result.nomor_booking, total: result.total_biaya, demo: false };
+    S.bookingResult = { nomorBooking: result.nomor_booking, total: result.total_biaya, demo: false, id_transaksi: result.id_transaksi };
+    
+    if (S.metodeBayar === 'MIDTRANS') {
+        btn.innerHTML = '<span class="spinner"></span> Membuka Pembayaran...';
+        await processMidtransPayment(result.id_transaksi, auth.access_token);
+        return; // processMidtransPayment will call goToStep3()
+    }
   } catch (err) {
-    // Fallback demo: tetap tampilkan alur sukses supaya bisa didemokan utuh,
-    // dengan nomor booking format AR-#### yang konsisten dengan schema.sql
-    // (BUKAN format BKG-... yang dipakai main.py saat ini — lihat catatan
-    // inkonsistensi format nomor booking di laporan Phase 1-2).
     const fakeSeq = Math.floor(1000 + Math.random() * 8999);
     S.bookingResult = {
       nomorBooking: `AR-${new Date().getFullYear()}${fakeSeq}`,
       total: calcTotal(),
       demo: true,
+      id_transaksi: 'demo-' + Date.now()
     };
-    // Simpan ke localStorage supaya muncul di Dashboard Customer (lihat utils.js)
     addDemoBooking({
-      id: 'demo-' + Date.now(),
+      id: S.bookingResult.id_transaksi,
       booking: S.bookingResult.nomorBooking,
       kendaraan: S.vehicle.nama_kendaraan,
       foto_kendaraan: S.vehicle.foto_url || '',
@@ -237,9 +251,48 @@ async function submitBooking() {
       status: 'MENUNGGU',
       created_at: new Date().toISOString(),
     });
+    
+    if (S.metodeBayar === 'MIDTRANS') {
+        showToast('⚠️', 'Mode Demo', 'Pembayaran Midtrans tidak dapat disimulasikan dalam mode offline/demo.');
+    }
   }
 
   goToStep3();
+}
+
+async function processMidtransPayment(tid, token) {
+  try {
+    const res = await fetch(`${API_BASE}/transaksi/${tid}/midtrans-snap`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Gagal mendapatkan token pembayaran.');
+    const data = await res.json();
+    
+    window.snap.pay(data.snap_token, {
+      onSuccess: function(result) {
+        showToast('✅', 'Pembayaran Berhasil', 'Terima kasih, pembayaran Anda telah diterima.');
+        goToStep3();
+      },
+      onPending: function(result) {
+        showToast('⏳', 'Menunggu Pembayaran', 'Silakan selesaikan pembayaran Anda.');
+        goToStep3();
+      },
+      onError: function(result) {
+        showToast('❌', 'Pembayaran Gagal', 'Terjadi kesalahan saat memproses pembayaran.');
+        qs('btn-step2-submit').disabled = false;
+        qs('btn-step2-submit').textContent = 'Konfirmasi & Sewa →';
+      },
+      onClose: function() {
+        showToast('⚠️', 'Pembayaran Ditunda', 'Anda menutup popup pembayaran. Anda dapat melanjutkannya nanti melalui Dashboard.');
+        goToStep3();
+      }
+    });
+  } catch (err) {
+    showToast('❌', 'Error', err.message);
+    qs('btn-step2-submit').disabled = false;
+    qs('btn-step2-submit').textContent = 'Konfirmasi & Sewa →';
+  }
 }
 
 function addDays(dateStr, days) {

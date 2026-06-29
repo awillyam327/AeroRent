@@ -6,10 +6,13 @@ import aiosmtplib
 import aiomysql
 from typing import Optional
 from contextlib import asynccontextmanager
-from database import get_db
+from datetime import date, timedelta
+from database import get_db, _pool
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 from fastapi import HTTPException, BackgroundTasks
 from config import cfg, log
 
@@ -174,7 +177,6 @@ async def smtp_invoice(email_tujuan: str, nama: str, booking: str, pdf_bytes: by
 # ==============================================================================
 # SCHEDULER — Reminder WA H-1 Pengembalian (APScheduler)
 # ==============================================================================
-scheduler = AsyncIOScheduler()
 
 
 async def job_reminder_pengembalian() -> None:

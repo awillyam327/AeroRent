@@ -94,11 +94,11 @@ async def get_current_pelanggan(
     if not row:
         raise HTTPException(401, "Pelanggan tidak ditemukan.")
 
-    return {"id": row["id_pelanggan"], "nama": row["nama_lengkap"], "email": row["email"], "role": "PELANGGAN"}
+    return {"id": row["id_pelanggan"], "nama": row["nama_lengkap"], "email": row["email"], "role": "CUSTOMER"}
 
 async def req_pelanggan(user: dict = Depends(get_current_pelanggan)) -> dict:
-    if user["role"] != "PELANGGAN":
-        raise HTTPException(403, "Diperlukan role PELANGGAN.")
+    if user["role"] != "CUSTOMER":
+        raise HTTPException(403, "Diperlukan role CUSTOMER.")
     return user
 
 async def get_current_account(
@@ -122,7 +122,7 @@ async def get_current_account(
     await cur.execute("SELECT id_pelanggan, nama_lengkap, email FROM PELANGGAN WHERE id_pelanggan = %(uid)s", {"uid": uid})
     row2 = await cur.fetchone()
     if row2:
-        return {"id": row2["id_pelanggan"], "nama": row2["nama_lengkap"], "email": row2["email"], "role": "PELANGGAN"}
+        return {"id": row2["id_pelanggan"], "nama": row2["nama_lengkap"], "email": row2["email"], "role": "CUSTOMER"}
         
     raise HTTPException(401, "User tidak ditemukan di sistem.")
 

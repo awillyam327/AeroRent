@@ -77,10 +77,13 @@ function logout(redirectTo = '/login.html') {
 async function apiFetch(path, options = {}, loginPath = '/login.html') {
   const token = getToken();
   const headers = {
-    'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
+  // Hanya set Content-Type jika bukan FormData (FormData butuh boundary otomatis dari browser)
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
   try {
     const res = await fetch(API_BASE + path, { ...options, headers });
     if (res.status === 401) {
@@ -132,10 +135,8 @@ async function apiLoginStaff(email, password) {
 }
 
 /**
- * Login Customer — BELUM ADA DI BACKEND (tabel PELANGGAN belum punya kolom
- * password sama sekali). Kontrak yang diharapkan didokumentasikan di
- * README_STRUKTUR.md. Selama backend belum mendukung ini, fungsi akan selalu
- * melempar Error, dan auth.js akan fallback ke mode demo lokal.
+ * Login Customer — endpoint POST /auth/login-customer di auth.py.
+ * Mengirim email & password sebagai JSON body.
  */
 async function apiLoginCustomer(email, password) {
   const res = await fetch(`${API_BASE}/auth/login-customer`, {
@@ -150,9 +151,8 @@ async function apiLoginCustomer(email, password) {
 }
 
 /**
- * Registrasi Customer — BELUM ADA DI BACKEND (endpoint POST /pelanggan yang
- * ada saat ini terkunci untuk Kasir/Owner saja, bukan untuk self-registration
- * publik). Kontrak yang diharapkan didokumentasikan di README_STRUKTUR.md.
+ * Registrasi Customer — endpoint POST /auth/register-customer di auth.py.
+ * Mengirim FormData (multipart) karena mungkin ada upload foto KTP.
  */
 async function apiRegisterCustomer(formData) {
   const res = await fetch(`${API_BASE}/auth/register-customer`, {

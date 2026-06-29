@@ -25,11 +25,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AeroRent API", version="1.0.0", lifespan=lifespan)
 
-@app.get("/", tags=["Health"])
-async def root():
-    return {"message": "AeroRent API is running successfully on Vercel! 🚀", "status": "active"}
-
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -37,6 +32,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/", tags=["Health"])
+async def root():
+    return {"message": "AeroRent API is running successfully on Vercel! 🚀", "status": "active"}
+
+@app.get("/config/midtrans", tags=["Config"])
+async def get_midtrans_config():
+    return {"client_key": cfg.MIDTRANS_CLIENT_KEY}
 
 app.include_router(auth.router)
 app.include_router(karyawan.router)

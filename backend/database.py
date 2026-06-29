@@ -29,6 +29,8 @@ async def close_pool() -> None:
 
 async def get_db():
     """FastAPI Dependency: Pinjamkan langsung DictCursor ke setiap endpoint."""
+    if _pool is None:
+        raise Exception("Database pool belum diinisialisasi. Pastikan init_pool() sudah dipanggil.")
     async with _pool.acquire() as conn:
         async with conn.cursor(aiomysql.DictCursor) as cur:
             yield cur

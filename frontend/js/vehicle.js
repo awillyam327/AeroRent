@@ -74,12 +74,6 @@ function renderVehicleCard(v, rootPath = '') {
   const fotoHtml = v.foto_url
     ? `<img src="${v.foto_url}" alt="${v.nama_kendaraan}" loading="lazy">`
     : `<div class="vehicle-photo-placeholder">🚗</div>`;
-function renderVehicleCard(v, rootPath = '') {
-
-  console.log(v.nama_kendaraan, v.foto_url);
-
-  const tersedia = v.status === 'TERSEDIA';
-}
   return `
     <div class="vehicle-card glass-card">
       <div class="vehicle-photo">

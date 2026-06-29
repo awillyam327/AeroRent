@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, R
 from utils import fmt_float, fmt_date
 from typing import Optional
 import aiomysql
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from database import get_db
 from dependencies import req_kasir_or_owner, req_owner, get_current_account
 from models import TransaksiIn, StatusUpd
-from utils import fonnte_send, imgbb_upload
+from utils import fonnte_send, imgbb_upload, midtrans_snap
 import uuid
 import asyncio
 import json
@@ -31,7 +31,7 @@ async def list_transaksi(
         "JOIN KENDARAAN k ON ts.id_kendaraan = k.id_kendaraan WHERE 1=1"
     )
     params: dict = {}
-    if user["role"] == "PELANGGAN":
+    if user["role"] == "CUSTOMER":
         q += " AND ts.id_pelanggan = %(uid)s"
         params["uid"] = user["id"]
         
@@ -58,7 +58,7 @@ async def list_transaksi_saya(
     user=Depends(get_current_account),
     cur=Depends(get_db),
 ):
-    if user["role"] != "PELANGGAN":
+    if user["role"] != "CUSTOMER":
         raise HTTPException(403, "Endpoint ini khusus untuk Customer.")
         
     return await list_transaksi(status, dari, sampai, limit, user, cur)
@@ -271,15 +271,18 @@ async def upload_foto_kondisi(
 
 
 @router.post("/{tid}/midtrans-snap", tags=["📋 Transaksi"])
-async def buat_snap(tid: str, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
+async def buat_snap(tid: str, user=Depends(get_current_account), cur=Depends(get_db)):
     await cur.execute(
-        "SELECT ts.nomor_booking, ts.total_biaya, p.nama_lengkap, p.email "
+        "SELECT ts.nomor_booking, ts.total_biaya, p.nama_lengkap, p.email, ts.id_pelanggan "
         "FROM TRANSAKSI_SEWA ts JOIN PELANGGAN p ON ts.id_pelanggan = p.id_pelanggan "
         "WHERE (ts.id_transaksi = %(id)s OR ts.nomor_booking = %(nb)s) AND ts.status IN ('MENUNGGU','DIKONFIRMASI')",
         {"id": tid, "nb": tid.upper()},
     )
     r = await cur.fetchone()
     if not r: raise HTTPException(404, "Transaksi tidak ditemukan atau tidak dapat dibayar online.")
+
+    if user["role"] == "CUSTOMER" and r["id_pelanggan"] != user["id"]:
+        raise HTTPException(403, "Anda tidak memiliki akses ke transaksi ini.")
 
     result = await midtrans_snap(r["nomor_booking"], fmt_float(r["total_biaya"]), r["nama_lengkap"], r["email"] or "")
     await cur.execute(

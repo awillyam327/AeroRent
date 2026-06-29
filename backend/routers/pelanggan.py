@@ -31,7 +31,7 @@ async def update_pelanggan_saya(
     user=Depends(get_current_account),
     cur=Depends(get_db)
 ):
-    if user["role"] != "PELANGGAN":
+    if user["role"] != "CUSTOMER":
         raise HTTPException(403, "Akses ditolak. Khusus pelanggan.")
         
     await cur.execute(
@@ -43,7 +43,7 @@ async def update_pelanggan_saya(
 
 @router.get("/{pid}", tags=["👥 Pelanggan"])
 async def detail_pelanggan(pid: str, user=Depends(get_current_account), cur=Depends(get_db)):
-    if user["role"] == "PELANGGAN" and user["id"] != pid:
+    if user["role"] == "CUSTOMER" and user["id"] != pid:
         raise HTTPException(403, "Akses ditolak.")
         
     await cur.execute(
