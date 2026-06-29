@@ -69,6 +69,31 @@ async function initCheckout() {
   qs('dd-nama').value = profile?.nama || auth.user.nama || '';
   qs('dd-telp').value = profile?.telp || '';
   qs('dd-alamat').value = profile?.alamat || '';
+  
+  // Ambil data pelanggan asli dari backend
+  try {
+    const pId = auth.user.id || auth.user.sub;
+    if (pId && !pId.startsWith('plg-demo')) {
+      const res = await fetch(`${API_BASE}/pelanggan/${pId}`, {
+        headers: { 'Authorization': `Bearer ${auth.access_token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.nama) qs('dd-nama').value = data.nama;
+        if (data.telepon) qs('dd-telp').value = data.telepon;
+        if (data.alamat) qs('dd-alamat').value = data.alamat;
+        if (data.foto_ktp) {
+          S.ktpUrl = data.foto_ktp;
+          qs('ktp-empty').classList.add('hidden');
+          qs('ktp-done').classList.remove('hidden');
+          qs('ktp-filename').textContent = 'KTP sudah tersimpan di profil';
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Gagal memuat profil pelanggan", e);
+  }
+  
   onDataDiriChange();
   // Load Midtrans Snap JS dynamically
   try {
@@ -171,7 +196,7 @@ function setMetodeBayar(metode) {
   renderSummary();
 }
 function validateStep2() {
-  const valid = !!(S.nama && S.telp && S.alamat && S.ktpFile && S.agreed);
+  const valid = !!(S.nama && S.telp && S.alamat && (S.ktpFile || S.ktpUrl) && S.agreed);
   qs('btn-step2-submit').disabled = !valid;
   return valid;
 }
@@ -276,7 +301,7 @@ async function processMidtransPayment(tid, token) {
       },
       onPending: function(result) {
         showToast('⏳', 'Menunggu Pembayaran', 'Silakan selesaikan pembayaran Anda.');
-        goToStep3();
+        goToStep3('PENDING');
       },
       onError: function(result) {
         showToast('❌', 'Pembayaran Gagal', 'Terjadi kesalahan saat memproses pembayaran.');
@@ -285,7 +310,7 @@ async function processMidtransPayment(tid, token) {
       },
       onClose: function() {
         showToast('⚠️', 'Pembayaran Ditunda', 'Anda menutup popup pembayaran. Anda dapat melanjutkannya nanti melalui Dashboard.');
-        goToStep3();
+        goToStep3('PENDING');
       }
     });
   } catch (err) {
@@ -301,7 +326,7 @@ function addDays(dateStr, days) {
   return d.toISOString().split('T')[0];
 }
 
-function goToStep3() {
+function goToStep3(status = 'SUCCESS') {
   S.step = 3;
   updateStepIndicator();
   qs('panel-step2').classList.add('hidden');
@@ -309,8 +334,30 @@ function goToStep3() {
   qs('summary-panel').classList.add('hidden');
 
   const user = getCurrentUser();
-  qs('success-nama').textContent = user?.nama || S.nama;
-  qs('success-booking').textContent = S.bookingResult.nomorBooking;
+  const userName = user?.nama || S.nama;
+  const bookingNum = S.bookingResult.nomorBooking;
+  
+  const p3 = qs('panel-step3');
+  const icon = p3.querySelector('.success-icon');
+  const title = p3.querySelector('h2');
+  const desc = p3.querySelector('p');
+  
+  if (status === 'PENDING') {
+    icon.textContent = '⚠️';
+    icon.style.color = 'var(--color-amber)';
+    icon.style.borderColor = 'rgba(245,158,11,0.2)';
+    icon.style.backgroundColor = 'rgba(245,158,11,0.05)';
+    title.textContent = 'PEMESANAN DITUNDA';
+    desc.innerHTML = `Terima kasih <strong style="color:#fff;">${userName}</strong>, pemesanan Anda (<span style="color:var(--color-amber);font-weight:700;">${bookingNum}</span>) telah dibuat, namun <strong>pembayaran belum diselesaikan</strong>. Silakan bayar melalui Dashboard.`;
+  } else {
+    icon.textContent = '✓';
+    icon.style.color = '';
+    icon.style.borderColor = '';
+    icon.style.backgroundColor = '';
+    title.textContent = 'PEMESANAN BERHASIL!';
+    desc.innerHTML = `Terima kasih <strong style="color:#fff;">${userName}</strong>, pemesanan Anda (<span style="color:var(--color-amber);font-weight:700;">${bookingNum}</span>) telah diterima sistem AeroRent Salatiga. Tim admin kami akan mengirimkan rincian invoice dan info supir via WhatsApp dalam waktu maksimal 10 menit.`;
+  }
+  
   if (S.bookingResult.demo) {
     showToast('🧪', 'Mode Demo', 'Booking ini tidak benar-benar tersimpan ke server (lihat catatan di kode).');
   }
