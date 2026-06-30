@@ -33,7 +33,7 @@ function renderNavbar(containerId, opts = {}) {
     if (user) {
       const initial = (user.nama || '?')[0].toUpperCase();
       authAreaHtml = `
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 hide-on-mobile">
           <div class="navbar-avatar">${initial}</div>
           <span class="navbar-greeting text-dim" style="font-size:14px;">Halo, ${(user.nama || '').split(' ')[0]}</span>
           <button class="navbar-logout hide-on-mobile" title="Keluar" onclick="logout('${rootPath}login.html')">
