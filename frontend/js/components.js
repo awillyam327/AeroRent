@@ -117,6 +117,23 @@ function renderCustomerSidebar(containerId, opts = {}) {
         <span>🚪</span> Keluar
       </button>
     </div>`;
+
+  // Inject Bottom Nav untuk versi Mobile
+  const existingBn = document.getElementById('cs-bottom-nav-mobile');
+  if (existingBn) existingBn.remove();
+  
+  const bn = document.createElement('nav');
+  bn.id = 'cs-bottom-nav-mobile';
+  bn.className = 'cs-bottom-nav';
+  bn.innerHTML = `
+    <div class="cs-bn-inner">
+      ${items.map((it) => `
+        <a href="${it.href}" class="cs-bn-item ${active === it.key ? 'active' : ''}">
+          <span>${it.icon}</span> ${it.label.split(' ')[0]}
+        </a>`).join('')}
+    </div>
+  `;
+  document.body.appendChild(bn);
 }
 /** Markup toast — sisipkan sekali per halaman, biasanya tepat sebelum </body> */
 function renderToastMarkup(containerId) {

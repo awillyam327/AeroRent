@@ -29,7 +29,10 @@
 .cs-logout:hover { background: rgba(239,68,68,.1); color: #FCA5A5; }
 
 /* Main content */
-.cs-main { flex: 1; min-width: 0; padding: 32px clamp(20px, 4vw, 40px); }
+.cs-main { flex: 1; min-width: 0; padding: 32px clamp(20px, 4vw, 40px); padding-bottom: 90px; }
+@media (max-width: 768px) {
+  .cs-main { padding: 20px 16px 100px 16px; }
+}
 .cs-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0 32px; }
 @media (max-width: 760px) { .cs-stat-grid { grid-template-columns: 1fr; } }
 .cs-stat-card { padding: 20px; border-radius: var(--radius-lg); }
@@ -43,10 +46,50 @@
 .cs-table tr:last-child td { border-bottom: none; }
 .cs-table tr:hover td { background: rgba(255,255,255,.02); }
 
+/* Bottom Nav (Mobile Only) */
+.cs-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(13, 13, 28, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255,255,255,.08);
+  z-index: 999;
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
+.cs-bn-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.cs-bn-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-dim);
+  font-size: 11px;
+  font-weight: 500;
+  flex: 1;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.cs-bn-item span { font-size: 20px; transition: transform 0.2s; }
+.cs-bn-item:hover { color: #fff; }
+.cs-bn-item.active { color: var(--color-purple-light); }
+.cs-bn-item.active span { transform: translateY(-3px) scale(1.1); color: var(--color-purple-light); }
+
 .cs-cta-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-radius: var(--radius-lg); margin-top: 20px; flex-wrap: wrap; }
 
 @media (max-width: 860px) {
   .cs-sidebar { display: none; }
+  .cs-bottom-nav { display: block; }
 }
 
 /* -- Riwayat Pemesanan cards -- */
