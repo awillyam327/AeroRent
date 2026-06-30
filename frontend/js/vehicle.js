@@ -86,8 +86,8 @@ function renderVehicleCard(v, rootPath = '') {
         <div class="vehicle-sub text-dim">${v.merk} • ${TIPE_LABEL[v.tipe_kendaraan] || v.tipe_kendaraan}</div>
         <div class="vehicle-specs">
           <span class="spec-pill"><i class="ph ph-user"></i> ${v.kapasitas_penumpang || '-'} Kursi</span>
-          <span class="spec-pill">⚙ ${v.transmisi === 'AT' ? 'Otomatis' : 'Manual'}</span>
-          <span class="spec-pill">⛽ ${v.bahan_bakar}</span>
+          <span class="spec-pill"><i class="ph ph-gear"></i> ${v.transmisi === 'AT' ? 'Otomatis' : 'Manual'}</span>
+          <span class="spec-pill"><i class="ph ph-gas-pump"></i> ${v.bahan_bakar}</span>
         </div>
         <div class="vehicle-footer">
           <div>
