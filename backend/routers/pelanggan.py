@@ -41,6 +41,27 @@ async def update_pelanggan_saya(
     )
     return {"message": "Profil berhasil diperbarui."}
 
+@router.post("/saya/avatar", tags=["Pelanggan"])
+async def upload_avatar_saya(
+    foto: UploadFile = File(...),
+    user=Depends(get_current_account),
+    cur=Depends(get_db)
+):
+    if user["role"] != "CUSTOMER":
+        raise HTTPException(403, "Akses ditolak. Khusus pelanggan.")
+        
+    img_bytes = await foto.read()
+    if not img_bytes:
+        raise HTTPException(400, "File foto kosong.")
+        
+    foto_url = await imgbb_upload(img_bytes, f"avatar_{user['id']}")
+    
+    await cur.execute(
+        "UPDATE PELANGGAN SET foto_profil_url = %(f)s WHERE id_pelanggan = %(id)s",
+        {"f": foto_url, "id": user["id"]}
+    )
+    return {"message": "Foto profil berhasil diperbarui.", "foto_profil_url": foto_url}
+
 @router.get("/{pid}", tags=["👥 Pelanggan"])
 async def detail_pelanggan(pid: str, user=Depends(get_current_account), cur=Depends(get_db)):
     if user["role"] == "CUSTOMER" and user["id"] != pid:

@@ -173,7 +173,7 @@ async function initProfil() {
     alamat: saved?.alamat || '',
   };
 
-  qs('pf-avatar').textContent = (profile.nama || '?')[0].toUpperCase();
+  qs('pf-avatar').innerHTML = auth.user.foto_profil_url ? `<img src="${auth.user.foto_profil_url}" style="width:100%;height:100%;object-fit:cover;">` : (profile.nama || '?')[0].toUpperCase();
   qs('pf-nama-display').textContent = profile.nama;
   qs('pf-email-display').textContent = profile.email;
   qs('pf-nama').value = profile.nama;
@@ -217,3 +217,56 @@ async function saveProfil() {
       showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal menyimpan profil ke server.');
     }
   }
+
+function showAvatarOptions() {
+  const modal = document.getElementById('modal-avatar-options');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+}
+
+function closeAvatarOptions() {
+  const modal = document.getElementById('modal-avatar-options');
+  if (modal) {
+    modal.classList.add('hidden');
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+  }
+}
+
+async function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const btnEdit = document.querySelector('.btn-edit-avatar');
+  const originalHtml = btnEdit.innerHTML;
+  btnEdit.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#111;"></span>';
+  
+  const formData = new FormData();
+  formData.append('foto', file);
+
+  const res = await apiFetch('/pelanggan/saya/avatar', {
+    method: 'POST',
+    body: formData
+  });
+
+  btnEdit.innerHTML = originalHtml;
+
+  if (res && res.ok) {
+    const data = await res.json();
+    const user = getCurrentUser();
+    if (user) {
+      user.foto_profil_url = data.foto_profil_url;
+      localStorage.setItem('aerorent_user', JSON.stringify(user));
+    }
+    
+    document.getElementById('pf-avatar').innerHTML = `<img src="${data.foto_profil_url}" style="width:100%;height:100%;object-fit:cover;">`;
+    showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', 'Foto profil berhasil diperbarui.');
+    
+    // Update sidebar & navbar if functions exist
+    if (typeof renderCustomerSidebar === 'function') renderCustomerSidebar('cs-sidebar', { active: 'profil', rootPath: '../../' });
+    if (typeof renderNavbar === 'function') renderNavbar('navbar', { active: 'profil', rootPath: '../../' });
+  } else {
+    showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal mengunggah foto profil.');
+  }
+}

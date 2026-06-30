@@ -25,7 +25,12 @@
 
     <div class="glass-card" style="padding:26px;">
       <div class="profil-header">
-        <div class="profil-avatar-lg" id="pf-avatar">?</div>
+        <div style="position:relative; display:inline-block;">
+          <div class="profil-avatar-lg" id="pf-avatar" style="overflow:hidden; padding:0;">?</div>
+          <button type="button" class="btn-edit-avatar" onclick="showAvatarOptions()" style="position:absolute; bottom:-4px; right:-4px; background:var(--color-amber); border:none; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:#111; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.5);">
+            <i class="ph-fill ph-camera"></i>
+          </button>
+        </div>
         <div>
           <div style="font-weight:700;font-size:16px;" id="pf-nama-display">—</div>
           <div class="text-dim" style="font-size:13px;" id="pf-email-display">—</div>
@@ -70,6 +75,24 @@
 </div>
 
 <div id="toast-root"></div>
+
+<!-- Modal Avatar Options -->
+<div id="modal-avatar-options" class="modal-overlay hidden" style="z-index: 1000; display: none;">
+  <div class="modal-content-box glass-card" style="max-width:320px; text-align:center;">
+    <h3 style="margin-bottom:16px; font-size:18px;">Ubah Foto Profil</h3>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <button class="btn btn-outline" onclick="document.getElementById('input-avatar-camera').click(); closeAvatarOptions();">
+        <i class="ph ph-camera"></i> Ambil dari Kamera
+      </button>
+      <button class="btn btn-outline" onclick="document.getElementById('input-avatar-gallery').click(); closeAvatarOptions();">
+        <i class="ph ph-image"></i> Pilih dari Galeri
+      </button>
+    </div>
+    <button class="btn btn-ghost mt-4 btn-block" onclick="closeAvatarOptions()">Batal</button>
+  </div>
+</div>
+<input type="file" id="input-avatar-camera" accept="image/*" capture="user" style="display:none;" onchange="handleAvatarUpload(event)">
+<input type="file" id="input-avatar-gallery" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
 
 <script src="../../js/utils.js"></script>
 <script src="../../js/api.js"></script>

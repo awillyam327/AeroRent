@@ -55,7 +55,7 @@ async def login_customer(
     cur: aiomysql.DictCursor = Depends(get_db),
 ):
     await cur.execute(
-        "SELECT id_pelanggan, nama_lengkap, email, password_hash "
+        "SELECT id_pelanggan, nama_lengkap, email, password_hash, foto_profil_url "
         "FROM PELANGGAN WHERE email = %(e)s",
         {"e": body.email},
     )
@@ -64,7 +64,7 @@ async def login_customer(
     if not row or not row["password_hash"] or not verify_pwd(body.password, row["password_hash"]):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Email atau password salah.")
 
-    token_data = {"sub": row["id_pelanggan"], "nama": row["nama_lengkap"], "email": row["email"], "role": "CUSTOMER"}
+    token_data = {"sub": row["id_pelanggan"], "nama": row["nama_lengkap"], "email": row["email"], "role": "CUSTOMER", "foto_profil_url": row["foto_profil_url"]}
     access_tok  = make_token(token_data, timedelta(minutes=cfg.ACCESS_EXPIRE_MIN))
     
     log.info(f"[Auth] Login Customer: {row['email']}")

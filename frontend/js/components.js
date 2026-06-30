@@ -34,7 +34,7 @@ function renderNavbar(containerId, opts = {}) {
       const initial = (user.nama || '?')[0].toUpperCase();
       authAreaHtml = `
         <div class="flex items-center gap-3 hide-on-mobile">
-          <div class="navbar-avatar">${initial}</div>
+          <div class="navbar-avatar" style="overflow:hidden;">${user.foto_profil_url ? `<img src="${user.foto_profil_url}" style="width:100%;height:100%;object-fit:cover;">` : initial}</div>
           <span class="navbar-greeting text-dim" style="font-size:14px;">Halo, ${(user.nama || '').split(' ')[0]}</span>
           <button class="navbar-logout hide-on-mobile" title="Keluar" onclick="logout('${rootPath}login.html')">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -102,7 +102,7 @@ function renderCustomerSidebar(containerId, opts = {}) {
     <div class="cs-userbox">
       <div class="cs-userbox-label">Customer Panel</div>
       <div class="flex items-center gap-3">
-        <div class="cs-avatar"><i class="ph-fill ph-user-circle"></i></div>
+        <div class="cs-avatar" style="overflow:hidden;">${user?.foto_profil_url ? `<img src="${user.foto_profil_url}" style="width:100%;height:100%;object-fit:cover;">` : `<i class="ph-fill ph-user-circle"></i>`}</div>
         <div>
           <div style="font-weight:700;font-size:14px;">${user?.nama || '—'}</div>
           <span class="badge badge-aktif mt-2" style="margin-top:4px;">Terverifikasi</span>
