@@ -127,7 +127,17 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
     await cur.execute("SELECT status, harga_sewa_harian, harga_supir_harian FROM KENDARAAN WHERE id_kendaraan = %(id)s", {"id": body.id_kendaraan})
     kend = await cur.fetchone()
     if not kend: raise HTTPException(404, "Kendaraan tidak ditemukan.")
-    if kend["status"] != "TERSEDIA": raise HTTPException(409, f"Kendaraan tidak tersedia (status: {kend['status']}).")
+    if kend["status"] == "PERAWATAN": raise HTTPException(409, "Kendaraan sedang dalam perawatan.")
+
+    await cur.execute(
+        "SELECT COUNT(*) AS jml FROM TRANSAKSI_SEWA "
+        "WHERE id_kendaraan = %(id)s AND status IN ('DIKONFIRMASI', 'AKTIF') "
+        "AND tanggal_mulai <= %(tse)s AND tanggal_selesai_rencana >= %(tmu)s",
+        {"id": body.id_kendaraan, "tse": body.tanggal_selesai_rencana, "tmu": body.tanggal_mulai}
+    )
+    overlap = await cur.fetchone()
+    if overlap["jml"] > 0:
+        raise HTTPException(409, "Kendaraan sudah terpesan/disewa pada rentang tanggal tersebut.")
 
     await cur.execute("SELECT nama_lengkap, no_telepon FROM PELANGGAN WHERE id_pelanggan = %(id)s", {"id": body.id_pelanggan})
     plg = await cur.fetchone()
@@ -240,34 +250,52 @@ async def upload_foto_kondisi(
     tid:           str,
     jenis:         str         = Form(..., description="'sebelum' atau 'sesudah'"),
     file_depan:    UploadFile  = File(...),
-    file_samping:  UploadFile  = File(...),
+    file_samping_kanan: UploadFile = File(...),
+    file_samping_kiri:  UploadFile = File(...),
     file_belakang: UploadFile  = File(...),
+    file_dalam:    UploadFile  = File(...),
+    files_tambahan: list[UploadFile] = File([]),
     user=Depends(req_kasir_or_owner),
     cur=Depends(get_db),
 ):
     if jenis not in ("sebelum", "sesudah"): raise HTTPException(400, "Parameter 'jenis' harus 'sebelum' atau 'sesudah'.")
 
-    b_d, b_s, b_b = (await file_depan.read(), await file_samping.read(), await file_belakang.read())
     pfx = f"trx_{tid[:8]}_{jenis}"
+    
+    tasks = [
+        imgbb_upload(await file_depan.read(), f"{pfx}_depan"),
+        imgbb_upload(await file_samping_kanan.read(), f"{pfx}_samping_kanan"),
+        imgbb_upload(await file_samping_kiri.read(), f"{pfx}_samping_kiri"),
+        imgbb_upload(await file_belakang.read(), f"{pfx}_belakang"),
+        imgbb_upload(await file_dalam.read(), f"{pfx}_dalam")
+    ]
+    
+    if files_tambahan:
+        for i, f in enumerate(files_tambahan):
+            tasks.append(imgbb_upload(await f.read(), f"{pfx}_tambahan_{i+1}"))
 
-    url_d, url_s, url_b = await asyncio.gather(
-        imgbb_upload(b_d, f"{pfx}_depan"),
-        imgbb_upload(b_s, f"{pfx}_samping"),
-        imgbb_upload(b_b, f"{pfx}_belakang"),
-    )
+    urls = await asyncio.gather(*tasks)
 
-    foto_json = json.dumps([
-        {"posisi": "depan",    "url": url_d},
-        {"posisi": "samping",  "url": url_s},
-        {"posisi": "belakang", "url": url_b},
-    ])
+    foto_json_list = [
+        {"posisi": "depan", "url": urls[0]},
+        {"posisi": "samping kanan", "url": urls[1]},
+        {"posisi": "samping kiri", "url": urls[2]},
+        {"posisi": "belakang", "url": urls[3]},
+        {"posisi": "dalam", "url": urls[4]}
+    ]
+    
+    if files_tambahan:
+        for i in range(len(files_tambahan)):
+            foto_json_list.append({"posisi": f"tambahan {i+1}", "url": urls[5+i]})
+
+    foto_json = json.dumps(foto_json_list)
     kolom = "foto_kondisi_sebelum" if jenis == "sebelum" else "foto_kondisi_sesudah"
 
     await cur.execute(
         f"UPDATE TRANSAKSI_SEWA SET {kolom} = %(foto)s WHERE id_transaksi = %(id)s OR nomor_booking = %(nb)s",
         {"foto": foto_json, "id": tid, "nb": tid.upper()},
     )
-    return {"message": f"3 foto kondisi '{jenis}' berhasil diupload.", "urls": {"depan": url_d, "samping": url_s, "belakang": url_b}}
+    return {"message": f"Foto kondisi '{jenis}' berhasil diupload.", "urls": foto_json_list}
 
 
 @router.post("/{tid}/midtrans-snap", tags=["📋 Transaksi"])

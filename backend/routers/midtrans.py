@@ -26,13 +26,20 @@ async def webhook_midtrans(request: Request, cur=Depends(get_db)):
         "pending": "BELUM_LUNAS", "deny": "BELUM_LUNAS",
         "cancel": "BELUM_LUNAS", "expire": "BELUM_LUNAS",
     }
+    status_pembayaran = STATUS_MAP.get(trx_status, "BELUM_LUNAS")
+    
+    # Auto-confirm if paid
+    set_status = ""
+    if status_pembayaran == "LUNAS":
+        set_status = ", status = IF(status = 'MENUNGGU', 'DIKONFIRMASI', status)"
+
     await cur.execute(
-        "UPDATE TRANSAKSI_SEWA "
-        "SET midtrans_status = %(ms)s, midtrans_transaction_id = %(mti)s, status_pembayaran = %(sp)s "
-        "WHERE midtrans_order_id = %(oid)s",
+        f"UPDATE TRANSAKSI_SEWA "
+        f"SET midtrans_status = %(ms)s, midtrans_transaction_id = %(mti)s, status_pembayaran = %(sp)s {set_status} "
+        f"WHERE midtrans_order_id = %(oid)s",
         {"ms": trx_status, "mti": payload.get("transaction_id"),
-         "sp": STATUS_MAP.get(trx_status, "BELUM_LUNAS"), "oid": order_id},
+         "sp": status_pembayaran, "oid": order_id},
     )
-    log.info(f"[Midtrans Webhook] order={order_id}, status={trx_status}")
+    log.info(f"[Midtrans Webhook] order={order_id}, status={trx_status}, status_pembayaran={status_pembayaran}")
     return {"status": "OK"}
 

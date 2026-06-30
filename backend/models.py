@@ -20,8 +20,8 @@ class KaryawanIn(BaseModel):
     @field_validator("role")
     @classmethod
     def cek_role(cls, v: str) -> str:
-        if v not in ("OWNER", "KASIR"):
-            raise ValueError("role harus 'OWNER' atau 'KASIR'")
+        if v not in ("OWNER", "KASIR", "SUPIR"):
+            raise ValueError("role harus 'OWNER', 'KASIR', atau 'SUPIR'")
         return v
 
 

@@ -411,6 +411,16 @@
           <div id="bt-new-plg-form" class="hidden mt-3 space-y-3 p-4 rounded-2xl"
             style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);">
             <div class="font-semibold text-sm text-white">Data Pelanggan Baru</div>
+            
+            <div class="glass p-3 rounded-xl mb-1 border border-white/5">
+               <div class="text-xs text-gray-400 mb-2">Punya KTP? Scan agar form otomatis terisi.</div>
+               <input type="file" id="bt-np-ktp" accept="image/*" class="hidden" onchange="btScanKtp(this)">
+               <button onclick="document.getElementById('bt-np-ktp').click()" class="w-full btn-o py-2 rounded-lg text-xs flex items-center justify-center gap-2">
+                 📷 Ambil / Pilih Foto KTP
+               </button>
+               <div id="bt-np-ktp-status" class="text-xs text-gray-500 hidden text-center mt-2"></div>
+            </div>
+
             <input type="text" id="bt-np-nama" placeholder="Nama Lengkap *"
               class="g-input w-full rounded-xl px-4 py-2.5 text-sm">
             <input type="tel" id="bt-np-telp" placeholder="Nomor Telepon / WhatsApp *"
@@ -495,10 +505,17 @@
             <div class="text-xs text-gray-500 mt-0.5" id="bt-supir-info">+ Rp 150.000 / hari</div>
           </div>
           <label class="sw-wrap">
-            <input type="checkbox" id="bt-supir-chk" onchange="btHitung()">
+            <input type="checkbox" id="bt-supir-chk" onchange="btHitung(); btToggleSupirSelect()">
             <div class="sw-track"></div>
             <div class="sw-thumb"></div>
           </label>
+        </div>
+
+        <div id="bt-supir-select-wrap" class="hidden mt-1 mb-3 px-1">
+          <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Pilih Supir</label>
+          <select id="bt-supir-select" class="g-input w-full rounded-xl px-3 py-2.5 text-sm bg-transparent">
+             <option value="">-- Menunggu Data Supir --</option>
+          </select>
         </div>
 
         <!-- Metode pembayaran -->
@@ -561,37 +578,49 @@
       <div class="flex items-center justify-between mb-4">
         <div>
           <div class="font-semibold text-white" id="mfoto-title">Upload Foto Kondisi</div>
-          <div class="text-xs text-gray-500 mt-0.5" id="mfoto-sub">Wajib 3 foto: Depan, Samping, Belakang</div>
+          <div class="text-xs text-gray-500 mt-0.5" id="mfoto-sub">Wajib 5 foto: Depan, Kanan, Kiri, Belakang, Dalam</div>
         </div>
         <button onclick="closeFotoModal()"
           class="relative z-50 text-gray-600 hover:text-white p-1.5 rounded-lg hover:bg-white/5">✕</button>
       </div>
-      <div class="grid grid-cols-3 gap-2 mb-4">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4" id="foto-zones-container">
+        <!-- Depan -->
         <div id="zone-d" class="up-zone p-3 text-center" onclick="pickFile('inp-d')">
-          <div id="zone-d-e" class="flex flex-col items-center gap-1 text-gray-600"><span
-              class="text-2xl">📷</span><span class="text-xs">Depan</span></div>
-          <div id="zone-d-p" class="hidden"><img id="img-d" src="" alt="" class="w-full h-14 object-cover rounded-lg">
-            <div class="text-xs text-green-400 mt-1">✓ Depan</div>
-          </div>
+          <div id="zone-d-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Depan</span></div>
+          <div id="zone-d-p" class="hidden"><img id="img-d" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Depan</div></div>
           <input type="file" id="inp-d" accept="image/*" class="hidden" onchange="onFile('d',this)">
         </div>
-        <div id="zone-s" class="up-zone p-3 text-center" onclick="pickFile('inp-s')">
-          <div id="zone-s-e" class="flex flex-col items-center gap-1 text-gray-600"><span
-              class="text-2xl">📷</span><span class="text-xs">Samping</span></div>
-          <div id="zone-s-p" class="hidden"><img id="img-s" src="" alt="" class="w-full h-14 object-cover rounded-lg">
-            <div class="text-xs text-green-400 mt-1">✓ Samping</div>
-          </div>
-          <input type="file" id="inp-s" accept="image/*" class="hidden" onchange="onFile('s',this)">
+        <!-- Samping Kanan -->
+        <div id="zone-sk" class="up-zone p-3 text-center" onclick="pickFile('inp-sk')">
+          <div id="zone-sk-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Kanan</span></div>
+          <div id="zone-sk-p" class="hidden"><img id="img-sk" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Kanan</div></div>
+          <input type="file" id="inp-sk" accept="image/*" class="hidden" onchange="onFile('sk',this)">
         </div>
+        <!-- Samping Kiri -->
+        <div id="zone-ski" class="up-zone p-3 text-center" onclick="pickFile('inp-ski')">
+          <div id="zone-ski-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Kiri</span></div>
+          <div id="zone-ski-p" class="hidden"><img id="img-ski" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Kiri</div></div>
+          <input type="file" id="inp-ski" accept="image/*" class="hidden" onchange="onFile('ski',this)">
+        </div>
+        <!-- Belakang -->
         <div id="zone-b" class="up-zone p-3 text-center" onclick="pickFile('inp-b')">
-          <div id="zone-b-e" class="flex flex-col items-center gap-1 text-gray-600"><span
-              class="text-2xl">📷</span><span class="text-xs">Belakang</span></div>
-          <div id="zone-b-p" class="hidden"><img id="img-b" src="" alt="" class="w-full h-14 object-cover rounded-lg">
-            <div class="text-xs text-green-400 mt-1">✓ Belakang</div>
-          </div>
+          <div id="zone-b-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Belakang</span></div>
+          <div id="zone-b-p" class="hidden"><img id="img-b" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Belakang</div></div>
           <input type="file" id="inp-b" accept="image/*" class="hidden" onchange="onFile('b',this)">
         </div>
+        <!-- Dalam -->
+        <div id="zone-dlm" class="up-zone p-3 text-center" onclick="pickFile('inp-dlm')">
+          <div id="zone-dlm-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Dalam</span></div>
+          <div id="zone-dlm-p" class="hidden"><img id="img-dlm" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Dalam</div></div>
+          <input type="file" id="inp-dlm" accept="image/*" class="hidden" onchange="onFile('dlm',this)">
+        </div>
+        <!-- Tambahan -->
+        <div class="up-zone p-3 text-center border-dashed border-2 flex flex-col items-center justify-center cursor-pointer" style="border-color:rgba(255,255,255,.1);" onclick="pickFile('inp-tambahan')">
+           <span class="text-2xl text-gray-500">+</span><span class="text-xs text-gray-500">Foto Lainnya</span>
+           <input type="file" id="inp-tambahan" accept="image/*" multiple class="hidden" onchange="onFileTambahan(this)">
+        </div>
       </div>
+      <div id="tambahan-preview" class="grid grid-cols-4 gap-2 mb-4 hidden"></div>
       <div id="sect-catatan" class="hidden mb-4 space-y-2">
         <textarea id="inp-catatan" rows="2" placeholder="Catatan kerusakan (jika ada)..."
           class="g-input w-full rounded-xl p-3 text-sm resize-none"></textarea>

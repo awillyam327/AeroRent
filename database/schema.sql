@@ -24,7 +24,7 @@
         email             VARCHAR(100)    NOT NULL UNIQUE,
         no_telepon        VARCHAR(25),
         password_hash     VARCHAR(255)    NOT NULL,
-        role              VARCHAR(20)     NOT NULL CHECK (role IN ('OWNER','KASIR')),
+        role              VARCHAR(20)     NOT NULL CHECK (role IN ('OWNER','KASIR','SUPIR')),
         is_aktif          TINYINT(1)      DEFAULT 1 NOT NULL,
         foto_profil_url   VARCHAR(500),
         tanggal_masuk     DATETIME        DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -89,6 +89,7 @@
         id_pelanggan              VARCHAR(50)     NOT NULL,
         id_kendaraan              VARCHAR(50)     NOT NULL,
         id_karyawan_kasir         VARCHAR(50),                     -- Kasir yang memproses
+        id_supir                  VARCHAR(50),                     -- Supir yang ditugaskan
         
         tanggal_mulai             DATE            NOT NULL,
         tanggal_selesai_rencana   DATE            NOT NULL,
@@ -121,7 +122,8 @@
         
         FOREIGN KEY (id_pelanggan)      REFERENCES PELANGGAN(id_pelanggan) ON DELETE RESTRICT,
         FOREIGN KEY (id_kendaraan)      REFERENCES KENDARAAN(id_kendaraan) ON DELETE RESTRICT,
-        FOREIGN KEY (id_karyawan_kasir) REFERENCES KARYAWAN(id_karyawan) ON DELETE SET NULL
+        FOREIGN KEY (id_karyawan_kasir) REFERENCES KARYAWAN(id_karyawan) ON DELETE SET NULL,
+        FOREIGN KEY (id_supir)          REFERENCES KARYAWAN(id_karyawan) ON DELETE SET NULL
     ) COMMENT='Inti sistem: siklus hidup lengkap transaksi sewa';
 
     -- ==============================================================================

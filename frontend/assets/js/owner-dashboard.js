@@ -436,7 +436,9 @@ async function loadStatistik() {
 // MANAJEMEN KENDARAAN
 // ============================================================
 async function loadKendaraan() {
-  const data = await apiJson('/kendaraan') || [];
+  const sort = document.getElementById('sk-sort') ? document.getElementById('sk-sort').value : '';
+  const order = document.getElementById('sk-order') ? document.getElementById('sk-order').value : 'asc';
+  const data = await apiJson(`/kendaraan?sort_by=${sort}&order=${order}`) || [];
   S.kendaraan = Array.isArray(data) ? data : [];
   renderKendaraanTable();
 }
@@ -595,7 +597,7 @@ function renderKaryawanTable() {
         </td>
         <td>
           <span class="badge" style="background:rgba(59,130,246,.12);color:#60A5FA;border:1px solid rgba(59,130,246,.25);">
-            ${k.role === 'OWNER' ? 'Owner' : 'Kasir'}
+            ${k.role === 'OWNER' ? 'Owner' : k.role === 'SUPIR' ? 'Supir' : 'Kasir'}
           </span>
         </td>
         <td class="text-xs text-gray-400">${fmtD(k.tanggal_masuk)}</td>

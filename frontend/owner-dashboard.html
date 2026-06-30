@@ -337,6 +337,19 @@
         </button>
       </div>
 
+      <div class="glass rounded-2xl p-4 mb-5 flex gap-3">
+        <select id="sk-sort" onchange="loadKendaraan()" class="g-input px-3 py-2 text-sm bg-transparent">
+          <option value="">Urutkan: Default</option>
+          <option value="harga">Urutkan: Harga Sewa</option>
+          <option value="tipe">Urutkan: Tipe Kendaraan</option>
+          <option value="karyawan">Urutkan: Karyawan Pengelola</option>
+        </select>
+        <select id="sk-order" onchange="loadKendaraan()" class="g-input px-3 py-2 text-sm bg-transparent">
+          <option value="asc">Menaik (ASC)</option>
+          <option value="desc">Menurun (DESC)</option>
+        </select>
+      </div>
+
       <div class="glass rounded-2xl overflow-hidden">
         <div class="overflow-x-auto">
           <table class="tbl w-full">
@@ -494,6 +507,7 @@
         <select id="mk-role" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
           <option value="KASIR">Kasir (bisa Admin)</option>
           <option value="OWNER">Owner</option>
+          <option value="SUPIR">Supir</option>
         </select>
       </div>
       <div>

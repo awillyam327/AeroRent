@@ -8,7 +8,7 @@ from config import cfg, log
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # Import Routers
-from routers import auth, karyawan, kendaraan, pelanggan, transaksi, midtrans, pengeluaran, laporan
+from routers import auth, karyawan, kendaraan, pelanggan, transaksi, midtrans, pengeluaran, laporan, ocr
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,6 +49,7 @@ app.include_router(transaksi.router)
 app.include_router(midtrans.router)
 app.include_router(pengeluaran.router)
 app.include_router(laporan.router)
+app.include_router(ocr.router)
 
 if __name__ == "__main__":
     import uvicorn

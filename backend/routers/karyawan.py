@@ -3,12 +3,22 @@ from utils import fmt_float, fmt_date
 from typing import Optional
 import aiomysql
 from database import get_db
-from dependencies import req_owner, hash_pwd
+from dependencies import req_owner, get_current_user, hash_pwd
 from models import KaryawanIn, KaryawanUpd
 import uuid
 from config import log
 
 router = APIRouter(prefix="/karyawan", tags=["Karyawan"])
+
+@router.get("/supir-aktif", tags=["👤 Karyawan"])
+async def list_supir_aktif(user=Depends(get_current_user), cur=Depends(get_db)):
+    await cur.execute(
+        "SELECT id_karyawan AS id, nama_lengkap AS nama FROM KARYAWAN "
+        "WHERE role = 'SUPIR' AND is_aktif = 1 ORDER BY nama_lengkap ASC"
+    )
+    rows = await cur.fetchall()
+    return rows
+
 @router.get("", tags=["👤 Karyawan"])
 async def list_karyawan(user=Depends(req_owner), cur=Depends(get_db)):
     await cur.execute(

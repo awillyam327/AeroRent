@@ -433,13 +433,20 @@
     // MODAL: FOTO KONDISI KENDARAAN
     // ============================================================
     function openFotoModal(jenis) {
-      S.fotoJenis = jenis; S.files = { d: null, s: null, b: null };
-      ['d', 's', 'b'].forEach(k => {
-        el(`zone-${k}`).classList.remove('done');
-        el(`zone-${k}-e`).classList.remove('hidden');
-        el(`zone-${k}-p`).classList.add('hidden');
-        el(`inp-${k}`).value = '';
+      S.fotoJenis = jenis; S.files = { d: null, sk: null, ski: null, b: null, dlm: null, tambahan: [] };
+      ['d', 'sk', 'ski', 'b', 'dlm'].forEach(k => {
+        const zone = el(`zone-${k}`);
+        if(zone) {
+          zone.classList.remove('done');
+          el(`zone-${k}-e`).classList.remove('hidden');
+          el(`zone-${k}-p`).classList.add('hidden');
+          el(`inp-${k}`).value = '';
+        }
       });
+      el('tambahan-preview').innerHTML = '';
+      el('tambahan-preview').classList.add('hidden');
+      el('inp-tambahan').value = '';
+      
       el('mfoto-title').textContent = jenis === 'sebelum' ? 'Upload Kondisi: Sebelum Diserahkan' : 'Upload Kondisi: Saat Dikembalikan';
       el('sect-catatan').classList.toggle('hidden', jenis === 'sebelum');
       el('btn-submit-foto').disabled = true;
@@ -447,6 +454,7 @@
     }
     function closeFotoModal() { el('modal-foto').classList.add('hidden'); }
     function pickFile(id) { el(id).click(); }
+    
     function onFile(k, inp) {
       if (!inp.files.length) return;
       S.files[k] = inp.files[0];
@@ -456,9 +464,33 @@
         el(`zone-${k}-e`).classList.add('hidden');
         el(`zone-${k}-p`).classList.remove('hidden');
         el(`zone-${k}`).classList.add('done');
-        el('btn-submit-foto').disabled = !(S.files.d && S.files.s && S.files.b);
+        el('btn-submit-foto').disabled = !(S.files.d && S.files.sk && S.files.ski && S.files.b && S.files.dlm);
       };
       reader.readAsDataURL(inp.files[0]);
+    }
+
+    function onFileTambahan(inp) {
+      if (!inp.files.length) return;
+      for (let f of inp.files) {
+        S.files.tambahan.push(f);
+        const reader = new FileReader();
+        reader.onload = e => {
+          const div = document.createElement('div');
+          div.className = 'relative rounded-lg overflow-hidden h-14';
+          div.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">
+                           <button onclick="removeTambahan(this)" class="absolute top-0 right-0 bg-red-500/80 text-white p-0.5 text-[10px]">✕</button>`;
+          el('tambahan-preview').appendChild(div);
+          el('tambahan-preview').classList.remove('hidden');
+        };
+        reader.readAsDataURL(f);
+      }
+    }
+    window.removeTambahan = function(btn) {
+      const div = btn.parentElement;
+      const idx = Array.from(div.parentElement.children).indexOf(div);
+      if(idx > -1) S.files.tambahan.splice(idx, 1);
+      div.remove();
+      if(S.files.tambahan.length === 0) el('tambahan-preview').classList.add('hidden');
     }
 
     async function submitFoto() {
@@ -474,8 +506,15 @@
       const fd = new FormData();
       fd.append('jenis', jenis);
       fd.append('file_depan', S.files.d);
-      fd.append('file_samping', S.files.s);
+      fd.append('file_samping_kanan', S.files.sk);
+      fd.append('file_samping_kiri', S.files.ski);
       fd.append('file_belakang', S.files.b);
+      fd.append('file_dalam', S.files.dlm);
+      
+      S.files.tambahan.forEach(f => {
+        fd.append('file_tambahan', f);
+      });
+
       if (jenis === 'sesudah') {
         const cat = el('inp-catatan').value;
         const dk = parseFloat(el('inp-denda-k').value || '0');
@@ -593,16 +632,26 @@
   el('bt-modal').classList.add('flex');
       btGotoStep(1);
 
-      // --- KODE INI YANG HILANG DARI POTONGAN TADI ---
       // 4. Ambil data dari server
-      const [rKend, rPlg] = await Promise.all([
+      const [rKend, rPlg, rSupir] = await Promise.all([
         api('/kendaraan?status=TERSEDIA'),
-        api('/pelanggan')
+        api('/pelanggan'),
+        api('/karyawan/supir-aktif')
       ]);
 
       if (rKend?.ok) BT.daftarKend = await rKend.json();
       if (rPlg?.ok) BT._allPlg = await rPlg.json();
-      // -----------------------------------------------
+      if (rSupir?.ok) {
+         BT.daftarSupir = await rSupir.json();
+         const sel = el('bt-supir-select');
+         if(sel) {
+            if(BT.daftarSupir.length === 0) {
+               sel.innerHTML = '<option value="">-- Tidak Ada Supir Tersedia --</option>';
+            } else {
+               sel.innerHTML = '<option value="">-- Pilih Supir --</option>' + BT.daftarSupir.map(s => `<option value="${s.id}">${s.nama}</option>`).join('');
+            }
+         }
+      }
     }
 
     function tutupBuatTrx() { el('bt-modal').classList.add('hidden'); el('bt-modal').classList.remove('flex'); }
@@ -744,6 +793,45 @@
     }
 
     function btToggleNewPlg() { el('bt-new-plg-form').classList.toggle('hidden'); }
+
+    async function btScanKtp(inp) {
+      if (!inp.files.length) return;
+      const file = inp.files[0];
+      const statusEl = el('bt-np-ktp-status');
+      
+      statusEl.classList.remove('hidden', 'text-green-400', 'text-red-400');
+      statusEl.classList.add('text-gray-500');
+      statusEl.innerHTML = '<div class="spin inline-block mx-auto" style="width:12px;height:12px;border-width:2px;vertical-align:-2px;margin-right:6px;"></div>Memproses OCR KTP...';
+      
+      const fd = new FormData();
+      fd.append('file', file);
+      
+      try {
+        const r = await fetch(`${API}/ocr/ktp`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + S.token },
+          body: fd
+        });
+        
+        if (r.ok) {
+          const res = await r.json();
+          if (res.nama) {
+            el('bt-np-nama').value = res.nama;
+            toast('✅', 'OCR Berhasil', `Nama ditemukan: ${res.nama}`);
+          } else {
+            toast('⚠️', 'OCR Selesai', 'Tidak menemukan nama yang jelas.');
+          }
+          statusEl.innerHTML = '✅ KTP diproses.';
+          statusEl.classList.add('text-green-400');
+        } else {
+          statusEl.innerHTML = '❌ Gagal membaca KTP.';
+          statusEl.classList.add('text-red-400');
+        }
+      } catch (e) {
+        statusEl.innerHTML = '❌ Terjadi kesalahan jaringan.';
+        statusEl.classList.add('text-red-400');
+      }
+    }
 
     async function btSimpanPlgBaru() {
       const nama = el('bt-np-nama').value.trim();
@@ -909,6 +997,14 @@
 
       el('bt-total').textContent = rp(total);
     }
+    
+    function btToggleSupirSelect() {
+      const isChecked = el('bt-supir-chk').checked;
+      const wrap = el('bt-supir-select-wrap');
+      if (wrap) {
+         wrap.classList.toggle('hidden', !isChecked);
+      }
+    }
 
 
     // ── Submit (Buat Transaksi ke API) ──────────────────────────
@@ -916,11 +1012,13 @@
       const tglMulai = el('bt-tgl-mulai').value;
       const durasi = Math.max(1, parseInt(el('bt-durasi').value) || 1);
       const supir = el('bt-supir-chk').checked ? 1 : 0;
+      const supirId = el('bt-supir-select') ? el('bt-supir-select').value : null;
       const metode = el('bt-metode').value;
       const catatan = el('bt-catatan').value.trim();
 
       if (!tglMulai) { toast('⚠️', 'Tanggal Wajib Diisi', 'Pilih tanggal mulai sewa.'); return; }
       if (!BT.pelanggan || !BT.kendaraan) { toast('⚠️', 'Data Tidak Lengkap', 'Pelanggan dan kendaraan wajib dipilih.'); return; }
+      if (supir && !supirId) { toast('⚠️', 'Supir Belum Dipilih', 'Silakan pilih supir yang tersedia.'); return; }
 
       // Hitung tanggal selesai
       const dtMulai = new Date(tglMulai);
@@ -934,6 +1032,7 @@
         tanggal_mulai: tglMulai,
         tanggal_selesai_rencana: tglSelesai,
         gunakan_supir: supir,
+        id_supir: supir ? supirId : null,
         metode_pembayaran: metode,
         catatan_kasir: catatan || null,
       };
