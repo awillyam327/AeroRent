@@ -134,6 +134,7 @@ function injectMobileBottomNav(active = '', rootPath = '') {
   const items = [
     { key: 'dashboard', href: `${rootPath}pages/customer/dashboard.html`, icon: '<i class="ph ph-squares-four"></i>', label: 'Dashboard' },
     { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '<i class="ph ph-car-profile"></i>', label: 'Sewa' },
+    { key: 'beranda', href: `${rootPath}index.html`, icon: '<i class="ph-fill ph-house"></i>', label: 'Beranda', isCenter: true },
     { key: 'riwayat', href: `${rootPath}pages/customer/riwayat.html`, icon: '<i class="ph ph-clock-counter-clockwise"></i>', label: 'Riwayat' },
     { key: 'profil', href: `${rootPath}pages/customer/profil.html`, icon: '<i class="ph ph-user"></i>', label: 'Profil' },
   ];
@@ -147,8 +148,8 @@ function injectMobileBottomNav(active = '', rootPath = '') {
   bn.innerHTML = `
     <div class="cs-bn-inner">
       ${items.map((it) => `
-        <a href="${it.href}" class="cs-bn-item ${active === it.key ? 'active' : ''}">
-          <span>${it.icon}</span> ${it.label}
+        <a href="${it.href}" class="cs-bn-item ${active === it.key ? 'active' : ''} ${it.isCenter ? 'cs-bn-center' : ''}">
+          <span>${it.icon}</span> ${it.isCenter ? '' : it.label}
         </a>`).join('')}
     </div>
   `;
