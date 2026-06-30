@@ -249,6 +249,8 @@ h3 { font-size: 1.5rem; }
 .navbar-burger { display: none; background: none; border: none; color: #fff; padding: 6px; }
 @media (max-width: 767px) {
   .navbar-burger { display: flex; }
+  .navbar-greeting { display: none; }
+  .hide-on-mobile { display: none !important; }
   
   .navbar-links {
     display: flex; flex-direction: column; 
