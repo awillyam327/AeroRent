@@ -70,6 +70,9 @@ function renderNavbar(containerId, opts = {}) {
   if (burger) {
     burger.addEventListener('click', () => el.classList.toggle('navbar-mobile-open'));
   }
+
+  // Inject bottom nav jika role adalah CUSTOMER
+  injectMobileBottomNav(active, rootPath);
 }
 
 /**
@@ -118,8 +121,24 @@ function renderCustomerSidebar(containerId, opts = {}) {
       </button>
     </div>`;
 
-  // Inject Bottom Nav untuk versi Mobile
-  const existingBn = document.getElementById('cs-bottom-nav-mobile');
+  injectMobileBottomNav(active, rootPath);
+}
+
+// Helper untuk menginjeksi Bottom Nav khusus mobile bagi Customer
+function injectMobileBottomNav(active = '', rootPath = '') {
+  const user = getCurrentUser();
+  if (!user || user.role !== 'CUSTOMER') return;
+  
+  if (active === 'armada') active = 'sewa-baru';
+
+  const items = [
+    { key: 'dashboard', href: `${rootPath}pages/customer/dashboard.html`, icon: '📊', label: 'Dashboard' },
+    { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '➕', label: 'Sewa' },
+    { key: 'riwayat', href: `${rootPath}pages/customer/riwayat.html`, icon: '🕘', label: 'Riwayat' },
+    { key: 'profil', href: `${rootPath}pages/customer/profil.html`, icon: '👤', label: 'Profil' },
+  ];
+
+  let existingBn = document.getElementById('cs-bottom-nav-mobile');
   if (existingBn) existingBn.remove();
   
   const bn = document.createElement('nav');
@@ -129,7 +148,7 @@ function renderCustomerSidebar(containerId, opts = {}) {
     <div class="cs-bn-inner">
       ${items.map((it) => `
         <a href="${it.href}" class="cs-bn-item ${active === it.key ? 'active' : ''}">
-          <span>${it.icon}</span> ${it.label.split(' ')[0]}
+          <span>${it.icon}</span> ${it.label}
         </a>`).join('')}
     </div>
   `;
