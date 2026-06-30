@@ -12,6 +12,7 @@
 
 <link rel="stylesheet" href="css/global.css">
 <link rel="stylesheet" href="css/checkout.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
 
@@ -27,7 +28,7 @@
 
   <!-- Error -->
   <div id="co-error" class="checkout-error glass-card hidden">
-    <div style="font-size:36px;margin-bottom:14px;">⚠️</div>
+    <div style="font-size:36px;margin-bottom:14px;"><i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i></div>
     <h2 class="mb-3">TIDAK DAPAT MELANJUTKAN</h2>
     <p id="co-error-msg" class="text-dim" style="font-size:14px;"></p>
     <a href="armada.html" class="btn btn-outline mt-6" style="display:inline-flex;">Kembali ke Armada</a>
@@ -51,7 +52,7 @@
 
         <!-- STEP 1: Jadwal & Layanan -->
         <div id="panel-step1" class="checkout-panel glass-card">
-          <div class="checkout-panel-title">📅 Detail Waktu &amp; Layanan</div>
+          <div class="checkout-panel-title"><i class="ph ph-calendar"></i> Detail Waktu &amp; Layanan</div>
           <div class="form-group">
             <label class="form-label" for="jadwal-tanggal">Tanggal Mulai Sewa</label>
             <input type="date" id="jadwal-tanggal" class="form-input" onchange="onJadwalChange()">
@@ -74,7 +75,7 @@
 
         <!-- STEP 2: Data Diri -->
         <div id="panel-step2" class="checkout-panel glass-card hidden">
-          <div class="checkout-panel-title">👤 Lengkapi Data Diri</div>
+          <div class="checkout-panel-title"><i class="ph ph-user"></i> Lengkapi Data Diri</div>
           <p class="text-dim mb-4" style="font-size:12px;margin-top:-12px;">Pastikan data sesuai dengan kartu identitas.</p>
 
           <div class="form-group">

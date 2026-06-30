@@ -41,7 +41,7 @@ let _toastTimer;
 function showToast(icon, title, msg, durationMs = 4000) {
   const box = qs('toast');
   if (!box) { console.warn('[toast] markup #toast tidak ditemukan di halaman ini'); return; }
-  qs('toast-ic').textContent = icon;
+  qs('toast-ic').innerHTML = icon;
   qs('toast-ttl').textContent = title;
   qs('toast-msg').textContent = msg;
   box.classList.remove('hidden');

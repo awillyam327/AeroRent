@@ -128,7 +128,7 @@ function renderSummary() {
   const v = S.vehicle;
   qs('sum-foto').innerHTML = v.foto_url
     ? `<img src="${v.foto_url}" alt="${v.nama_kendaraan}">`
-    : `<div class="vehicle-photo-placeholder" style="font-size:24px;">🚗</div>`;
+    : `<div class="vehicle-photo-placeholder" style="font-size:24px;"><i class="ph ph-car"></i></div>`;
   qs('sum-nama').textContent = v.nama_kendaraan;
   qs('sum-spec').textContent = `${TIPE_LABEL[v.tipe_kendaraan] || v.tipe_kendaraan} • ${rp(v.harga_sewa_harian)}/hari`;
 
@@ -278,7 +278,7 @@ async function submitBooking() {
     });
     
     if (S.metodeBayar === 'MIDTRANS') {
-        showToast('⚠️', 'Mode Demo', 'Pembayaran Midtrans tidak dapat disimulasikan dalam mode offline/demo.');
+        showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Mode Demo', 'Pembayaran Midtrans tidak dapat disimulasikan dalam mode offline/demo.');
     }
   }
 
@@ -296,25 +296,25 @@ async function processMidtransPayment(tid, token) {
     
     window.snap.pay(data.snap_token, {
       onSuccess: function(result) {
-        showToast('✅', 'Pembayaran Berhasil', 'Terima kasih, pembayaran Anda telah diterima.');
+        showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Pembayaran Berhasil', 'Terima kasih, pembayaran Anda telah diterima.');
         goToStep3();
       },
       onPending: function(result) {
-        showToast('⏳', 'Menunggu Pembayaran', 'Silakan selesaikan pembayaran Anda.');
+        showToast('<i class="ph-fill ph-hourglass-high" style="color: #3B82F6;"></i>', 'Menunggu Pembayaran', 'Silakan selesaikan pembayaran Anda.');
         goToStep3('PENDING');
       },
       onError: function(result) {
-        showToast('❌', 'Pembayaran Gagal', 'Terjadi kesalahan saat memproses pembayaran.');
+        showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Pembayaran Gagal', 'Terjadi kesalahan saat memproses pembayaran.');
         qs('btn-step2-submit').disabled = false;
         qs('btn-step2-submit').textContent = 'Konfirmasi & Sewa →';
       },
       onClose: function() {
-        showToast('⚠️', 'Pembayaran Ditunda', 'Anda menutup popup pembayaran. Anda dapat melanjutkannya nanti melalui Dashboard.');
+        showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Pembayaran Ditunda', 'Anda menutup popup pembayaran. Anda dapat melanjutkannya nanti melalui Dashboard.');
         goToStep3('PENDING');
       }
     });
   } catch (err) {
-    showToast('❌', 'Error', err.message);
+    showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Error', err.message);
     qs('btn-step2-submit').disabled = false;
     qs('btn-step2-submit').textContent = 'Konfirmasi & Sewa →';
   }
@@ -343,7 +343,7 @@ function goToStep3(status = 'SUCCESS') {
   const desc = p3.querySelector('p');
   
   if (status === 'PENDING') {
-    icon.textContent = '⚠️';
+    icon.textContent = '<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>';
     icon.style.color = 'var(--color-amber)';
     icon.style.borderColor = 'rgba(245,158,11,0.2)';
     icon.style.backgroundColor = 'rgba(245,158,11,0.05)';
@@ -359,7 +359,7 @@ function goToStep3(status = 'SUCCESS') {
   }
   
   if (S.bookingResult.demo) {
-    showToast('🧪', 'Mode Demo', 'Booking ini tidak benar-benar tersimpan ke server (lihat catatan di kode).');
+    showToast('<i class="ph-fill ph-flask" style="color: #8B5CF6;"></i>', 'Mode Demo', 'Booking ini tidak benar-benar tersimpan ke server (lihat catatan di kode).');
   }
 }
 

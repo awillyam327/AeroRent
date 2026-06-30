@@ -47,7 +47,7 @@ async function initDashboard() {
   renderCustomerSidebar('cs-sidebar', { active: 'dashboard', rootPath: '../../' });
   renderToastMarkup('toast-root');
 
-  qs('cs-greeting').textContent = `HALO, ${auth.user.nama.toUpperCase()}! 👋`;
+  qs('cs-greeting').textContent = `HALO, ${auth.user.nama.toUpperCase()}! <i class="ph-fill ph-hand-waving"></i>`;
 
   const bookings = await fetchMyBookings();
   const totalSewa = bookings.length;
@@ -113,8 +113,8 @@ async function initRiwayat() {
         ${fmtD(b.mulai)} s/d ${fmtD(b.selesai_rencana)} (${b.durasi} hari)
       </div>
       <div class="flex gap-2 mt-4 flex-wrap">
-        <button class="btn btn-outline" style="padding:8px 16px;font-size:12px;" onclick="printInvoice('${b.booking}')">🖨 Cetak Invoice</button>
-        ${canExtend ? `<button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;" onclick="handleExtendClick('${b.booking}')">⏱ Extend Sewa (Perpanjang)</button>` : ''}
+        <button class="btn btn-outline" style="padding:8px 16px;font-size:12px;" onclick="printInvoice('${b.booking}')"><i class="ph ph-printer"></i> Cetak Invoice</button>
+        ${canExtend ? `<button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;" onclick="handleExtendClick('${b.booking}')"><i class="ph ph-timer"></i> Extend Sewa (Perpanjang)</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -125,7 +125,7 @@ async function initRiwayat() {
  *  Phase 1-2). Daripada berpura-pura berhasil, tombol ini jujur memberi tahu
  *  bahwa fitur belum tersedia. */
 function handleExtendClick(nomorBooking) {
-  showToast('🚧', 'Belum Tersedia', `Perpanjangan sewa untuk ${nomorBooking} belum didukung backend saat ini.`);
+  showToast('<i class="ph-fill ph-traffic-cone" style="color: #F59E0B;"></i>', 'Belum Tersedia', `Perpanjangan sewa untuk ${nomorBooking} belum didukung backend saat ini.`);
 }
 
 /** Cetak invoice sederhana via window.print() — murni client-side, tidak
@@ -134,7 +134,7 @@ function handleExtendClick(nomorBooking) {
 function printInvoice(nomorBooking) {
   const all = [...getDemoBookings(), ...DEMO_BOOKINGS];
   const b = all.find((x) => x.booking === nomorBooking);
-  if (!b) { showToast('❌', 'Gagal', 'Data invoice tidak ditemukan.'); return; }
+  if (!b) { showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Data invoice tidak ditemukan.'); return; }
   const user = getCurrentUser();
 
   const w = window.open('', '_blank', 'width=400,height=600');
@@ -194,7 +194,7 @@ async function saveProfil() {
       alamat: qs('pf-alamat').value.trim(),
     };
     if (!data.nama || !data.telp) {
-      showToast('⚠️', 'Validasi', 'Nama dan nomor telepon wajib diisi.');
+      showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nama dan nomor telepon wajib diisi.');
       return;
     }
 
@@ -212,8 +212,8 @@ async function saveProfil() {
       localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(data));
       qs('pf-nama-display').textContent = data.nama;
       qs('pf-avatar').textContent = data.nama[0].toUpperCase();
-      showToast('✅', 'Berhasil', 'Profil berhasil disimpan.');
+      showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', 'Profil berhasil disimpan.');
     } else {
-      showToast('❌', 'Gagal', 'Gagal menyimpan profil ke server.');
+      showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal menyimpan profil ke server.');
     }
   }

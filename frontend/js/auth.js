@@ -109,7 +109,7 @@ async function handleLoginSubmit(e) {
     // 1) Coba login staf asli (Owner/Kasir) ke backend nyata.
     const result = await apiLoginStaff(email, password);
     setAuth(result);
-    showToast('✅', 'Berhasil Masuk', `Selamat datang, ${result.user.nama}.`);
+    showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil Masuk', `Selamat datang, ${result.user.nama}.`);
     setTimeout(() => { location.href = getPostLoginRedirect(result.user.role); }, 600);
     return;
   } catch (staffErr) {
@@ -135,7 +135,7 @@ async function handleLoginSubmit(e) {
       user: { id: demo.id, nama: demo.nama, email, role: demo.role },
     };
     setAuth(fakeAuth);
-    showToast('🧪', 'Mode Demo', 'Backend tidak tersedia — masuk memakai data demo lokal.');
+    showToast('<i class="ph-fill ph-flask" style="color: #8B5CF6;"></i>', 'Mode Demo', 'Backend tidak tersedia — masuk memakai data demo lokal.');
     setTimeout(() => { location.href = getPostLoginRedirect(demo.role); }, 700);
     return;
   }

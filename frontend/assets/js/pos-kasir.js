@@ -103,13 +103,13 @@
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + S.token },
             body: JSON.stringify(item.body)
           });
-          if (r.ok) { await idbDel('offline_queue', item.id); toast('✅', 'Sync OK', `${item.nb || item.endpoint} tersinkronisasi.`); }
+          if (r.ok) { await idbDel('offline_queue', item.id); toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Sync OK', `${item.nb || item.endpoint} tersinkronisasi.`); }
         } catch (_) { }
       }
       refreshQueueBadge();
     }
     function manualSync() { syncQueue(); }
-    function onSwMsg(ev) { if (ev.data?.type === 'SYNC_SUCCESS') { toast('✅', 'Sync OK', `${ev.data.nomor_booking} berhasil.`); loadList(); } }
+    function onSwMsg(ev) { if (ev.data?.type === 'SYNC_SUCCESS') { toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Sync OK', `${ev.data.nomor_booking} berhasil.`); loadList(); } }
 
 
     // ============================================================
@@ -375,7 +375,7 @@
       } else if (t.status === 'DIKONFIRMASI') {
         bar.innerHTML = `
       <button class="${cls} btn-g" onclick="openFotoModal('sebelum')">
-        🚗 Serahkan Kendaraan (Upload Foto Kondisi)
+        <i class="ph ph-car"></i> Serahkan Kendaraan (Upload Foto Kondisi)
       </button>`;
       } else if (t.status === 'AKTIF') {
         bar.innerHTML = `
@@ -387,7 +387,7 @@
       </button>`;
       } else if (['SELESAI', 'DIBATALKAN'].includes(t.status)) {
         bar.innerHTML = `<div class="text-center text-gray-600 text-sm py-2">
-      ${t.status === 'SELESAI' ? '✅ Transaksi selesai' : '✕ Transaksi dibatalkan'}</div>`;
+      ${t.status === 'SELESAI' ? '<i class="ph-fill ph-check-circle" style="color: #10B981;"></i> Transaksi selesai' : '✕ Transaksi dibatalkan'}</div>`;
         return;
       }
 
@@ -410,12 +410,12 @@
         const r = await api(`/transaksi/${id}/status`, { method: 'PUT', body: JSON.stringify(payload) });
         if (r?.ok) {
           const res = await r.json();
-          toast('✅', 'Status Diperbarui', `${res.nomor_booking}: ${statusBaru}`);
+          toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Status Diperbarui', `${res.nomor_booking}: ${statusBaru}`);
           await loadList();
           if (S.selected) await selectTrx(S.selected.id_transaksi || id);
         } else {
           const err = r ? await r.json().catch(() => ({})) : {};
-          toast('❌', 'Gagal', err.detail || 'Tidak dapat memperbarui status.');
+          toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', err.detail || 'Tidak dapat memperbarui status.');
         }
       } else {
         await idbAdd('offline_queue', {
@@ -501,7 +501,7 @@
       el('up-status').classList.remove('hidden');
       const id = t.id_transaksi || t.id;
 
-      if (!S.online) { toast('❌', 'Offline', 'Upload foto memerlukan koneksi internet.'); btn.disabled = false; el('up-status').classList.add('hidden'); return; }
+      if (!S.online) { toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Offline', 'Upload foto memerlukan koneksi internet.'); btn.disabled = false; el('up-status').classList.add('hidden'); return; }
 
       const fd = new FormData();
       fd.append('jenis', jenis);
@@ -536,10 +536,10 @@
           }
         } else {
           const e = await r.json().catch(() => ({}));
-          toast('❌', 'Upload Gagal', e.detail || 'Terjadi kesalahan saat upload.');
+          toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Upload Gagal', e.detail || 'Terjadi kesalahan saat upload.');
           btn.disabled = false;
         }
-      } catch (_) { toast('❌', 'Upload Gagal', 'Periksa koneksi internet Anda.'); btn.disabled = false; }
+      } catch (_) { toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Upload Gagal', 'Periksa koneksi internet Anda.'); btn.disabled = false; }
       el('up-status').classList.add('hidden');
     }
 
@@ -701,10 +701,10 @@
 
     function btNext() {
       if (BT.step === 1) {
-        if (!BT.pelanggan) { toast('⚠️', 'Pilih Pelanggan', 'Cari dan pilih atau daftarkan pelanggan terlebih dahulu.'); return; }
+        if (!BT.pelanggan) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Pilih Pelanggan', 'Cari dan pilih atau daftarkan pelanggan terlebih dahulu.'); return; }
         btGotoStep(2);
       } else if (BT.step === 2) {
-        if (!BT.kendaraan) { toast('⚠️', 'Pilih Kendaraan', 'Pilih salah satu kendaraan yang tersedia.'); return; }
+        if (!BT.kendaraan) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Pilih Kendaraan', 'Pilih salah satu kendaraan yang tersedia.'); return; }
         btGotoStep(3); btHitung();
       } else {
         btSubmit();
@@ -770,7 +770,7 @@
       // dataStr bisa berupa string JSON dari onclick inline
       let p;
       try { p = typeof dataStr === 'object' ? dataStr : JSON.parse(dataStr.replace(/&quot;/g, '"')); }
-      catch (e) { toast('❌', 'Error', 'Gagal memproses data pelanggan.'); return; }
+      catch (e) { toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Error', 'Gagal memproses data pelanggan.'); return; }
       BT.pelanggan = p;
       btUpdatePlgUI();
     }
@@ -817,18 +817,18 @@
           const res = await r.json();
           if (res.nama) {
             el('bt-np-nama').value = res.nama;
-            toast('✅', 'OCR Berhasil', `Nama ditemukan: ${res.nama}`);
+            toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'OCR Berhasil', `Nama ditemukan: ${res.nama}`);
           } else {
-            toast('⚠️', 'OCR Selesai', 'Tidak menemukan nama yang jelas.');
+            toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'OCR Selesai', 'Tidak menemukan nama yang jelas.');
           }
-          statusEl.innerHTML = '✅ KTP diproses.';
+          statusEl.innerHTML = '<i class="ph-fill ph-check-circle" style="color: #10B981;"></i> KTP diproses.';
           statusEl.classList.add('text-green-400');
         } else {
-          statusEl.innerHTML = '❌ Gagal membaca KTP.';
+          statusEl.innerHTML = '<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i> Gagal membaca KTP.';
           statusEl.classList.add('text-red-400');
         }
       } catch (e) {
-        statusEl.innerHTML = '❌ Terjadi kesalahan jaringan.';
+        statusEl.innerHTML = '<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i> Terjadi kesalahan jaringan.';
         statusEl.classList.add('text-red-400');
       }
     }
@@ -838,7 +838,7 @@
       const telp = el('bt-np-telp').value.trim();
       const alamat = el('bt-np-alamat').value.trim();
 
-      if (!nama || !telp) { toast('⚠️', 'Data Tidak Lengkap', 'Nama lengkap dan nomor telepon wajib diisi.'); return; }
+      if (!nama || !telp) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Data Tidak Lengkap', 'Nama lengkap dan nomor telepon wajib diisi.'); return; }
 
       const btn = el('bt-np-btn');
       btn.disabled = true;
@@ -863,12 +863,12 @@
           BT._allPlg.unshift({ id_pelanggan: res.id_pelanggan, nama_lengkap: nama, no_telepon: telp });
           btUpdatePlgUI();
           el('bt-new-plg-form').classList.add('hidden');
-          toast('✅', 'Pelanggan Ditambahkan', `${nama} berhasil didaftarkan.`);
+          toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Pelanggan Ditambahkan', `${nama} berhasil didaftarkan.`);
         } else {
           const e = await r.json().catch(() => ({}));
-          toast('❌', 'Gagal Menyimpan', e.detail || 'Terjadi kesalahan saat mendaftarkan pelanggan.');
+          toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal Menyimpan', e.detail || 'Terjadi kesalahan saat mendaftarkan pelanggan.');
         }
-      } catch (e) { toast('❌', 'Error Jaringan', e.message); }
+      } catch (e) { toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Error Jaringan', e.message); }
 
       btn.disabled = false;
       btn.innerHTML = 'Simpan &amp; Pilih Pelanggan Ini';
@@ -925,7 +925,7 @@
         <div class="relative" style="height:110px;overflow:hidden;background:rgba(255,255,255,.04);">
           ${foto
             ? `<img src="${foto}" alt="${nama}" class="w-full h-full object-cover" style="opacity:${sel ? 1 : .8};">`
-            : `<div class="w-full h-full flex items-center justify-center text-5xl text-gray-700">🚗</div>`}
+            : `<div class="w-full h-full flex items-center justify-center text-5xl text-gray-700"><i class="ph ph-car"></i></div>`}
           <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 60%);"></div>
           ${sel
             ? `<div style="position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;
@@ -948,7 +948,7 @@
       // payload bisa berupa object (dari onclick) atau string JSON
       BT.kendaraan = typeof payload === 'object' ? payload : JSON.parse(payload);
       btRenderKendaraan();
-      toast('✅', 'Kendaraan Dipilih', BT.kendaraan.nama);
+      toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Kendaraan Dipilih', BT.kendaraan.nama);
     }
 
 
@@ -1016,9 +1016,9 @@
       const metode = el('bt-metode').value;
       const catatan = el('bt-catatan').value.trim();
 
-      if (!tglMulai) { toast('⚠️', 'Tanggal Wajib Diisi', 'Pilih tanggal mulai sewa.'); return; }
-      if (!BT.pelanggan || !BT.kendaraan) { toast('⚠️', 'Data Tidak Lengkap', 'Pelanggan dan kendaraan wajib dipilih.'); return; }
-      if (supir && !supirId) { toast('⚠️', 'Supir Belum Dipilih', 'Silakan pilih supir yang tersedia.'); return; }
+      if (!tglMulai) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Tanggal Wajib Diisi', 'Pilih tanggal mulai sewa.'); return; }
+      if (!BT.pelanggan || !BT.kendaraan) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Data Tidak Lengkap', 'Pelanggan dan kendaraan wajib dipilih.'); return; }
+      if (supir && !supirId) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Supir Belum Dipilih', 'Silakan pilih supir yang tersedia.'); return; }
 
       // Hitung tanggal selesai
       const dtMulai = new Date(tglMulai);
@@ -1053,12 +1053,12 @@
           if (res.id_transaksi) setTimeout(() => selectTrx(res.id_transaksi), 600);
         } else {
           const err = r ? await r.json().catch(() => ({})) : {};
-          toast('❌', 'Gagal Membuat Transaksi', err.detail || 'Terjadi kesalahan. Coba lagi.');
+          toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal Membuat Transaksi', err.detail || 'Terjadi kesalahan. Coba lagi.');
           btn.disabled = false;
           btn.textContent = '✓ Buat Transaksi';
         }
       } catch (e) {
-        toast('❌', 'Error Jaringan', e.message);
+        toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Error Jaringan', e.message);
         btn.disabled = false;
         btn.textContent = '✓ Buat Transaksi';
       }

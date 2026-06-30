@@ -13,6 +13,7 @@
 
 <link rel="stylesheet" href="css/global.css">
 <link rel="stylesheet" href="css/public.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
 
@@ -32,7 +33,7 @@
     <div class="search-box-inline">
       <input type="text" id="hero-search-text" class="form-input" placeholder="Cari kategori: '5 Seater', 'Avanza'...">
       <input type="date" id="hero-tanggal" class="form-input hero-date-input">
-      <button class="btn btn-amber hero-search-btn" onclick="goToArmada()" aria-label="Cari">🔍</button>
+      <button class="btn btn-amber hero-search-btn" onclick="goToArmada()" aria-label="Cari"><i class="ph ph-magnifying-glass"></i></button>
     </div>
 
     <div class="hero-promo-row">
@@ -72,19 +73,19 @@
     </div>
     <div class="category-grid">
       <div class="category-card glass-card" onclick="location.href='armada.html?tipe=5_SEATER'">
-        <div class="category-icon">🚗</div>
+        <div class="category-icon"><i class="ph ph-car"></i></div>
         <h3>5 Seater</h3>
         <p>Hatchback, sedan, dan compact crossover lincah untuk daerah perkotaan.</p>
         <span class="category-price">Mulai Rp 300rb</span>
       </div>
       <div class="category-card glass-card" onclick="location.href='armada.html?tipe=7_SEATER'">
-        <div class="category-icon">🛡️</div>
+        <div class="category-icon"><i class="ph ph-shield-check"></i></div>
         <h3>7 Seater / SUV</h3>
         <p>SUV dan MPV lega yang nyaman untuk keluarga maupun perjalanan jauh.</p>
         <span class="category-price">Mulai Rp 350rb</span>
       </div>
       <div class="category-card glass-card" onclick="location.href='armada.html?tipe=MICROBUS'">
-        <div class="category-icon">👥</div>
+        <div class="category-icon"><i class="ph ph-users"></i></div>
         <h3>Microbus</h3>
         <p>Minibus kapasitas besar super nyaman untuk rombongan & pariwisata.</p>
         <span class="category-price">Mulai Harga</span>
@@ -112,7 +113,7 @@
 <div class="btn-trigger-container">
   <div class="container">
     <button type="button" id="open-modal-btn" class="btn-cara-sewa">
-      <span style="color:#FFB800;">ℹ️</span> Cara Sewa Mobil
+      <span style="color:#FFB800;"><i class="ph ph-info"></i></span> Cara Sewa Mobil
     </button>
   </div>
 </div>

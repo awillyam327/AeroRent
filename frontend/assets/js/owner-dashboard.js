@@ -4,7 +4,7 @@
 // ============================================================
 // Ganti URL ini dengan URL Ngrok milik Anda
 // Gunakan localhost untuk pengujian di laptop sendiri
-// ✅ BENAR — baca dari localStorage agar sinkron dengan index.html
+// <i class="ph-fill ph-check-circle" style="color: #10B981;"></i> BENAR — baca dari localStorage agar sinkron dengan index.html
 // Tidak perlu update manual setiap kali URL Ngrok berubah
 const API = localStorage.getItem('aerorent_api_base') || 'https://aero-rent-twvb.vercel.app';
 const AUTH_KEY = 'aerorent_auth';
@@ -88,7 +88,7 @@ async function api(path, opts = {}) {
         location.reload();
       } else {
         // Jika memang dari awal tidak ada token, hentikan loop dan beri peringatan
-        toast('🔒', 'Mode Demo Aktif', 'Belum login. Data yang tampil adalah simulasi.');
+        toast('<i class="ph ph-lock"></i>', 'Mode Demo Aktif', 'Belum login. Data yang tampil adalah simulasi.');
       }
       return null;
     }
@@ -324,9 +324,9 @@ async function savePengeluaran() {
   const ket = el('po-ket').value.trim();
 
   if (!tgl || !nom || !ket) {
-    toast('⚠️', 'Validasi', 'Tanggal, nominal, dan keterangan wajib diisi.'); return;
+    toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Tanggal, nominal, dan keterangan wajib diisi.'); return;
   }
-  if (nom <= 0) { toast('⚠️', 'Validasi', 'Nominal harus lebih dari 0.'); return; }
+  if (nom <= 0) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nominal harus lebih dari 0.'); return; }
 
   let saved = false;
   // Backend menggunakan Form(...), jadi kita harus kirim FormData — bukan JSON
@@ -360,14 +360,14 @@ async function savePengeluaran() {
 
   el('po-nominal').value = '';
   el('po-ket').value = '';
-  toast('✅', saved ? 'Tersimpan ke Server' : 'Disimpan Lokal', `Pengeluaran Rp ${rp(nom)} berhasil dicatat.`);
+  toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', saved ? 'Tersimpan ke Server' : 'Disimpan Lokal', `Pengeluaran Rp ${rp(nom)} berhasil dicatat.`);
 }
 
 async function deletePengeluaran(id) {
   if (!confirm('Hapus catatan pengeluaran ini?')) return;
   if (S.token && !id.startsWith('po-local-')) {
     const r = await api(`/pengeluaran/${id}`, { method: 'DELETE' });
-    if (!r || !r.ok) { toast('❌', 'Gagal', 'Tidak dapat menghapus data.'); return; }
+    if (!r || !r.ok) { toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Tidak dapat menghapus data.'); return; }
   }
   S.pengeluaran = S.pengeluaran.filter(p => (p.id || p.id_pengeluaran) !== id);
   renderPengeluaranTable();
@@ -407,7 +407,7 @@ async function loadStatistik() {
           <span class="absolute top-2 right-2 badge ${stBadge}">${stLabel}</span>
           ${k.foto
         ? `<img src="${k.foto}" alt="${k.nama}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300">`
-        : `<div class="w-full h-full flex items-center justify-center text-4xl text-gray-700">🚗</div>`}
+        : `<div class="w-full h-full flex items-center justify-center text-4xl text-gray-700"><i class="ph ph-car"></i></div>`}
           <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(10,10,20,.7) 0%, transparent 60%);"></div>
         </div>
         <div class="p-4">
@@ -529,7 +529,7 @@ async function saveKendaraan() {
   };
 
   if (!payload.nama_kendaraan || !payload.nomor_plat) {
-    toast('⚠️', 'Validasi', 'Nama dan plat nomor wajib diisi.');
+    toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nama dan plat nomor wajib diisi.');
     return;
   }
 
@@ -545,9 +545,9 @@ async function saveKendaraan() {
   if (ok) {
     await loadKendaraan();
     closeKendaraanModal();
-    toast('✅', 'Berhasil', `Kendaraan berhasil ${S.editKendId ? 'diperbarui' : 'ditambahkan'}.`);
+    toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', `Kendaraan berhasil ${S.editKendId ? 'diperbarui' : 'ditambahkan'}.`);
   } else {
-    toast('❌', 'Gagal', 'Terjadi kesalahan saat menyimpan kendaraan.');
+    toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Terjadi kesalahan saat menyimpan kendaraan.');
   }
 }
 
@@ -556,9 +556,9 @@ async function deleteKendaraan(id) {
   const r = await api(`/kendaraan/${id}`, { method: 'DELETE' });
   if (r && r.ok) {
     await loadKendaraan();
-    toast('✅', 'Berhasil', 'Kendaraan dihapus.');
+    toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', 'Kendaraan dihapus.');
   } else {
-    toast('❌', 'Gagal', 'Gagal menghapus. Mungkin ada transaksi aktif.');
+    toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal menghapus. Mungkin ada transaksi aktif.');
   }
 }
 
@@ -657,8 +657,8 @@ async function saveKaryawan() {
   const pass = el('mk-pass').value;
   const aktif = parseInt(el('mk-status').value);
 
-  if (!nama || !email) { toast('⚠️', 'Validasi', 'Nama dan email wajib diisi.'); return; }
-  if (!S.editKaryId && !pass) { toast('⚠️', 'Validasi', 'Password awal wajib diisi untuk karyawan baru.'); return; }
+  if (!nama || !email) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nama dan email wajib diisi.'); return; }
+  if (!S.editKaryId && !pass) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Password awal wajib diisi untuk karyawan baru.'); return; }
 
   let ok = false;
   if (S.editKaryId) {
@@ -688,7 +688,7 @@ async function saveKaryawan() {
 
   renderKaryawanTable();
   closeKaryawanModal();
-  toast(ok ? '✅' : '⚠️', ok ? 'Tersimpan' : 'Mode Demo', `Data karyawan ${nama} berhasil ${S.editKaryId ? 'diperbarui' : 'ditambahkan'}.`);
+  toast(ok ? '<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>' : '<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', ok ? 'Tersimpan' : 'Mode Demo', `Data karyawan ${nama} berhasil ${S.editKaryId ? 'diperbarui' : 'ditambahkan'}.`);
 }
 
 async function toggleKaryawan(id, aktif) {
@@ -700,9 +700,9 @@ async function toggleKaryawan(id, aktif) {
     const idx = S.karyawan.findIndex(k => k.id === id);
     if (idx >= 0) S.karyawan[idx].is_aktif = aktif;
     renderKaryawanTable();
-    toast('✅', 'Status Diperbarui', aktif ? 'Karyawan berhasil diaktifkan.' : 'Karyawan berhasil dinonaktifkan.');
+    toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Status Diperbarui', aktif ? 'Karyawan berhasil diaktifkan.' : 'Karyawan berhasil dinonaktifkan.');
   } else {
-    toast('❌', 'Gagal', 'Tidak dapat mengubah status karyawan.');
+    toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Tidak dapat mengubah status karyawan.');
   }
 }
 
@@ -766,7 +766,7 @@ function renderPesanan() {
           <div class="w-full md:w-20 h-20 rounded-xl overflow-hidden bg-white/5 shrink-0 relative">
             ${t.foto_kendaraan
         ? `<img src="${t.foto_kendaraan}" alt="" class="w-full h-full object-cover">`
-        : `<div class="w-full h-full flex items-center justify-center text-3xl">🚗</div>`}
+        : `<div class="w-full h-full flex items-center justify-center text-3xl"><i class="ph ph-car"></i></div>`}
             <span class="absolute top-1 left-1 badge ${stBadge[t.status] || 'b-selesai'}" style="font-size:8px;">
               ${stLabel[t.status] || t.status}
             </span>
@@ -811,17 +811,17 @@ function buildPesananActions(t) {
   } else if (t.status === 'DIKONFIRMASI') {
     actions.push(`
       <button onclick="ownerUpdateStatus('${id}','AKTIF')"
-              class="btn-g px-3 py-1.5 rounded-xl text-xs font-semibold">🚗 Serahkan</button>
+              class="btn-g px-3 py-1.5 rounded-xl text-xs font-semibold"><i class="ph ph-car"></i> Serahkan</button>
       <button onclick="ownerUpdateStatus('${id}','DIBATALKAN')"
               class="btn-r px-3 py-1.5 rounded-xl text-xs">Batalkan</button>`);
   } else if (t.status === 'AKTIF') {
     actions.push(`
       <button onclick="ownerUpdateStatus('${id}','SELESAI')"
-              class="btn-o px-3 py-1.5 rounded-xl text-xs font-semibold">✅ Selesaikan</button>`);
+              class="btn-o px-3 py-1.5 rounded-xl text-xs font-semibold"><i class="ph-fill ph-check-circle" style="color: #10B981;"></i> Selesaikan</button>`);
   }
 
   actions.push(`
-    <a href="pos-kasir.html" class="btn-o px-3 py-1.5 rounded-xl text-xs">🖨 Kwitansi</a>`);
+    <a href="pos-kasir.html" class="btn-o px-3 py-1.5 rounded-xl text-xs"><i class="ph ph-printer"></i> Kwitansi</a>`);
 
   return actions.join('');
 }
@@ -836,14 +836,14 @@ async function ownerUpdateStatus(id, status) {
   });
 
   if (r && r.ok) {
-    toast('✅', 'Status Diperbarui', `Transaksi berhasil ${label[status] || status}.`);
+    toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Status Diperbarui', `Transaksi berhasil ${label[status] || status}.`);
     await loadPesanan();
   } else {
     // Fallback demo: update lokal
     const idx = S.transaksi.findIndex(t => (t.id || t.id_transaksi) === id);
     if (idx >= 0) S.transaksi[idx].status = status;
     renderPesanan();
-    toast('⚠️', 'Mode Demo', `Status diubah secara lokal (API tidak tersedia).`);
+    toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Mode Demo', `Status diubah secara lokal (API tidak tersedia).`);
   }
 }
 
@@ -880,7 +880,7 @@ function exportExcel() {
   a.download = `Laporan_AeroRent_${el('lk-dari').value}_${el('lk-sampai').value}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('📊', 'Export Berhasil', 'File CSV laporan keuangan berhasil diunduh.');
+  toast('<i class="ph ph-squares-four"></i>', 'Export Berhasil', 'File CSV laporan keuangan berhasil diunduh.');
 }
 
 function exportPDF() {

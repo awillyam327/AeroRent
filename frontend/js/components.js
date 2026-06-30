@@ -88,10 +88,10 @@ function renderCustomerSidebar(containerId, opts = {}) {
   const initial = (user?.nama || '?')[0].toUpperCase();
 
   const items = [
-    { key: 'dashboard', href: `${rootPath}pages/customer/dashboard.html`, icon: '📊', label: 'Dashboard' },
-    { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '➕', label: 'Sewa Baru' },
-    { key: 'riwayat', href: `${rootPath}pages/customer/riwayat.html`, icon: '🕘', label: 'Riwayat Pemesanan' },
-    { key: 'profil', href: `${rootPath}pages/customer/profil.html`, icon: '👤', label: 'Profil Saya' },
+    { key: 'dashboard', href: `${rootPath}pages/customer/dashboard.html`, icon: '<i class="ph ph-squares-four"></i>', label: 'Dashboard' },
+    { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '<i class="ph ph-car-profile"></i>', label: 'Sewa Baru' },
+    { key: 'riwayat', href: `${rootPath}pages/customer/riwayat.html`, icon: '<i class="ph ph-clock-counter-clockwise"></i>', label: 'Riwayat Pemesanan' },
+    { key: 'profil', href: `${rootPath}pages/customer/profil.html`, icon: '<i class="ph ph-user"></i>', label: 'Profil Saya' },
   ];
 
   el.innerHTML = `
@@ -102,7 +102,7 @@ function renderCustomerSidebar(containerId, opts = {}) {
     <div class="cs-userbox">
       <div class="cs-userbox-label">Customer Panel</div>
       <div class="flex items-center gap-3">
-        <div class="cs-avatar">${initial}</div>
+        <div class="cs-avatar"><i class="ph-fill ph-user-circle"></i></div>
         <div>
           <div style="font-weight:700;font-size:14px;">${user?.nama || '—'}</div>
           <span class="badge badge-aktif mt-2" style="margin-top:4px;">Terverifikasi</span>
@@ -117,7 +117,7 @@ function renderCustomerSidebar(containerId, opts = {}) {
     </nav>
     <div class="cs-nav-bottom">
       <button class="cs-nav-item cs-logout" onclick="logout('${rootPath}login.html')">
-        <span>🚪</span> Keluar
+        <span><i class="ph ph-sign-out"></i></span> Keluar
       </button>
     </div>`;
 
@@ -132,10 +132,10 @@ function injectMobileBottomNav(active = '', rootPath = '') {
   if (active === 'armada') active = 'sewa-baru';
 
   const items = [
-    { key: 'dashboard', href: `${rootPath}pages/customer/dashboard.html`, icon: '📊', label: 'Dashboard' },
-    { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '➕', label: 'Sewa' },
-    { key: 'riwayat', href: `${rootPath}pages/customer/riwayat.html`, icon: '🕘', label: 'Riwayat' },
-    { key: 'profil', href: `${rootPath}pages/customer/profil.html`, icon: '👤', label: 'Profil' },
+    { key: 'dashboard', href: `${rootPath}pages/customer/dashboard.html`, icon: '<i class="ph ph-squares-four"></i>', label: 'Dashboard' },
+    { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '<i class="ph ph-car-profile"></i>', label: 'Sewa' },
+    { key: 'riwayat', href: `${rootPath}pages/customer/riwayat.html`, icon: '<i class="ph ph-clock-counter-clockwise"></i>', label: 'Riwayat' },
+    { key: 'profil', href: `${rootPath}pages/customer/profil.html`, icon: '<i class="ph ph-user"></i>', label: 'Profil' },
   ];
 
   let existingBn = document.getElementById('cs-bottom-nav-mobile');
@@ -161,12 +161,12 @@ function renderToastMarkup(containerId) {
   el.innerHTML = `
     <div id="toast" class="toast hidden">
       <div class="glass-card flex items-start gap-3" style="padding:14px;">
-        <span id="toast-ic" style="font-size:18px;">✅</span>
+        <span id="toast-ic" style="font-size:24px;"><i class="ph-fill ph-info"></i></span>
         <div style="flex:1;">
           <div id="toast-ttl" style="font-weight:700;font-size:14px;">—</div>
           <div id="toast-msg" class="text-dim" style="font-size:12px;margin-top:2px;">—</div>
         </div>
-        <button onclick="hideToast()" class="text-faint" style="background:none;border:none;font-size:13px;">✕</button>
+        <button onclick="hideToast()" class="text-faint hover:text-white transition" style="background:none;border:none;font-size:16px;cursor:pointer;"><i class="ph ph-x"></i></button>
       </div>
     </div>`;
 }

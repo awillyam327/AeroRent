@@ -33,6 +33,7 @@
     };
   </script>
   <link rel="stylesheet" href="assets/css/pos-kasir.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 
 <body class="flex flex-col h-screen overflow-hidden">
@@ -213,7 +214,7 @@
               <div class="text-xs text-gray-600" id="det-created">—</div>
             </div>
           </div>
-          <button onclick="printReceipt()" class="btn-o px-3 py-1.5 rounded-lg text-xs">🖨 Kwitansi</button>
+          <button onclick="printReceipt()" class="btn-o px-3 py-1.5 rounded-lg text-xs"><i class="ph ph-printer"></i> Kwitansi</button>
         </div>
 
         <!-- Scrollable detail body -->
@@ -416,7 +417,7 @@
                <div class="text-xs text-gray-400 mb-2">Punya KTP? Scan agar form otomatis terisi.</div>
                <input type="file" id="bt-np-ktp" accept="image/*" capture="environment" class="hidden" onchange="btScanKtp(this)">
                <button onclick="document.getElementById('bt-np-ktp').click()" class="w-full btn-o py-2 rounded-lg text-xs flex items-center justify-center gap-2">
-                 📷 Ambil / Pilih Foto KTP
+                 <i class="ph ph-camera"></i> Ambil / Pilih Foto KTP
                </button>
                <div id="bt-np-ktp-status" class="text-xs text-gray-500 hidden text-center mt-2"></div>
             </div>
@@ -468,7 +469,7 @@
             <div
               class="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-white/5 flex items-center justify-center text-2xl">
               <img id="bt-s3-foto" src="" alt="" class="w-full h-full object-cover" onerror="this.style.display='none'">
-              <span id="bt-s3-emoji" class="hidden">🚗</span>
+              <span id="bt-s3-emoji" class="hidden"><i class="ph ph-car"></i></span>
             </div>
             <div class="flex-1 min-w-0">
               <div class="font-semibold text-white text-sm" id="bt-s3-kend">—</div>
@@ -586,31 +587,31 @@
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4" id="foto-zones-container">
         <!-- Depan -->
         <div id="zone-d" class="up-zone p-3 text-center" onclick="pickFile('inp-d')">
-          <div id="zone-d-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Depan</span></div>
+          <div id="zone-d-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl"><i class="ph ph-camera"></i></span><span class="text-xs">Depan</span></div>
           <div id="zone-d-p" class="hidden"><img id="img-d" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Depan</div></div>
           <input type="file" id="inp-d" accept="image/*" capture="environment" class="hidden" onchange="onFile('d',this)">
         </div>
         <!-- Samping Kanan -->
         <div id="zone-sk" class="up-zone p-3 text-center" onclick="pickFile('inp-sk')">
-          <div id="zone-sk-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Kanan</span></div>
+          <div id="zone-sk-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl"><i class="ph ph-camera"></i></span><span class="text-xs">Kanan</span></div>
           <div id="zone-sk-p" class="hidden"><img id="img-sk" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Kanan</div></div>
           <input type="file" id="inp-sk" accept="image/*" capture="environment" class="hidden" onchange="onFile('sk',this)">
         </div>
         <!-- Samping Kiri -->
         <div id="zone-ski" class="up-zone p-3 text-center" onclick="pickFile('inp-ski')">
-          <div id="zone-ski-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Kiri</span></div>
+          <div id="zone-ski-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl"><i class="ph ph-camera"></i></span><span class="text-xs">Kiri</span></div>
           <div id="zone-ski-p" class="hidden"><img id="img-ski" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Kiri</div></div>
           <input type="file" id="inp-ski" accept="image/*" capture="environment" class="hidden" onchange="onFile('ski',this)">
         </div>
         <!-- Belakang -->
         <div id="zone-b" class="up-zone p-3 text-center" onclick="pickFile('inp-b')">
-          <div id="zone-b-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Belakang</span></div>
+          <div id="zone-b-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl"><i class="ph ph-camera"></i></span><span class="text-xs">Belakang</span></div>
           <div id="zone-b-p" class="hidden"><img id="img-b" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Belakang</div></div>
           <input type="file" id="inp-b" accept="image/*" capture="environment" class="hidden" onchange="onFile('b',this)">
         </div>
         <!-- Dalam -->
         <div id="zone-dlm" class="up-zone p-3 text-center" onclick="pickFile('inp-dlm')">
-          <div id="zone-dlm-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl">📷</span><span class="text-xs">Dalam</span></div>
+          <div id="zone-dlm-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl"><i class="ph ph-camera"></i></span><span class="text-xs">Dalam</span></div>
           <div id="zone-dlm-p" class="hidden"><img id="img-dlm" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Dalam</div></div>
           <input type="file" id="inp-dlm" accept="image/*" capture="environment" class="hidden" onchange="onFile('dlm',this)">
         </div>
@@ -643,7 +644,7 @@
   <div id="modal-konfirm" class="overlay hidden">
     <div class="modal-box p-6 max-w-sm">
       <div class="text-center mb-5">
-        <div id="mk-icon" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-4 text-3xl">✅</div>
+        <div id="mk-icon" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-4 text-3xl"><i class="ph-fill ph-check-circle" style="color: #10B981;"></i></div>
         <div class="font-bebas text-2xl tracking-wider" id="mk-title">KONFIRMASI</div>
         <p class="text-sm text-gray-400 mt-2" id="mk-body">—</p>
       </div>
@@ -659,7 +660,7 @@
     <div class="modal-box p-5 max-w-sm">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-          style="background:rgba(239,68,68,.12);">⚠️</div>
+          style="background:rgba(239,68,68,.12);"><i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i></div>
         <div>
           <div class="font-semibold text-white">Selesaikan Transaksi</div>
           <div class="text-xs text-gray-500 mt-0.5">Isi biaya tambahan sebelum menutup</div>
@@ -693,7 +694,7 @@
   <!-- ===== TOAST ===== -->
   <div id="toast" class="hidden fixed bottom-4 right-4 z-[60] max-w-xs">
     <div class="glass rounded-xl p-3.5 flex items-start gap-3 shadow-2xl slide-in">
-      <span id="toast-ic" class="text-lg shrink-0">✅</span>
+      <span id="toast-ic" class="text-lg shrink-0"><i class="ph-fill ph-check-circle" style="color: #10B981;"></i></span>
       <div class="flex-1">
         <div class="font-semibold text-sm" id="toast-ttl">—</div>
         <div class="text-xs text-gray-400 mt-0.5" id="toast-msg">—</div>

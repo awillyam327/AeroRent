@@ -73,7 +73,7 @@ function renderVehicleCard(v, rootPath = '') {
   const badgeLabel = tersedia ? 'Tersedia' : 'Disewa';
   const fotoHtml = v.foto_url
     ? `<img src="${v.foto_url}" alt="${v.nama_kendaraan}" loading="lazy">`
-    : `<div class="vehicle-photo-placeholder">🚗</div>`;
+    : `<div class="vehicle-photo-placeholder"><i class="ph ph-car"></i></div>`;
   return `
     <div class="vehicle-card glass-card">
       <div class="vehicle-photo">
@@ -85,7 +85,7 @@ function renderVehicleCard(v, rootPath = '') {
         <div class="vehicle-name">${v.nama_kendaraan}</div>
         <div class="vehicle-sub text-dim">${v.merk} • ${TIPE_LABEL[v.tipe_kendaraan] || v.tipe_kendaraan}</div>
         <div class="vehicle-specs">
-          <span class="spec-pill">👤 ${v.kapasitas_penumpang || '-'} Kursi</span>
+          <span class="spec-pill"><i class="ph ph-user"></i> ${v.kapasitas_penumpang || '-'} Kursi</span>
           <span class="spec-pill">⚙ ${v.transmisi === 'AT' ? 'Otomatis' : 'Manual'}</span>
           <span class="spec-pill">⛽ ${v.bahan_bakar}</span>
         </div>
