@@ -136,7 +136,7 @@ function injectMobileBottomNav(active = '', rootPath = '') {
     { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '<i class="ph ph-car-profile"></i>', label: 'Sewa' },
     { key: 'beranda', href: `${rootPath}index.html`, icon: '<i class="ph-fill ph-house"></i>', label: 'Beranda', isCenter: true },
     { key: 'riwayat', href: `${rootPath}pages/customer/riwayat.html`, icon: '<i class="ph ph-clock-counter-clockwise"></i>', label: 'Riwayat' },
-    { key: 'profil', href: `${rootPath}pages/customer/profil.html`, icon: '<i class="ph ph-user"></i>', label: 'Profil' },
+    { key: 'profil', href: `${rootPath}pages/customer/profil.html`, icon: user?.foto_profil_url ? `<img src="${user.foto_profil_url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin:0 auto;display:block;">` : '<i class="ph ph-user"></i>', label: 'Profil' },
   ];
 
   let existingBn = document.getElementById('cs-bottom-nav-mobile');
