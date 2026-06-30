@@ -198,9 +198,9 @@ function renderFooter(containerId, rootPath = '') {
         <div>
           <h4 class="mb-3" style="font-size:14px;">Kontak Kami</h4>
           <ul class="text-dim" style="list-style:none;font-size:14px;line-height:2;">
-            <li>📍 Jl. Diponegoro No. 123, Salatiga</li>
-            <li>📞 +62 812 3456 7890</li>
-            <li>✉ support@aerorent.id</li>
+            <li><i class="ph-fill ph-map-pin" style="color:var(--color-amber);"></i> Jl. Diponegoro No. 123, Salatiga</li>
+            <li><i class="ph-fill ph-phone" style="color:var(--color-amber);"></i> +62 812 3456 7890</li>
+            <li><i class="ph-fill ph-envelope" style="color:var(--color-amber);"></i> support@aerorent.id</li>
           </ul>
         </div>
       </div>
