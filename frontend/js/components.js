@@ -51,8 +51,8 @@ function renderNavbar(containerId, opts = {}) {
         ${BRAND_LOGO_SVG}
       </a>
       <nav class="navbar-links">
-        <a href="${rootPath}index.html" class="${isActive('beranda')}">Beranda</a>
-        <a href="${rootPath}armada.html" class="${isActive('armada')}">Armada</a>
+        <a href="${rootPath}index.html" class="nav-link ${isActive('beranda')}">Beranda</a>
+        <a href="${rootPath}armada.html" class="nav-link ${isActive('armada')}">Armada</a>
       </nav>
       <div class="navbar-auth">${authAreaHtml}</div>
       <button class="navbar-burger" id="navbar-burger-btn" aria-label="Buka menu">
