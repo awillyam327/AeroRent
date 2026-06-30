@@ -256,21 +256,50 @@ document
   ];
 
   let heroIndex = 0;
+  let charIndex = 0;
+  let isDeleting = false;
+  const target = document.getElementById('hero-rotating-text');
 
-  setInterval(() => {
-    const target = document.getElementById('hero-rotating-text');
-
-    if (!target) return;
-
-    target.style.opacity = '0';
-
-    setTimeout(() => {
-      heroIndex = (heroIndex + 1) % heroTexts.length;
-      target.textContent = heroTexts[heroIndex];
-      target.style.opacity = '1';
-    }, 300);
-
-  }, 3000);
+  if (target) {
+    target.style.borderRight = '2px solid var(--color-amber)';
+    target.style.paddingRight = '4px';
+    target.style.animation = 'blinkCursor 0.75s step-end infinite';
+    
+    // Add CSS for blinking cursor if not present
+    if (!document.getElementById('cursor-style')) {
+      const style = document.createElement('style');
+      style.id = 'cursor-style';
+      style.innerHTML = `@keyframes blinkCursor { from, to { border-color: transparent } 50% { border-color: var(--color-amber); } }`;
+      document.head.appendChild(style);
+    }
+    
+    function typeEffect() {
+      const currentText = heroTexts[heroIndex];
+      
+      if (isDeleting) {
+        target.textContent = currentText.substring(0, charIndex - 1);
+        charIndex--;
+      } else {
+        target.textContent = currentText.substring(0, charIndex + 1);
+        charIndex++;
+      }
+      
+      let typeSpeed = isDeleting ? 30 : 70;
+      
+      if (!isDeleting && charIndex === currentText.length) {
+        typeSpeed = 2000; // Pause at end of word
+        isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        heroIndex = (heroIndex + 1) % heroTexts.length;
+        typeSpeed = 500; // Pause before typing next word
+      }
+      
+      setTimeout(typeEffect, typeSpeed);
+    }
+    
+    typeEffect();
+  }
 
   // LOGIKA JAVASCRIPT UNTUK MODAL POP-UP
   const modal = document.getElementById('cara-sewa-modal');
