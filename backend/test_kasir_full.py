@@ -90,11 +90,8 @@ async def main():
             r = await c.get(f"/transaksi/{tid}", headers=h)
             log(f"GET /transaksi/{tid[:12]}...", r.status_code, r.status_code == 200)
 
-        # ─── 5. STATUS: MENUNGGU → DIKONFIRMASI ──────────────────
-        if tid:
-            print("\n📌 5. STATUS: MENUNGGU → DIKONFIRMASI")
-            r = await c.put(f"/transaksi/{tid}/status", json={"status": "DIKONFIRMASI"}, headers=h)
-            log("PUT status → DIKONFIRMASI", r.status_code, r.status_code == 200, r.text[:80])
+        # ─── 5. STATUS: MENUNGGU → DIKONFIRMASI (SKIPPED) ────────
+        # Transaksi sekarang otomatis DIKONFIRMASI saat dibuat, jadi step ini dilewati.
 
         # ─── 6. UPLOAD FOTO KONDISI (SEBELUM) ────────────────────
         if tid:
