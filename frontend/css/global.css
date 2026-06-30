@@ -252,8 +252,23 @@ h3 { font-size: 1.5rem; }
   .navbar-burger { display: flex; }
   #navbar.navbar-mobile-open .navbar-links {
     display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0;
-    background: rgba(10,10,20,.97); backdrop-filter: blur(16px); padding: 20px; gap: 18px;
+    background: rgba(13, 13, 28, 0.98); backdrop-filter: blur(20px); padding: 16px; gap: 8px;
     border-bottom: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  #navbar.navbar-mobile-open .nav-link {
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    background: rgba(255,255,255, 0.03);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    transition: all 0.3s ease;
+  }
+  #navbar.navbar-mobile-open .nav-link:hover,
+  #navbar.navbar-mobile-open .nav-link.active {
+    background: rgba(124, 58, 237, 0.15);
+    color: var(--color-purple-light);
   }
 }
 
