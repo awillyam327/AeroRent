@@ -207,15 +207,25 @@ const heroPromos = [
 ];
 function renderPromo() {
   const promo = heroPromos[currentPromo];
+  const card = document.querySelector('.hero-promo-card');
+  const textContainer = document.getElementById('promo-text');
 
-  document.querySelector('.hero-promo-card')
-    .style.backgroundImage =
-      `url('${promo.image}')`;
+  // Fade and blur out
+  card.style.transition = 'filter 0.4s ease, opacity 0.4s ease';
+  card.style.filter = 'blur(8px)';
+  card.style.opacity = '0.6';
 
-  document.getElementById('promo-text').innerHTML = `
-    <span class="promo-hashtag">${promo.tag}</span>
-    <div class="promo-title">${promo.title}</div>
-  `;
+  setTimeout(() => {
+    card.style.backgroundImage = `url('${promo.image}')`;
+    textContainer.innerHTML = `
+      <span class="promo-hashtag">${promo.tag}</span>
+      <div class="promo-title">${promo.title}</div>
+    `;
+    
+    // Fade and blur in
+    card.style.filter = 'blur(0)';
+    card.style.opacity = '1';
+  }, 400);
 }
 function nextPromo() {
   currentPromo =
