@@ -94,7 +94,7 @@
   backface-visibility: hidden;
   will-change: filter, opacity;
 
-  min-height:330px;
+  height:330px;
   padding:48px;
 
   border-radius:28px;
