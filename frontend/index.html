@@ -39,6 +39,7 @@
     <div class="hero-promo-row">
       <div class="hero-promo-card">
         <div id="promo-bg" class="promo-bg"></div>
+        <div id="promo-bg-2" class="promo-bg" style="opacity: 0;"></div>
 
         <button type="button" class="promo-arrow promo-arrow-left" aria-label="Sebelumnya">‹</button>
         <button type="button" class="promo-arrow promo-arrow-right" aria-label="Berikutnya">›</button>
@@ -206,31 +207,53 @@ const heroPromos = [
     image: "assets/images/promo1.avif"
   }
 ];
+let activeBgIndex = 1;
+let isFirstPromoRender = true;
+
 function renderPromo() {
   const promo = heroPromos[currentPromo];
-  const bgLayer = document.getElementById('promo-bg');
+  const bg1 = document.getElementById('promo-bg');
+  const bg2 = document.getElementById('promo-bg-2');
   const textContainer = document.getElementById('promo-text');
 
-  // Fade and blur out the background layer
-  bgLayer.style.filter = 'blur(12px)';
-  bgLayer.style.opacity = '0';
-  
-  // Also fade text
-  textContainer.style.opacity = '0';
-
-  setTimeout(() => {
-    // Change content while invisible
-    bgLayer.style.backgroundImage = `url('${promo.image}')`;
+  if (isFirstPromoRender) {
+    bg1.style.backgroundImage = `url('${promo.image}')`;
+    bg1.style.opacity = '1';
+    bg1.style.filter = 'blur(0)';
     textContainer.innerHTML = `
       <span class="promo-hashtag">${promo.tag}</span>
       <div class="promo-title">${promo.title}</div>
     `;
-    
-    // Fade and blur in
-    bgLayer.style.filter = 'blur(0)';
-    bgLayer.style.opacity = '1';
     textContainer.style.opacity = '1';
-  }, 400); // Wait for the fade-out to complete
+    isFirstPromoRender = false;
+    return;
+  }
+
+  const activeBg = activeBgIndex === 1 ? bg1 : bg2;
+  const nextBg = activeBgIndex === 1 ? bg2 : bg1;
+
+  // Prepare next background
+  nextBg.style.backgroundImage = `url('${promo.image}')`;
+  
+  // Fade out text
+  textContainer.style.opacity = '0';
+
+  // Crossfade backgrounds
+  nextBg.style.filter = 'blur(0)';
+  nextBg.style.opacity = '1';
+
+  activeBg.style.filter = 'blur(12px)';
+  activeBg.style.opacity = '0';
+
+  setTimeout(() => {
+    textContainer.innerHTML = `
+      <span class="promo-hashtag">${promo.tag}</span>
+      <div class="promo-title">${promo.title}</div>
+    `;
+    textContainer.style.opacity = '1';
+  }, 400); // Wait for text fade before updating
+
+  activeBgIndex = activeBgIndex === 1 ? 2 : 1;
 }
 function nextPromo() {
   currentPromo =
