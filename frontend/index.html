@@ -38,6 +38,7 @@
 
     <div class="hero-promo-row">
       <div class="hero-promo-card">
+        <div id="promo-bg" class="promo-bg"></div>
 
         <button type="button" class="promo-arrow promo-arrow-left" aria-label="Sebelumnya">‹</button>
         <button type="button" class="promo-arrow promo-arrow-right" aria-label="Berikutnya">›</button>
@@ -207,29 +208,29 @@ const heroPromos = [
 ];
 function renderPromo() {
   const promo = heroPromos[currentPromo];
-  const card = document.querySelector('.hero-promo-card');
+  const bgLayer = document.getElementById('promo-bg');
   const textContainer = document.getElementById('promo-text');
 
-  // Fade and blur out
-  card.style.transition = 'filter 0.5s ease-in-out, opacity 0.5s ease-in-out';
-  card.style.filter = 'blur(12px)';
-  card.style.opacity = '0'; // Completely fade out for a smoother switch
+  // Fade and blur out the background layer
+  bgLayer.style.filter = 'blur(12px)';
+  bgLayer.style.opacity = '0';
+  
+  // Also fade text
+  textContainer.style.opacity = '0';
 
   setTimeout(() => {
     // Change content while invisible
-    card.style.backgroundImage = `url('${promo.image}')`;
+    bgLayer.style.backgroundImage = `url('${promo.image}')`;
     textContainer.innerHTML = `
       <span class="promo-hashtag">${promo.tag}</span>
       <div class="promo-title">${promo.title}</div>
     `;
     
-    // Force a browser repaint/reflow before fading back in
-    void card.offsetWidth;
-    
     // Fade and blur in
-    card.style.filter = 'blur(0)';
-    card.style.opacity = '1';
-  }, 500); // Wait for the fade-out to complete
+    bgLayer.style.filter = 'blur(0)';
+    bgLayer.style.opacity = '1';
+    textContainer.style.opacity = '1';
+  }, 400); // Wait for the fade-out to complete
 }
 function nextPromo() {
   currentPromo =

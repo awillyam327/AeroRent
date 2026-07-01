@@ -99,12 +99,19 @@
 
   border-radius:28px;
 
-  background-size:cover;
-  background-position:center;
-
   display:flex;
   flex-direction:column;
   justify-content:flex-start;
+}
+.promo-bg {
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  background-position:center;
+  z-index:1;
+  transition: filter 0.4s ease, opacity 0.4s ease;
+  will-change: filter, opacity;
+  transform: translateZ(0);
 }
 .hero-promo-card::before{
   content:"";
