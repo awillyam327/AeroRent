@@ -211,21 +211,25 @@ function renderPromo() {
   const textContainer = document.getElementById('promo-text');
 
   // Fade and blur out
-  card.style.transition = 'filter 0.4s ease, opacity 0.4s ease';
-  card.style.filter = 'blur(8px)';
-  card.style.opacity = '0.6';
+  card.style.transition = 'filter 0.5s ease-in-out, opacity 0.5s ease-in-out';
+  card.style.filter = 'blur(12px)';
+  card.style.opacity = '0'; // Completely fade out for a smoother switch
 
   setTimeout(() => {
+    // Change content while invisible
     card.style.backgroundImage = `url('${promo.image}')`;
     textContainer.innerHTML = `
       <span class="promo-hashtag">${promo.tag}</span>
       <div class="promo-title">${promo.title}</div>
     `;
     
+    // Force a browser repaint/reflow before fading back in
+    void card.offsetWidth;
+    
     // Fade and blur in
     card.style.filter = 'blur(0)';
     card.style.opacity = '1';
-  }, 400);
+  }, 500); // Wait for the fade-out to complete
 }
 function nextPromo() {
   currentPromo =
