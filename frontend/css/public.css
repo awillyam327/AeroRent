@@ -90,6 +90,9 @@
 .hero-promo-card{
   position:relative;
   overflow:hidden;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: filter, opacity;
 
   min-height:330px;
   padding:48px;
