@@ -39,10 +39,12 @@
 }
 .hero-heading{
   display:flex;
-  align-items:center;
+  align-items:flex-start; /* Prevent vertical bouncing */
+  align-content:flex-start;
   gap:14px;
   flex-wrap:wrap;
   margin-left:80px;
+  min-height: 110px; /* Lock height to accommodate 2-3 lines of text wrapping */
 }
 
 .hero-heading #hero-rotating-text{
