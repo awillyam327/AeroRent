@@ -45,6 +45,15 @@ function renderNavbar(containerId, opts = {}) {
     }
   }
 
+  let customerLinksHtml = '';
+  if (user && user.role === 'CUSTOMER') {
+    customerLinksHtml = `
+      <a href="${rootPath}pages/customer/dashboard.html" class="nav-link ${isActive('dashboard')} hide-on-mobile">Dashboard</a>
+      <a href="${rootPath}pages/customer/riwayat.html" class="nav-link ${isActive('riwayat')} hide-on-mobile">Riwayat</a>
+      <a href="${rootPath}pages/customer/profil.html" class="nav-link ${isActive('profil')} hide-on-mobile">Profil</a>
+    `;
+  }
+
   el.innerHTML = `
     <div class="navbar-inner container">
       <a href="${rootPath}index.html" class="navbar-brand">
@@ -53,6 +62,7 @@ function renderNavbar(containerId, opts = {}) {
       <nav class="navbar-links">
         <a href="${rootPath}index.html" class="nav-link ${isActive('beranda')}">Beranda</a>
         <a href="${rootPath}armada.html" class="nav-link ${isActive('armada')}">Armada</a>
+        ${customerLinksHtml}
       </nav>
       <div class="navbar-auth">${authAreaHtml}</div>
       <button class="navbar-burger" id="navbar-burger-btn" aria-label="Buka menu">
