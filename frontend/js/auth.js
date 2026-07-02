@@ -183,6 +183,8 @@ async function handleRegisterSubmit(e) {
   const email = qs('reg-email').value.trim();
   const password = qs('reg-password').value;
   const passwordConfirm = qs('reg-password-confirm').value;
+  const nik = qs('reg-nik').value.trim();
+  const alamat = qs('reg-alamat').value.trim();
   const fotoKtp = qs('reg-ktp').files[0];
 
   if (!nama || !telp || !email || !password || !passwordConfirm) {
@@ -204,6 +206,8 @@ async function handleRegisterSubmit(e) {
   fd.append('no_telepon', telp);
   fd.append('email', email);
   fd.append('password', password);
+  if (nik) fd.append('no_ktp', nik);
+  if (alamat) fd.append('alamat', alamat);
   if (fotoKtp) fd.append('foto_ktp', fotoKtp);
 
   try {
@@ -223,6 +227,58 @@ async function handleRegisterSubmit(e) {
     btn.textContent = 'Daftar Akun';
     showError(err.message || 'Terjadi kesalahan saat mendaftar.');
   }
+}
+
+async function scanRegKtp() {
+  const inp = document.getElementById('reg-ktp');
+  if (!inp.files.length) {
+    showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Peringatan', 'Pilih foto KTP terlebih dahulu.');
+    return;
+  }
+  
+  const file = inp.files[0];
+  const statusEl = document.getElementById('reg-ktp-status');
+  const btn = document.getElementById('btn-scan-reg-ktp');
+  
+  statusEl.classList.remove('hidden', 'text-green-400', 'text-red-400');
+  statusEl.classList.add('text-gray-500');
+  statusEl.innerHTML = '<div class="spin inline-block mx-auto" style="width:12px;height:12px;border-width:2px;vertical-align:-2px;margin-right:6px;"></div>Memproses OCR...';
+  btn.disabled = true;
+  
+  const fd = new FormData();
+  fd.append('file', file);
+  
+  try {
+    // API is global from api.js (API_BASE)
+    const r = await fetch(`${API_BASE}/ocr/ktp`, {
+      method: 'POST',
+      body: fd
+    });
+    
+    if (r.ok) {
+      const res = await r.json();
+      let msg = [];
+      if (res.nik) { document.getElementById('reg-nik').value = res.nik; msg.push('NIK'); }
+      if (res.nama) { document.getElementById('reg-nama').value = res.nama; msg.push('Nama'); }
+      if (res.alamat) { document.getElementById('reg-alamat').value = res.alamat; msg.push('Alamat'); }
+      
+      if (msg.length > 0) {
+        showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'OCR Berhasil', `Berhasil mengisi: ${msg.join(', ')}`);
+        statusEl.innerHTML = '<i class="ph-fill ph-check-circle" style="color: #10B981;"></i> ' + msg.join(', ') + ' berhasil diisi.';
+        statusEl.classList.add('text-green-400');
+      } else {
+        showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'OCR Selesai', 'KTP berhasil dibaca, tapi data tidak jelas.');
+        statusEl.innerHTML = 'Data tidak jelas / blur.';
+      }
+    } else {
+      statusEl.innerHTML = '<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i> Gagal membaca KTP.';
+      statusEl.classList.add('text-red-400');
+    }
+  } catch (e) {
+    statusEl.innerHTML = '<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i> Terjadi kesalahan jaringan.';
+    statusEl.classList.add('text-red-400');
+  }
+  btn.disabled = false;
 }
 
 window.addEventListener('DOMContentLoaded', initAuthPage);

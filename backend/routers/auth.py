@@ -84,6 +84,8 @@ async def register_customer(
     email: str = Form(...),
     no_telepon: str = Form(...),
     password: str = Form(...),
+    no_ktp: Optional[str] = Form(None),
+    alamat: Optional[str] = Form(None),
     foto_ktp: Optional[UploadFile] = File(None),
     cur: aiomysql.DictCursor = Depends(get_db),
 ):
@@ -106,13 +108,15 @@ async def register_customer(
         ktp_url = await imgbb_upload(img_bytes, foto_ktp.filename)
 
     await cur.execute(
-        "INSERT INTO PELANGGAN (id_pelanggan, nama_lengkap, email, no_telepon, password_hash, foto_ktp_url, is_verified) "
-        "VALUES (%(id)s, %(nama)s, %(email)s, %(telp)s, %(pwd)s, %(ktp)s, 0)",
+        "INSERT INTO PELANGGAN (id_pelanggan, nama_lengkap, email, no_telepon, no_ktp, alamat, password_hash, foto_ktp_url, is_verified) "
+        "VALUES (%(id)s, %(nama)s, %(email)s, %(telp)s, %(nik)s, %(alamat)s, %(pwd)s, %(ktp)s, 0)",
         {
             "id": new_id,
             "nama": nama_lengkap,
             "email": email,
             "telp": no_telepon,
+            "nik": no_ktp,
+            "alamat": alamat,
             "pwd": hashed,
             "ktp": ktp_url
         }

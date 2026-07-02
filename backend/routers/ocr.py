@@ -35,7 +35,37 @@ async def ocr_ktp(file: UploadFile = File(...)):
             if not parsed_results:
                 raise HTTPException(400, "Tidak ada teks yang terdeteksi.")
                 
-            return {"text": parsed_results[0].get("ParsedText", "")}
+            raw_text = parsed_results[0].get("ParsedText", "")
+            
+            # Simple Regex for Indonesian KTP
+            import re
+            
+            nik = ""
+            nama = ""
+            alamat = ""
+            
+            # Find NIK (16 digits)
+            nik_match = re.search(r'\b\d{16}\b', raw_text)
+            if nik_match:
+                nik = nik_match.group(0)
+            
+            # Find Nama
+            # Look for "Nama" or "Narna" followed by anything, capture the rest of the line
+            nama_match = re.search(r'(?i)Nama\s*[:;]?\s*(.+)', raw_text)
+            if nama_match:
+                nama = nama_match.group(1).strip()
+            
+            # Find Alamat
+            alamat_match = re.search(r'(?i)Alamat\s*[:;]?\s*(.+)', raw_text)
+            if alamat_match:
+                alamat = alamat_match.group(1).strip()
+                
+            return {
+                "text": raw_text,
+                "nik": nik,
+                "nama": nama,
+                "alamat": alamat
+            }
             
         except httpx.RequestError as e:
             raise HTTPException(503, f"Gagal menghubungi layanan OCR: {str(e)}")
