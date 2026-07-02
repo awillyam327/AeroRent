@@ -167,6 +167,7 @@ async function initProfil() {
     email: auth.user.email || '',
     telp: saved?.telp || '',
     alamat: saved?.alamat || '',
+    nik: '',
   };
 
   const pid = auth.user.sub || auth.user.id;
@@ -179,6 +180,7 @@ async function initProfil() {
         profile.email = data.email || profile.email;
         profile.telp = data.telepon || profile.telp;
         profile.alamat = data.alamat || profile.alamat;
+        profile.nik = data.no_ktp || '';
       }
     } catch (err) {
       console.warn("Gagal memuat profil pelanggan dari server", err);
@@ -192,6 +194,7 @@ async function initProfil() {
   qs('pf-email').value = profile.email;
   qs('pf-telp').value = profile.telp;
   qs('pf-alamat').value = profile.alamat;
+  if (qs('pf-nik')) qs('pf-nik').value = profile.nik || 'Belum terisi';
 
   qs('form-profil').addEventListener('submit', (e) => {
     e.preventDefault();
