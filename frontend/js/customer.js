@@ -13,11 +13,7 @@
  * ==============================================================================
  */
 
-const DEMO_BOOKINGS = [
-  { id: 'd1', booking: 'AR-4827', kendaraan: 'Honda Brio RS 2023', mulai: '2026-06-30', selesai_rencana: '2026-07-03', durasi: 3, total: 900000, status: 'MENUNGGU', foto_kendaraan: '' },
-  { id: 'd2', booking: 'AR-9129', kendaraan: 'Honda Brio RS 2023', mulai: '2026-06-23', selesai_rencana: '2026-06-26', durasi: 3, total: 900000, status: 'MENUNGGU', foto_kendaraan: '' },
-  { id: 'd3', booking: 'AR-1881', kendaraan: 'Toyota Innova Reborn 2023', mulai: '2026-06-08', selesai_rencana: '2026-06-11', durasi: 3, total: 2700000, status: 'AKTIF', foto_kendaraan: '' },
-];
+const DEMO_BOOKINGS = [];
 
 /** Endpoint yang DIHARAPKAN ada (belum diimplementasikan backend) untuk
  *  Customer mengambil booking miliknya sendiri berdasarkan token JWT-nya. */
