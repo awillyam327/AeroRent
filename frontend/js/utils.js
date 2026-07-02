@@ -67,7 +67,8 @@ function debounce(fn, delay = 300) {
 const DEMO_BOOKINGS_KEY = 'aerorent_demo_bookings';
 
 function getDemoBookings() {
-  return [];
+  try { return JSON.parse(localStorage.getItem(DEMO_BOOKINGS_KEY) || '[]'); }
+  catch (_) { return []; }
 }
 function addDemoBooking(booking) {
   const list = getDemoBookings();
