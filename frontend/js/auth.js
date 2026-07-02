@@ -50,7 +50,6 @@ let activeTab = 'login';
 function initAuthPage() {
   renderToastMarkup('toast-root');
   wireTabSwitcher();
-  wireDemoCards();
   qs('form-login').addEventListener('submit', handleLoginSubmit);
   qs('form-register').addEventListener('submit', handleRegisterSubmit);
 
@@ -95,18 +94,9 @@ function switchTab(tab) {
   qs('auth-subtitle').textContent = tab === 'login'
     ? 'Silakan masuk untuk menyewa armada AeroRent.'
     : 'Daftarkan identitas KTP Anda untuk memulai.';
-  qs('demo-section').classList.toggle('hidden', tab !== 'login');
   hideError();
 }
 
-function wireDemoCards() {
-  document.querySelectorAll('.demo-card').forEach((card) => {
-    card.addEventListener('click', () => {
-      qs('login-email').value = card.dataset.email;
-      qs('login-password').value = 'Demo@123';
-    });
-  });
-}
 
 function showError(msg) {
   const box = qs('auth-error');

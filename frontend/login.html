@@ -54,13 +54,13 @@
       <div class="form-group">
         <label class="form-label" for="login-email">Alamat Email</label>
         <input type="email" id="login-email" class="form-input" required
-              placeholder="owner@aerorent.id / kasir@aerorent.id / customer@aerorent.id">
+              placeholder="customer@contoh.id">
       </div>
       <div class="form-group">
         <label class="form-label" for="login-password">Password</label>
         <div style="position:relative;">
           <input type="password" id="login-password" class="form-input" required
-                placeholder="Untuk demo: gunakan password mengandung &quot;123&quot;" style="padding-right:40px;">
+                placeholder="Minimal 8 karakter" style="padding-right:40px;">
           <button type="button" class="btn-toggle-password" onclick="togglePassword('login-password', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim);"><i class="ph ph-eye"></i></button>
         </div>
       </div>
@@ -126,24 +126,7 @@
       </button>
     </form>
 
-    <!-- ===== DEMO ACCOUNTS ===== -->
-    <div id="demo-section" class="demo-section">
-      <div class="demo-label">GUNAKAN AKUN DEMO INI</div>
-      <div class="demo-grid">
-        <div class="demo-card role-owner" data-email="owner@aerorent.id">
-          <div class="role">Owner</div>
-          <div class="email">owner@aerorent.id</div>
-        </div>
-        <div class="demo-card role-kasir" data-email="kasir@aerorent.id">
-          <div class="role">Admin (Kasir)</div>
-          <div class="email">kasir@aerorent.id</div>
-        </div>
-        <div class="demo-card role-customer" data-email="customer@aerorent.id">
-          <div class="role">Customer</div>
-          <div class="email">customer@aerorent.id</div>
-        </div>
-      </div>
-    </div>
+
 
   </div>
 </main>
