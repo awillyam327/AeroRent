@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     SMTP_USER:          str   = ""
     SMTP_PASSWORD:      str   = ""
     SMTP_FROM:          str   = "noreply@aerorent.id"
+    FRONTEND_URL:       str   = "http://localhost:5500"
     APP_DEBUG:          bool  = False
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

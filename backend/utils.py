@@ -175,6 +175,50 @@ async def smtp_invoice(email_tujuan: str, nama: str, booking: str, pdf_bytes: by
 
 
 # ==============================================================================
+# EMAIL VERIFIKASI
+# ==============================================================================
+
+async def send_verification_email(email_tujuan: str, token: str) -> bool:
+    """Kirim email verifikasi saat registrasi."""
+    try:
+        verify_url = f"{cfg.FRONTEND_URL}/login.html?verify={token}"
+        msg = MIMEMultipart("alternative")
+        msg["From"] = cfg.SMTP_FROM
+        msg["To"] = email_tujuan
+        msg["Subject"] = "Verifikasi Akun AeroRent Anda"
+
+        html = f"""
+        <html>
+          <body style="font-family: Arial, sans-serif; background-color: #f4f4f5; padding: 20px;">
+            <div style="max-width: 500px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+              <h2 style="color: #7c3aed; text-align: center; margin-bottom: 20px;">AeroRent Salatiga</h2>
+              <p style="color: #3f3f46; font-size: 16px;">Halo,</p>
+              <p style="color: #3f3f46; font-size: 16px;">Terima kasih telah mendaftar di AeroRent. Silakan klik tombol di bawah ini untuk memverifikasi alamat email Anda dan mengaktifkan akun Anda.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{verify_url}" style="background-color: #7c3aed; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">Verifikasi Email Saya</a>
+              </div>
+              <p style="color: #71717a; font-size: 14px; text-align: center;">Tautan ini akan kedaluwarsa dalam 24 jam.</p>
+              <p style="color: #71717a; font-size: 12px; text-align: center; margin-top: 30px;">
+                Jika Anda tidak merasa mendaftar di AeroRent, abaikan email ini.
+              </p>
+            </div>
+          </body>
+        </html>
+        """
+        
+        msg.attach(MIMEText(html, "html"))
+
+        await aiosmtplib.send(
+            msg, hostname=cfg.SMTP_HOST, port=cfg.SMTP_PORT,
+            username=cfg.SMTP_USER, password=cfg.SMTP_PASSWORD, start_tls=True
+        )
+        log.info(f"[SMTP] Email verifikasi terkirim ke {email_tujuan}")
+        return True
+    except Exception as exc:
+        log.error(f"[SMTP] Gagal kirim email verifikasi ke {email_tujuan}: {exc}")
+        return False
+
+# ==============================================================================
 # SCHEDULER — Reminder WA H-1 Pengembalian (APScheduler)
 # ==============================================================================
 

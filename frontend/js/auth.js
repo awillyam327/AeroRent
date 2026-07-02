@@ -56,7 +56,28 @@ function initAuthPage() {
 
   // Kalau sudah login, langsung lempar ke dashboard masing-masing.
   const auth = getAuth();
-  if (auth?.user?.role) location.href = getPostLoginRedirect(auth.user.role);
+  if (auth?.user?.role) {
+    location.href = getPostLoginRedirect(auth.user.role);
+    return;
+  }
+
+  // Cek jika ada parameter verifikasi email di URL
+  const params = new URLSearchParams(window.location.search);
+  const verifyToken = params.get('verify');
+  if (verifyToken) {
+    handleVerifyEmail(verifyToken);
+  }
+}
+
+async function handleVerifyEmail(token) {
+  try {
+    const result = await apiVerifyEmail(token);
+    showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Verifikasi Berhasil', result.message || 'Email Anda telah diverifikasi.');
+    // Bersihkan URL dari parameter verify
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } catch (err) {
+    showError(err.message || 'Gagal memverifikasi email.');
+  }
 }
 
 function wireTabSwitcher() {
@@ -117,13 +138,20 @@ async function handleLoginSubmit(e) {
   }
 
   try {
-    // 2) Coba endpoint login customer asli (saat ini belum ada di backend — lihat api.js).
+    // 2) Coba endpoint login customer asli
     const result = await apiLoginCustomer(email, password);
     setAuth(result);
     location.href = getPostLoginRedirect('CUSTOMER');
     return;
   } catch (custErr) {
-    // Lanjut ke mode demo.
+    // Jika backend mengirim error spesifik (misal belum verifikasi), tampilkan error tersebut dan hentikan fallback.
+    if (custErr.message && custErr.message.toLowerCase().includes('diverifikasi')) {
+      btn.disabled = false;
+      btn.textContent = 'Masuk Sekarang';
+      showError(custErr.message);
+      return;
+    }
+    // Jika bukan error verifikasi (misal salah password / API mati), lanjut ke mode demo.
   }
 
   // 3) Mode demo lokal (backend belum mendukung / sedang tidak tersedia).
@@ -173,10 +201,16 @@ async function handleRegisterSubmit(e) {
   if (fotoKtp) fd.append('foto_ktp', fotoKtp);
 
   try {
-    // Endpoint ini BELUM ADA di backend — lihat catatan di api.js.
     const result = await apiRegisterCustomer(fd);
-    setAuth(result);
-    location.href = getPostLoginRedirect('CUSTOMER');
+    
+    // Jangan langsung login, tampilkan pesan sukses dan instruksi cek email
+    btn.disabled = false;
+    btn.textContent = 'Daftar Akun';
+    qs('form-register').reset();
+    switchTab('login'); // Kembali ke form login
+    
+    showToast('<i class="ph-fill ph-envelope-simple" style="color: #3B82F6;"></i>', 'Cek Email Anda', result.message || 'Registrasi berhasil. Silakan periksa email Anda untuk verifikasi.');
+    
     return;
   } catch (err) {
     btn.disabled = false;

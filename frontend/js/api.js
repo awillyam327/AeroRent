@@ -146,7 +146,10 @@ async function apiLoginCustomer(email, password) {
     },
     body: JSON.stringify({ email, password }),
   });
-  if (!res.ok) throw new Error('Endpoint login customer belum tersedia di backend.');
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Login gagal.');
+  }
   return res.json();
 }
 
@@ -162,6 +165,24 @@ async function apiRegisterCustomer(formData) {
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
     throw new Error(errData.detail || 'Pendaftaran gagal (Terjadi kesalahan server)');
+  }
+  return res.json();
+}
+
+/**
+ * Verifikasi Email Customer
+ */
+async function apiVerifyEmail(token) {
+  const res = await fetch(`${API_BASE}/auth/verify-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ token }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || 'Verifikasi gagal atau token tidak valid.');
   }
   return res.json();
 }
