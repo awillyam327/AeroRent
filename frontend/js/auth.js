@@ -271,7 +271,15 @@ async function scanRegKtp() {
         statusEl.innerHTML = 'Data tidak jelas / blur.';
       }
     } else {
-      statusEl.innerHTML = '<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i> Gagal membaca KTP.';
+      let errMsg = 'Gagal membaca KTP.';
+      try {
+        const errRes = await r.json();
+        if (errRes.detail) errMsg = typeof errRes.detail === 'string' ? errRes.detail : JSON.stringify(errRes.detail);
+        else errMsg = 'Server membalas: ' + JSON.stringify(errRes);
+      } catch (e) {
+        errMsg += ' (Bukan JSON)';
+      }
+      statusEl.innerHTML = '<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i> ' + errMsg;
       statusEl.classList.add('text-red-400');
     }
   } catch (e) {

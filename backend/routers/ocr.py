@@ -67,5 +67,8 @@ async def ocr_ktp(file: UploadFile = File(...)):
                 "alamat": alamat
             }
             
+        except httpx.HTTPStatusError as e:
+            err_text = e.response.text if e.response else str(e)
+            raise HTTPException(502, f"OCR API Error ({e.response.status_code if e.response else 'Unknown'}): {err_text}")
         except httpx.RequestError as e:
             raise HTTPException(503, f"Gagal menghubungi layanan OCR: {str(e)}")
