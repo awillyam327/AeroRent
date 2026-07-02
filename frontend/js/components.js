@@ -124,20 +124,33 @@ function renderCustomerSidebar(containerId, opts = {}) {
   injectMobileBottomNav(active, rootPath);
 }
 
-// Helper untuk menginjeksi Bottom Nav khusus mobile bagi Customer
+// Helper untuk menginjeksi Bottom Nav khusus mobile
 function injectMobileBottomNav(active = '', rootPath = '') {
   const user = getCurrentUser();
-  if (!user || user.role !== 'CUSTOMER') return;
+  // Jika Karyawan/Owner, tidak perlu bottom nav (atau bisa dibuatkan khusus nanti)
+  if (user && user.role !== 'CUSTOMER') return;
   
   if (active === 'armada') active = 'sewa-baru';
 
-  const items = [
-    { key: 'dashboard', href: `${rootPath}pages/customer/dashboard.html`, icon: '<i class="ph ph-squares-four"></i>', label: 'Dashboard' },
-    { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '<i class="ph ph-car-profile"></i>', label: 'Sewa' },
-    { key: 'beranda', href: `${rootPath}index.html`, icon: '<i class="ph-fill ph-house"></i>', label: 'Beranda', isCenter: true },
-    { key: 'riwayat', href: `${rootPath}pages/customer/riwayat.html`, icon: '<i class="ph ph-clock-counter-clockwise"></i>', label: 'Riwayat' },
-    { key: 'profil', href: `${rootPath}pages/customer/profil.html`, icon: user?.foto_profil_url ? `<img src="${user.foto_profil_url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin:0 auto;display:block;">` : '<i class="ph ph-user"></i>', label: 'Profil' },
-  ];
+  let items = [];
+
+  if (!user) {
+    // Menu untuk pengguna yang belum login (Guest)
+    items = [
+      { key: 'beranda', href: `${rootPath}index.html`, icon: '<i class="ph ph-house"></i>', label: 'Beranda' },
+      { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '<i class="ph ph-car-profile"></i>', label: 'Armada', isCenter: true },
+      { key: 'login', href: `${rootPath}login.html`, icon: '<i class="ph ph-sign-in"></i>', label: 'Masuk' }
+    ];
+  } else {
+    // Menu untuk Customer yang sudah login
+    items = [
+      { key: 'dashboard', href: `${rootPath}pages/customer/dashboard.html`, icon: '<i class="ph ph-squares-four"></i>', label: 'Dashboard' },
+      { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '<i class="ph ph-car-profile"></i>', label: 'Sewa' },
+      { key: 'beranda', href: `${rootPath}index.html`, icon: '<i class="ph-fill ph-house"></i>', label: 'Beranda', isCenter: true },
+      { key: 'riwayat', href: `${rootPath}pages/customer/riwayat.html`, icon: '<i class="ph ph-clock-counter-clockwise"></i>', label: 'Riwayat' },
+      { key: 'profil', href: `${rootPath}pages/customer/profil.html`, icon: user?.foto_profil_url ? `<img src="${user.foto_profil_url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin:0 auto;display:block;">` : '<i class="ph ph-user"></i>', label: 'Profil' },
+    ];
+  }
 
   let existingBn = document.getElementById('cs-bottom-nav-mobile');
   if (existingBn) existingBn.remove();
