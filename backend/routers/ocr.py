@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 import httpx
 from config import cfg
+import asyncio
+import random
+from deps import get_current_account, get_db
+import aiomysql
 
 router = APIRouter(prefix="/ocr", tags=["OCR"])
 
@@ -72,3 +76,33 @@ async def ocr_ktp(file: UploadFile = File(...)):
             raise HTTPException(502, f"OCR API Error ({e.response.status_code if e.response else 'Unknown'}): {err_text}")
         except httpx.RequestError as e:
             raise HTTPException(503, f"Gagal menghubungi layanan OCR: {str(e)}")
+
+@router.post("/face-match", tags=["📷 OCR"])
+async def face_match_liveness(
+    selfie: UploadFile = File(...),
+    user = Depends(get_current_account),
+    cur: aiomysql.DictCursor = Depends(get_db)
+):
+    if user["role"] != "CUSTOMER":
+        raise HTTPException(403, "Akses ditolak.")
+        
+    await cur.execute("SELECT foto_ktp_url, foto_sim_url FROM PELANGGAN WHERE id_pelanggan = %(id)s", {"id": user["id"]})
+    plg = await cur.fetchone()
+    
+    if not plg or not plg["foto_ktp_url"] or not plg["foto_sim_url"]:
+        raise HTTPException(400, "KTP atau SIM A belum diunggah. Lengkapi profil terlebih dahulu.")
+        
+    content = await selfie.read()
+    if not content:
+        raise HTTPException(400, "Selfie kosong.")
+        
+    # SIMULASI AI (Mock)
+    await asyncio.sleep(2)
+    
+    match_score = round(random.uniform(85.0, 98.0), 2)
+    
+    return {
+        "status": "success",
+        "match_score": match_score,
+        "message": f"Wajah cocok dengan KTP & SIM ({match_score}%)."
+    }

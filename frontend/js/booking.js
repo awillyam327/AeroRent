@@ -27,6 +27,9 @@ let S = {
   ktpFile: null,
   simFile: null,
   hasSim: false,
+  livenessFile: null,
+  livenessPassed: false,
+  stream: null,
   metodeBayar: 'TUNAI', // 'TUNAI' (Cash) | 'MIDTRANS' (Cashless)
   agreed: false,
   bookingResult: null,
@@ -206,6 +209,7 @@ function goToStep2() {
   qs('summary-step1-actions').classList.add('hidden');
   qs('summary-step2-actions').classList.remove('hidden');
   qs('sim-upload-zone').classList.toggle('hidden', S.useDriver);
+  qs('liveness-zone').classList.toggle('hidden', S.useDriver);
   renderSummary();
   validateStep2();
 }
@@ -270,9 +274,115 @@ async function uploadSewaSim() {
 }
 function validateStep2() {
   const simValid = S.useDriver ? true : !!(S.hasSim || S.simFile);
-  const valid = !!(S.nama && S.telp && S.alamat && (S.ktpFile || S.ktpUrl) && simValid && S.agreed);
+  const livenessValid = S.useDriver ? true : S.livenessPassed;
+  const valid = !!(S.nama && S.telp && S.alamat && (S.ktpFile || S.ktpUrl) && simValid && livenessValid && S.agreed);
   qs('btn-step2-submit').disabled = !valid;
   return valid;
+}
+
+// LIVENESS FUNCTIONS
+async function startCamera() {
+  try {
+    S.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    const video = qs('liveness-video');
+    video.srcObject = S.stream;
+    qs('btn-start-camera').style.display = 'none';
+    qs('camera-container').style.display = 'block';
+    qs('liveness-result').style.display = 'none';
+    S.livenessPassed = false;
+    validateStep2();
+  } catch (err) {
+    showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'Kamera Error', 'Tidak dapat mengakses kamera.');
+  }
+}
+
+function stopCamera() {
+  if (S.stream) {
+    S.stream.getTracks().forEach(track => track.stop());
+    S.stream = null;
+  }
+}
+
+async function captureLiveness() {
+  const video = qs('liveness-video');
+  const canvas = qs('liveness-canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+  canvas.toBlob(async (blob) => {
+    S.livenessFile = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+    qs('liveness-preview').src = URL.createObjectURL(S.livenessFile);
+    stopCamera();
+    qs('camera-container').style.display = 'none';
+    qs('liveness-result').style.display = 'block';
+    
+    // Auto-upload SIM if needed before matching
+    if (!S.hasSim && S.simFile) {
+      qs('liveness-status-text').innerHTML = '<span class="spinner" style="width:12px;height:12px;"></span> Mengunggah SIM A...';
+      const fd = new FormData();
+      fd.append('foto_sim', S.simFile);
+      const auth = getAuth();
+      try {
+        const res = await fetch(`${API_BASE}/pelanggan/saya/sim`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${auth.access_token}` },
+          body: fd
+        });
+        if (res.ok) {
+          S.hasSim = true;
+          const btnSim = qs('btn-upload-sewa-sim');
+          if(btnSim) btnSim.style.display = 'none';
+        } else {
+          qs('liveness-status-text').innerHTML = '<span class="text-red-500">Gagal mengunggah SIM A</span>';
+          return;
+        }
+      } catch (e) {
+        qs('liveness-status-text').innerHTML = '<span class="text-red-500">Koneksi Error</span>';
+        return;
+      }
+    }
+    
+    // Call Face Match API
+    qs('liveness-status-text').innerHTML = '<span class="spinner" style="width:12px;height:12px;"></span> Menganalisa Wajah...';
+    qs('btn-retake-camera').disabled = true;
+    
+    const fd = new FormData();
+    fd.append('selfie', S.livenessFile);
+    const auth = getAuth();
+    
+    try {
+      const res = await fetch(`${API_BASE}/ocr/face-match`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${auth.access_token}` },
+        body: fd
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.match_score >= 80) {
+        S.livenessPassed = true;
+        qs('liveness-status-text').innerHTML = `<span style="color:#10B981;"><i class="ph-fill ph-check-circle"></i> Cocok (${data.match_score}%)</span>`;
+        qs('btn-retake-camera').disabled = false;
+        validateStep2();
+      } else {
+        S.livenessPassed = false;
+        const msg = data.detail || (data.match_score ? `Tidak cocok (${data.match_score}%)` : 'Gagal memverifikasi');
+        qs('liveness-status-text').innerHTML = `<span style="color:#EF4444;"><i class="ph-fill ph-x-circle"></i> ${msg}</span>`;
+        qs('btn-retake-camera').disabled = false;
+      }
+    } catch (e) {
+      qs('liveness-status-text').innerHTML = '<span style="color:#EF4444;">Kesalahan jaringan saat verifikasi.</span>';
+      qs('btn-retake-camera').disabled = false;
+    }
+    
+  }, 'image/jpeg', 0.8);
+}
+
+function retakeLiveness() {
+  S.livenessPassed = false;
+  S.livenessFile = null;
+  startCamera();
 }
 function backToStep1() {
   S.step = 1;

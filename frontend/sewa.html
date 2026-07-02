@@ -150,6 +150,30 @@
               </button>
             </div>
           </div>
+
+          <!-- 2.5 FACE MATCH LIVENESS (LEPAS KUNCI) -->
+          <div id="liveness-zone" class="form-group hidden" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <label class="form-label" style="color:var(--color-amber);">Verifikasi Wajah (Liveness Check)</label>
+            <p class="text-dim" style="font-size: 12px; margin-top: -6px; margin-bottom: 12px;">Wajib mengambil foto selfie untuk pencocokan AI dengan KTP & SIM A.</p>
+            
+            <div id="camera-container" style="display:none; width:100%; border-radius:12px; overflow:hidden; background:#000; position:relative; aspect-ratio:3/4; max-width: 240px; margin: 0 auto;">
+              <video id="liveness-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover; transform: scaleX(-1);"></video>
+              <button type="button" class="btn btn-primary" style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); border-radius:50px; padding:10px 20px;" onclick="captureLiveness()">
+                <i class="ph-fill ph-camera"></i> Ambil
+              </button>
+            </div>
+            
+            <div id="liveness-result" style="display:none; text-align:center;">
+              <img id="liveness-preview" style="width:120px; height:160px; object-fit:cover; border-radius:8px; margin:0 auto 12px; transform: scaleX(-1);" />
+              <div id="liveness-status-text" class="text-sm font-semibold mb-2" style="color:var(--color-amber);">Belum diverifikasi</div>
+              <button type="button" id="btn-retake-camera" class="btn btn-ghost" style="font-size:12px; width: 100%;" onclick="retakeLiveness()">Ulangi Foto</button>
+            </div>
+
+            <button type="button" id="btn-start-camera" class="btn btn-outline" style="width: 100%;" onclick="startCamera()">
+              <i class="ph ph-camera"></i> Buka Kamera Selfie
+            </button>
+          </div>
+          <canvas id="liveness-canvas" style="display:none;"></canvas>
           <label class="flex items-start gap-2" style="font-size:12px;color:var(--color-text-dim);cursor:pointer;margin-top:14px;">
             <input type="checkbox" id="dd-agree" onchange="onDataDiriChange()" style="margin-top:2px;">
             Saya menyetujui Syarat &amp; Ketentuan yang berlaku, termasuk denda keterlambatan dan kebijakan pembatalan sewa.
