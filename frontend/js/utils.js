@@ -83,7 +83,7 @@ const DEMO_PROFILE_KEY = 'aerorent_demo_profile';
 
 function getDemoProfile() {
   try { return JSON.parse(localStorage.getItem(DEMO_PROFILE_KEY) || 'null'); }
-} catch (_) { return null; }
+  catch (_) { return null; }
 }
 
 /**
