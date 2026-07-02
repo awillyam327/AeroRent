@@ -614,10 +614,22 @@ function renderKaryawanTable() {
                          class="btn-r px-3 py-1.5 rounded-xl text-xs">Nonaktif</button>`
         : `<button onclick="toggleKaryawan('${k.id || ''}', 1)"
                          class="btn-g px-3 py-1.5 rounded-xl text-xs">Aktifkan</button>`}
+            <button onclick="deleteKaryawan('${k.id || ''}')" class="btn-r px-3 py-1.5 rounded-xl text-xs bg-red-900/40 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30">Hapus</button>
           </div>
         </td>
-      </tr>`;
+    </tr>`;
   }).join('');
+}
+
+async function deleteKaryawan(id) {
+  if (!confirm('PERINGATAN: Apakah Anda yakin ingin MENGHAPUS karyawan ini secara permanen? Data ini tidak dapat dikembalikan.')) return;
+  const r = await api(`/karyawan/${id}`, { method: 'DELETE' });
+  if (r && r.ok) {
+    await loadKaryawan();
+    toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', 'Karyawan berhasil dihapus.');
+  } else {
+    toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal menghapus karyawan. Pastikan karyawan tidak memiliki transaksi yang terikat.');
+  }
 }
 
 function openKaryawanModal(id = null) {

@@ -20,10 +20,8 @@ async def list_kendaraan(
     q = ("SELECT k.id_kendaraan, k.nama_kendaraan, k.merk, k.model, k.tahun, k.nomor_plat, "
          "k.tipe_kendaraan, k.transmisi, k.bahan_bakar, k.kapasitas_penumpang, "
          "k.harga_sewa_harian, k.harga_supir_harian, k.status, k.foto_url, "
-         "k.is_featured, k.traccar_device_id, k.odometer_km, k.created_at, "
-         "k.id_karyawan, kar.nama_lengkap AS nama_karyawan "
-         "FROM KENDARAAN k "
-         "LEFT JOIN KARYAWAN kar ON k.id_karyawan = kar.id_karyawan WHERE 1=1")
+         "k.is_featured, k.traccar_device_id, k.odometer_km, k.created_at "
+         "FROM KENDARAAN k WHERE 1=1")
     p = {}
     if tipe:     q += " AND k.tipe_kendaraan = %(tipe)s"; p["tipe"] = tipe.upper()
     if status:   q += " AND k.status = %(st)s";           p["st"]   = status.upper()
@@ -35,8 +33,6 @@ async def list_kendaraan(
         q += f" ORDER BY k.harga_sewa_harian {order_dir}, k.nama_kendaraan ASC"
     elif sort_by == "tipe":
         q += f" ORDER BY k.tipe_kendaraan {order_dir}, k.nama_kendaraan ASC"
-    elif sort_by == "karyawan":
-        q += f" ORDER BY kar.nama_lengkap {order_dir}, k.nama_kendaraan ASC"
     else:
         q += " ORDER BY k.is_featured DESC, k.nama_kendaraan ASC"
 
@@ -81,13 +77,13 @@ async def tambah_kendaraan(body: KendaraanIn, user=Depends(req_owner), cur=Depen
     await cur.execute(
         "INSERT INTO KENDARAAN (id_kendaraan, nama_kendaraan, merk, model, tahun, nomor_plat, "
         "tipe_kendaraan, transmisi, bahan_bakar, kapasitas_penumpang, harga_sewa_harian, "
-        "harga_supir_harian, is_featured, traccar_device_id, deskripsi, id_karyawan) "
-        "VALUES (%(id)s, %(n)s, %(m)s, %(mo)s, %(t)s, %(p)s, %(tp)s, %(tr)s, %(b)s, %(k)s, %(h)s, %(hs)s, %(f)s, %(tid)s, %(d)s, %(idk)s)",
+        "harga_supir_harian, is_featured, traccar_device_id, deskripsi) "
+        "VALUES (%(id)s, %(n)s, %(m)s, %(mo)s, %(t)s, %(p)s, %(tp)s, %(tr)s, %(b)s, %(k)s, %(h)s, %(hs)s, %(f)s, %(tid)s, %(d)s)",
         {"id": kid, "n": body.nama_kendaraan, "m": body.merk, "mo": body.model,
          "t": body.tahun, "p": body.nomor_plat.upper(), "tp": body.tipe_kendaraan,
          "tr": body.transmisi, "b": body.bahan_bakar, "k": body.kapasitas_penumpang,
          "h": body.harga_sewa_harian, "hs": body.harga_supir_harian,
-         "f": body.is_featured, "tid": body.traccar_device_id, "d": body.deskripsi, "idk": user["id"]},
+         "f": body.is_featured, "tid": body.traccar_device_id, "d": body.deskripsi},
     )
     return {"message": "Kendaraan berhasil ditambahkan.", "id_kendaraan": kid}
 

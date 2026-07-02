@@ -79,3 +79,24 @@ async def update_karyawan(kid: str, body: KaryawanUpd, user=Depends(req_owner), 
     await cur.execute(f"UPDATE KARYAWAN SET {', '.join(sets)} WHERE id_karyawan = %(id)s", params)
     return {"message": "Karyawan berhasil diperbarui."}
 
+@router.delete("/{kid}", tags=["👤 Karyawan"])
+async def hapus_karyawan(kid: str, user=Depends(req_owner), cur=Depends(get_db)):
+    if kid == user["id"]:
+        raise HTTPException(400, "Anda tidak dapat menghapus akun Anda sendiri.")
+        
+    await cur.execute("SELECT id_karyawan FROM KARYAWAN WHERE id_karyawan = %(id)s", {"id": kid})
+    if not await cur.fetchone():
+        raise HTTPException(404, "Karyawan tidak ditemukan.")
+        
+    # Check if the employee has any related records (transactions/pengeluaran)
+    # To keep it simple, we just delete them. If foreign key constraints prevent it, 
+    # we can catch it or we can just let it fail naturally.
+    try:
+        await cur.execute("DELETE FROM KARYAWAN WHERE id_karyawan = %(id)s", {"id": kid})
+    except Exception as e:
+        log.error(f"Gagal menghapus karyawan {kid}: {e}")
+        raise HTTPException(400, "Gagal menghapus karyawan. Pastikan karyawan tidak memiliki transaksi atau data yang terikat.")
+        
+    log.info(f"[Karyawan] Dihapus: {kid} oleh {user['email']}")
+    return {"message": "Karyawan berhasil dihapus."}
+
