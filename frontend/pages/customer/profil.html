@@ -68,7 +68,12 @@
           </div>
           <div class="doc-row">
             <span style="font-size:13px;"><i class="ph ph-car"></i> SIM A Aktif</span>
-            <span class="badge badge-menunggu">Belum Diunggah</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span id="badge-sim" class="badge badge-menunggu">Belum Diunggah</span>
+              <button type="button" id="btn-upload-sim" class="btn btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="document.getElementById('input-sim-profil').click()">
+                Unggah
+              </button>
+            </div>
           </div>
         </div>
 
@@ -102,6 +107,7 @@
 </div>
 <input type="file" id="input-avatar-camera" accept="image/*" capture="user" style="display:none;" onchange="handleAvatarUpload(event)">
 <input type="file" id="input-avatar-gallery" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+<input type="file" id="input-sim-profil" accept="image/*" style="display:none;" onchange="handleSimUploadProfil(event)">
 
 <script src="../../js/utils.js"></script>
 <script src="../../js/api.js"></script>

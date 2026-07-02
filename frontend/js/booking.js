@@ -25,6 +25,8 @@ let S = {
   telp: '',
   alamat: '',
   ktpFile: null,
+  simFile: null,
+  hasSim: false,
   metodeBayar: 'TUNAI', // 'TUNAI' (Cash) | 'MIDTRANS' (Cashless)
   agreed: false,
   bookingResult: null,
@@ -104,6 +106,15 @@ async function initCheckout() {
             qs('ktp-empty').classList.add('hidden');
             qs('ktp-done').classList.remove('hidden');
             qs('ktp-filename').textContent = 'KTP sudah tersimpan di profil';
+          }
+          if (data.foto_sim) {
+            S.hasSim = true;
+            S.simUrl = data.foto_sim;
+            qs('sim-empty').classList.add('hidden');
+            qs('sim-done').classList.remove('hidden');
+            qs('sim-filename').textContent = 'SIM A sudah tersimpan di profil';
+            const btnSim = qs('btn-upload-sewa-sim');
+            if (btnSim) btnSim.style.display = 'none';
           }
         }
       }
@@ -194,7 +205,9 @@ function goToStep2() {
   qs('panel-step2').classList.remove('hidden');
   qs('summary-step1-actions').classList.add('hidden');
   qs('summary-step2-actions').classList.remove('hidden');
+  qs('sim-upload-zone').classList.toggle('hidden', S.useDriver);
   renderSummary();
+  validateStep2();
 }
 
 /* ---------- STEP 2: Data Diri ---------- */
@@ -220,8 +233,44 @@ function setMetodeBayar(metode) {
   qs('btn-cashless').classList.toggle('btn-ghost', metode !== 'MIDTRANS');
   renderSummary();
 }
+function onSimUpload(input) {
+  S.simFile = input.files[0] || null;
+  qs('sim-empty').classList.toggle('hidden', !!S.simFile);
+  qs('sim-done').classList.toggle('hidden', !S.simFile);
+  if (S.simFile) qs('sim-filename').textContent = S.simFile.name;
+  validateStep2();
+}
+async function uploadSewaSim() {
+  if (!S.simFile) return showToast('<i class="ph-fill ph-warning-circle" style="color:#F59E0B;"></i>', 'Perhatian', 'Pilih file SIM A terlebih dahulu.');
+  const btn = qs('btn-upload-sewa-sim');
+  const ori = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#111;"></span>';
+  const fd = new FormData();
+  fd.append('foto_sim', S.simFile);
+  const auth = getAuth();
+  try {
+      const res = await fetch(`${API_BASE}/pelanggan/saya/sim`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${auth.access_token}` },
+          body: fd
+      });
+      if (res.ok) {
+          S.hasSim = true;
+          showToast('<i class="ph-fill ph-check-circle" style="color:#10B981;"></i>', 'Berhasil', 'SIM A berhasil diunggah.');
+          btn.style.display = 'none';
+          validateStep2();
+      } else {
+          showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'Gagal', 'Gagal mengunggah SIM A.');
+      }
+  } catch(e) {
+      showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'Gagal', 'Terjadi kesalahan jaringan.');
+  } finally {
+      btn.innerHTML = ori;
+  }
+}
 function validateStep2() {
-  const valid = !!(S.nama && S.telp && S.alamat && (S.ktpFile || S.ktpUrl) && S.agreed);
+  const simValid = S.useDriver ? true : !!(S.hasSim || S.simFile);
+  const valid = !!(S.nama && S.telp && S.alamat && (S.ktpFile || S.ktpUrl) && simValid && S.agreed);
   qs('btn-step2-submit').disabled = !valid;
   return valid;
 }
@@ -246,6 +295,37 @@ function updateStepIndicator() {
 async function submitBooking() {
   if (!validateStep2()) return;
   const btn = qs('btn-step2-submit');
+  
+  if (!S.useDriver && !S.hasSim && S.simFile) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Mengunggah SIM A...';
+      const fd = new FormData();
+      fd.append('foto_sim', S.simFile);
+      const auth = getAuth();
+      try {
+          const res = await fetch(`${API_BASE}/pelanggan/saya/sim`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${auth.access_token}` },
+              body: fd
+          });
+          if (res.ok) {
+              S.hasSim = true;
+              const btnSim = qs('btn-upload-sewa-sim');
+              if(btnSim) btnSim.style.display = 'none';
+          } else {
+              showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'Gagal', 'Gagal mengunggah SIM A.');
+              btn.disabled = false;
+              btn.innerHTML = 'Konfirmasi & Sewa →';
+              return;
+          }
+      } catch(e) {
+          showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'Gagal', 'Gagal mengunggah SIM A (Jaringan).');
+          btn.disabled = false;
+          btn.innerHTML = 'Konfirmasi & Sewa →';
+          return;
+      }
+  }
+  
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Memproses...';
 

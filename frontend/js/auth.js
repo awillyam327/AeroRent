@@ -176,6 +176,7 @@ async function handleRegisterSubmit(e) {
   const nik = qs('reg-nik').value.trim();
   const alamat = qs('reg-alamat').value.trim();
   const fotoKtp = qs('reg-ktp').files[0];
+  const fotoSim = qs('reg-sim').files[0];
 
   if (!nama || !telp || !email || !password || !passwordConfirm) {
     showError('Semua field wajib diisi.');
@@ -199,6 +200,7 @@ async function handleRegisterSubmit(e) {
   if (nik) fd.append('no_ktp', nik);
   if (alamat) fd.append('alamat', alamat);
   if (fotoKtp) fd.append('foto_ktp', fotoKtp);
+  if (fotoSim) fd.append('foto_sim', fotoSim);
 
   try {
     const result = await apiRegisterCustomer(fd);

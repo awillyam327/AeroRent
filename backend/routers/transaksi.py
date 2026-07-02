@@ -139,9 +139,12 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
     if overlap["jml"] > 0:
         raise HTTPException(409, "Kendaraan sudah terpesan/disewa pada rentang tanggal tersebut.")
 
-    await cur.execute("SELECT nama_lengkap, no_telepon, email FROM PELANGGAN WHERE id_pelanggan = %(id)s", {"id": body.id_pelanggan})
+    await cur.execute("SELECT nama_lengkap, no_telepon, email, foto_sim_url FROM PELANGGAN WHERE id_pelanggan = %(id)s", {"id": body.id_pelanggan})
     plg = await cur.fetchone()
     if not plg: raise HTTPException(404, "Pelanggan tidak ditemukan.")
+    
+    if body.gunakan_supir == 0 and not plg["foto_sim_url"]:
+        raise HTTPException(400, "Untuk sewa lepas kunci, wajib mengunggah foto SIM A aktif.")
 
     durasi  = max((body.tanggal_selesai_rencana - body.tanggal_mulai).days, 1)
     b_sewa  = float(kend["harga_sewa_harian"]) * durasi

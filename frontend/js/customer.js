@@ -181,6 +181,17 @@ async function initProfil() {
         profile.telp = data.telepon || profile.telp;
         profile.alamat = data.alamat || profile.alamat;
         profile.nik = data.no_ktp || '';
+        if (data.foto_sim) {
+            const badgeSim = qs('badge-sim');
+            const btnUploadSim = qs('btn-upload-sim');
+            if (badgeSim) {
+                badgeSim.textContent = 'Terverifikasi';
+                badgeSim.className = 'badge badge-aktif';
+            }
+            if (btnUploadSim) {
+                btnUploadSim.style.display = 'none';
+            }
+        }
       }
     } catch (err) {
       console.warn("Gagal memuat profil pelanggan dari server", err);
@@ -283,5 +294,36 @@ async function handleAvatarUpload(event) {
     if (typeof renderNavbar === 'function') renderNavbar('navbar', { active: 'profil', rootPath: '../../' });
   } else {
     showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal mengunggah foto profil.');
+  }
+}
+
+async function handleSimUploadProfil(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const btnUpload = document.getElementById('btn-upload-sim');
+  const originalHtml = btnUpload.innerHTML;
+  btnUpload.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#111;"></span>';
+
+  const formData = new FormData();
+  formData.append('foto_sim', file);
+
+  const res = await apiFetch('/pelanggan/saya/sim', {
+    method: 'POST',
+    body: formData
+  });
+
+  btnUpload.innerHTML = originalHtml;
+
+  if (res && res.ok) {
+    showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', 'Foto SIM A berhasil diunggah.');
+    const badgeSim = document.getElementById('badge-sim');
+    if (badgeSim) {
+      badgeSim.textContent = 'Terverifikasi';
+      badgeSim.className = 'badge badge-aktif';
+    }
+    btnUpload.style.display = 'none';
+  } else {
+    showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal mengunggah foto SIM A.');
   }
 }

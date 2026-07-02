@@ -87,6 +87,7 @@ async def register_customer(
     no_ktp: Optional[str] = Form(None),
     alamat: Optional[str] = Form(None),
     foto_ktp: Optional[UploadFile] = File(None),
+    foto_sim: Optional[UploadFile] = File(None),
     cur: aiomysql.DictCursor = Depends(get_db),
 ):
     # Cek apakah email sudah dipakai
@@ -106,10 +107,15 @@ async def register_customer(
     if foto_ktp:
         img_bytes = await foto_ktp.read()
         ktp_url = await imgbb_upload(img_bytes, foto_ktp.filename)
+        
+    sim_url = None
+    if foto_sim:
+        sim_bytes = await foto_sim.read()
+        sim_url = await imgbb_upload(sim_bytes, foto_sim.filename)
 
     await cur.execute(
-        "INSERT INTO PELANGGAN (id_pelanggan, nama_lengkap, email, no_telepon, no_ktp, alamat, password_hash, foto_ktp_url, is_verified) "
-        "VALUES (%(id)s, %(nama)s, %(email)s, %(telp)s, %(nik)s, %(alamat)s, %(pwd)s, %(ktp)s, 0)",
+        "INSERT INTO PELANGGAN (id_pelanggan, nama_lengkap, email, no_telepon, no_ktp, alamat, password_hash, foto_ktp_url, foto_sim_url, is_verified) "
+        "VALUES (%(id)s, %(nama)s, %(email)s, %(telp)s, %(nik)s, %(alamat)s, %(pwd)s, %(ktp)s, %(sim)s, 0)",
         {
             "id": new_id,
             "nama": nama_lengkap,
@@ -118,7 +124,8 @@ async def register_customer(
             "nik": no_ktp,
             "alamat": alamat,
             "pwd": hashed,
-            "ktp": ktp_url
+            "ktp": ktp_url,
+            "sim": sim_url
         }
     )
     
