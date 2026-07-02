@@ -182,10 +182,16 @@ async function handleRegisterSubmit(e) {
   const telp = qs('reg-telp').value.trim();
   const email = qs('reg-email').value.trim();
   const password = qs('reg-password').value;
+  const passwordConfirm = qs('reg-password-confirm').value;
   const fotoKtp = qs('reg-ktp').files[0];
 
-  if (!nama || !telp || !email || !password) {
+  if (!nama || !telp || !email || !password || !passwordConfirm) {
     showError('Semua field wajib diisi.');
+    return;
+  }
+  
+  if (password !== passwordConfirm) {
+    showError('Konfirmasi password tidak cocok.');
     return;
   }
 

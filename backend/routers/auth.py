@@ -88,9 +88,14 @@ async def register_customer(
     cur: aiomysql.DictCursor = Depends(get_db),
 ):
     # Cek apakah email sudah dipakai
-    await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE email = %(e)s", {"e": email})
-    if await cur.fetchone():
-        raise HTTPException(400, "Email sudah terdaftar.")
+    await cur.execute("SELECT id_pelanggan, is_verified FROM PELANGGAN WHERE email = %(e)s", {"e": email})
+    row = await cur.fetchone()
+    if row:
+        if row["is_verified"] == 1:
+            raise HTTPException(400, "Email sudah terdaftar dan terverifikasi.")
+        else:
+            # Jika belum diverifikasi, hapus data lama agar bisa mendaftar ulang
+            await cur.execute("DELETE FROM PELANGGAN WHERE id_pelanggan = %(id)s", {"id": row["id_pelanggan"]})
 
     new_id = "p-" + uuid.uuid4().hex[:12]
     hashed = hash_pwd(password)

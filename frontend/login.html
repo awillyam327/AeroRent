@@ -58,8 +58,11 @@
       </div>
       <div class="form-group">
         <label class="form-label" for="login-password">Password</label>
-        <input type="password" id="login-password" class="form-input" required
-              placeholder="Untuk demo: gunakan password mengandung &quot;123&quot;">
+        <div style="position:relative;">
+          <input type="password" id="login-password" class="form-input" required
+                placeholder="Untuk demo: gunakan password mengandung &quot;123&quot;" style="padding-right:40px;">
+          <button type="button" class="btn-toggle-password" onclick="togglePassword('login-password', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim);"><i class="ph ph-eye"></i></button>
+        </div>
       </div>
       <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block" style="padding:14px;font-size:15px;margin-top:6px;">
         Masuk Sekarang
@@ -90,7 +93,17 @@
       </div>
       <div class="form-group">
         <label class="form-label" for="reg-password">Password</label>
-        <input type="password" id="reg-password" class="form-input" required placeholder="Minimal 8 karakter">
+        <div style="position:relative;">
+          <input type="password" id="reg-password" class="form-input" required placeholder="Minimal 8 karakter" style="padding-right:40px;">
+          <button type="button" class="btn-toggle-password" onclick="togglePassword('reg-password', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim);"><i class="ph ph-eye"></i></button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="reg-password-confirm">Konfirmasi Password</label>
+        <div style="position:relative;">
+          <input type="password" id="reg-password-confirm" class="form-input" required placeholder="Ketik ulang password" style="padding-right:40px;">
+          <button type="button" class="btn-toggle-password" onclick="togglePassword('reg-password-confirm', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim);"><i class="ph ph-eye"></i></button>
+        </div>
       </div>
       <button type="submit" id="btn-register-submit" class="btn btn-primary btn-block" style="padding:14px;font-size:15px;margin-top:6px;">
         Daftar Akun
@@ -134,6 +147,21 @@
       qs('reg-ktp-label').textContent = e.target.files[0]?.name || 'Silakan pilih foto KTP Anda...';
     });
   });
+
+  // Fungsi toggle show/hide password
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.remove('ph-eye');
+      icon.classList.add('ph-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.remove('ph-eye-slash');
+      icon.classList.add('ph-eye');
+    }
+  }
 </script>
 <script src="js/auth.js"></script>
 </body>
