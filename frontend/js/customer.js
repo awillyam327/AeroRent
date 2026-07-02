@@ -47,7 +47,7 @@ async function initDashboard() {
   renderCustomerSidebar('cs-sidebar', { active: 'dashboard', rootPath: '../../' });
   renderToastMarkup('toast-root');
 
-  qs('cs-greeting').textContent = `HALO, ${auth.user.nama.toUpperCase()}! <i class="ph-fill ph-hand-waving"></i>`;
+  qs('cs-greeting').innerHTML = `HALO, ${auth.user.nama.toUpperCase()}! <i class="ph-fill ph-hand-waving"></i>`;
 
   const bookings = await fetchMyBookings();
   const totalSewa = bookings.length;
