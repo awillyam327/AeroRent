@@ -928,7 +928,7 @@ function exportPDF() {
   });
 
   doc.save(`Laporan_AeroRent_${el('lk-dari').value}_${el('lk-sampai').value}.pdf`);
-  toast('📄', 'Export Berhasil', 'File PDF laporan keuangan berhasil diunduh.');
+  toast('<i class="ph ph-file-pdf"></i>', 'Export Berhasil', 'File PDF laporan keuangan berhasil diunduh.');
 }
 
 // ============================================================

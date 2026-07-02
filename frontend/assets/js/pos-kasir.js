@@ -149,7 +149,7 @@
           rows = await r.json();
           for (const t of rows) await idbPut('transaksi', mapToIdb(t)).catch(() => { });
         } else {
-          toast('📡', 'Memuat dari cache', 'Tidak dapat menjangkau server.');
+          toast('<i class="ph ph-broadcast"></i>', 'Memuat dari cache', 'Tidak dapat menjangkau server.');
           rows = (await idbAll('transaksi')).map(idbToRow);
         }
       } else {
@@ -380,10 +380,10 @@
       } else if (t.status === 'AKTIF') {
         bar.innerHTML = `
       <button class="${cls} btn-a" onclick="openFotoModal('sesudah')">
-        📦 Proses Pengembalian (Upload Foto Kondisi)
+        <i class="ph ph-package"></i> Proses Pengembalian (Upload Foto Kondisi)
       </button>
       <button class="${cls} mt-1" style="background:#2563EB; color:white;" onclick="trackGps('${t.id_kendaraan}')">
-        📍 Track GPS Kendaraan
+        <i class="ph ph-map-pin"></i> Track GPS Kendaraan
       </button>`;
       } else if (['SELESAI', 'DIBATALKAN'].includes(t.status)) {
         bar.innerHTML = `<div class="text-center text-gray-600 text-sm py-2">
@@ -422,7 +422,7 @@
           endpoint: `/transaksi/${id}/status`, method: 'PUT', body: payload,
           nb: S.selected?.nomor_booking || id, created_at: new Date().toISOString()
         });
-        toast('📡', 'Disimpan Offline', 'Aksi akan disinkronisasi saat online.');
+        toast('<i class="ph ph-broadcast"></i>', 'Disimpan Offline', 'Aksi akan disinkronisasi saat online.');
         refreshQueueBadge();
       }
       closeKonfirm();
@@ -528,7 +528,7 @@
         });
         if (r.ok) {
           closeFotoModal();
-          toast('📸', 'Foto Terupload', 'Dokumentasi kondisi kendaraan tersimpan.');
+          toast('<i class="ph ph-camera"></i>', 'Foto Terupload', 'Dokumentasi kondisi kendaraan tersimpan.');
           if (jenis === 'sebelum') {
             await updateStatus(id, 'AKTIF', { catatan_kasir: 'Kendaraan diserahkan ke pelanggan.' });
           } else {
@@ -1047,7 +1047,7 @@
         if (r?.ok) {
           const res = await r.json();
           tutupBuatTrx();
-          toast('🎉', 'Transaksi Berhasil Dibuat!', `${res.nomor_booking} — ${rp(res.total_biaya)}`);
+          toast('<i class="ph ph-party-popper"></i>', 'Transaksi Berhasil Dibuat!', `${res.nomor_booking} — ${rp(res.total_biaya)}`);
           await loadList();
           // Auto-pilih transaksi yang baru dibuat
           if (res.id_transaksi) setTimeout(() => selectTrx(res.id_transaksi), 600);
