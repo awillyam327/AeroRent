@@ -6,7 +6,7 @@ from datetime import date, datetime, timezone
 from database import get_db
 from dependencies import req_kasir_or_owner, req_owner, get_current_account
 from models import TransaksiIn, StatusUpd
-from utils import fonnte_send, imgbb_upload, midtrans_snap
+from utils import fonnte_send, imgbb_upload, midtrans_snap, smtp_booking_notification
 import uuid
 import asyncio
 import json
@@ -124,7 +124,7 @@ async def detail_transaksi(tid: str, user=Depends(req_kasir_or_owner), cur=Depen
 
 @router.post("", status_code=201, tags=["🛒 Transaksi"])
 async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(get_current_account), cur=Depends(get_db)):
-    await cur.execute("SELECT status, harga_sewa_harian, harga_supir_harian FROM KENDARAAN WHERE id_kendaraan = %(id)s", {"id": body.id_kendaraan})
+    await cur.execute("SELECT nama_kendaraan, status, harga_sewa_harian, harga_supir_harian FROM KENDARAAN WHERE id_kendaraan = %(id)s", {"id": body.id_kendaraan})
     kend = await cur.fetchone()
     if not kend: raise HTTPException(404, "Kendaraan tidak ditemukan.")
     if kend["status"] == "PERAWATAN": raise HTTPException(409, "Kendaraan sedang dalam perawatan.")
@@ -139,7 +139,7 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
     if overlap["jml"] > 0:
         raise HTTPException(409, "Kendaraan sudah terpesan/disewa pada rentang tanggal tersebut.")
 
-    await cur.execute("SELECT nama_lengkap, no_telepon FROM PELANGGAN WHERE id_pelanggan = %(id)s", {"id": body.id_pelanggan})
+    await cur.execute("SELECT nama_lengkap, no_telepon, email FROM PELANGGAN WHERE id_pelanggan = %(id)s", {"id": body.id_pelanggan})
     plg = await cur.fetchone()
     if not plg: raise HTTPException(404, "Pelanggan tidak ditemukan.")
 
@@ -174,7 +174,37 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
         f"📅 {body.tanggal_mulai} s/d {body.tanggal_selesai_rencana} ({durasi} hari)\n💰 Total: Rp {total:,.0f}\n"
     )
     bt.add_task(fonnte_send, plg["no_telepon"], pesan)
+    
+    if plg.get("email"):
+        bt.add_task(smtp_booking_notification, plg["email"], plg["nama_lengkap"], nomor_booking, body.tanggal_mulai, body.tanggal_selesai_rencana, kend["nama_kendaraan"])
+        
     return {"message": "Pemesanan berhasil.", "id_transaksi": tid, "nomor_booking": nomor_booking, "total_biaya": total}
+
+
+@router.post("/{tid}/remind-wa", tags=["📋 Transaksi"])
+async def send_wa_reminder(tid: str, bt: BackgroundTasks, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
+    """Mengirim pesan pengingat pengembalian ke pelanggan via WA."""
+    await cur.execute(
+        "SELECT ts.nomor_booking, ts.tanggal_selesai_rencana, p.nama_lengkap, p.no_telepon, k.nama_kendaraan "
+        "FROM TRANSAKSI_SEWA ts "
+        "JOIN PELANGGAN p ON ts.id_pelanggan = p.id_pelanggan "
+        "JOIN KENDARAAN k ON ts.id_kendaraan = k.id_kendaraan "
+        "WHERE ts.id_transaksi = %(id)s OR ts.nomor_booking = %(nb)s",
+        {"id": tid, "nb": tid.upper()}
+    )
+    trx = await cur.fetchone()
+    if not trx: raise HTTPException(404, "Transaksi tidak ditemukan.")
+    
+    tgl_selesai = fmt_date(trx["tanggal_selesai_rencana"])
+    pesan = (
+        f"Halo {trx['nama_lengkap']},\n\n"
+        f"Mengingatkan bahwa batas waktu pengembalian kendaraan sewa AeroRent ({trx['nama_kendaraan']}) "
+        f"dengan No. Booking *{trx['nomor_booking']}* adalah pada *{tgl_selesai}*.\n\n"
+        f"Mohon untuk dapat melakukan pengembalian tepat waktu agar terhindar dari denda keterlambatan.\n\n"
+        f"Terima kasih telah mempercayakan perjalanan Anda kepada kami!"
+    )
+    bt.add_task(fonnte_send, trx["no_telepon"], pesan)
+    return {"message": "Reminder WA sedang diproses dan akan segera dikirim."}
 
 
 @router.put("/{tid}/status", tags=["📋 Transaksi"])

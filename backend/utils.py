@@ -7,6 +7,7 @@ import aiomysql
 from typing import Optional
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
+import datetime
 from database import get_db, _pool
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from email.mime.multipart import MIMEMultipart
@@ -140,6 +141,71 @@ async def traccar_posisi(device_id: str) -> Optional[dict]:
     except httpx.RequestError as exc:
         log.error(f"[Traccar] Request error (device={device_id}): {exc}")
         return None
+
+def generate_ics(nomor_booking: str, nama_kendaraan: str, dt_mulai: datetime.date, dt_selesai_rencana: datetime.date) -> bytes:
+    """Generate ICS file bytes for booking rental dates."""
+    # ICS events use exclusive end dates for all day events.
+    end_exclusive = dt_selesai_rencana + datetime.timedelta(days=1)
+    
+    dtstart = dt_mulai.strftime('%Y%m%d')
+    dtend = end_exclusive.strftime('%Y%m%d')
+    now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    
+    ics_content = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//AeroRent Salatiga//ID
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:{nomor_booking}@aerorent.id
+DTSTAMP:{now}
+DTSTART;VALUE=DATE:{dtstart}
+DTEND;VALUE=DATE:{dtend}
+SUMMARY:Sewa {nama_kendaraan} - AeroRent
+DESCRIPTION:Nomor Booking: {nomor_booking}\\nKendaraan: {nama_kendaraan}\\nHarap kembalikan kendaraan sesuai tanggal selesai yang dijanjikan.
+END:VEVENT
+END:VCALENDAR"""
+    return ics_content.encode('utf-8')
+
+
+async def smtp_booking_notification(email_tujuan: str, nama: str, booking: str, tgl_mulai: datetime.date, tgl_selesai: datetime.date, nama_kendaraan: str) -> bool:
+    """Kirim email notifikasi booking sukses beserta attachment kalender ICS."""
+    if not cfg.SMTP_USER:
+        log.warning("[SMTP] Belum dikonfigurasi. Pengiriman email dilewati.")
+        return False
+    try:
+        msg = MIMEMultipart("mixed")
+        msg["From"]    = cfg.SMTP_FROM
+        msg["To"]      = email_tujuan
+        msg["Subject"] = f"Booking Berhasil: {nama_kendaraan} — {booking}"
+        
+        body_text = (
+            f"Yth. {nama},\n\nTerima kasih telah melakukan pemesanan di AeroRent!\n\n"
+            f"Berikut adalah ringkasan pesanan Anda:\n"
+            f"Nomor Booking: {booking}\n"
+            f"Kendaraan: {nama_kendaraan}\n"
+            f"Tanggal Sewa: {tgl_mulai.strftime('%d %B %Y')} - {tgl_selesai.strftime('%d %B %Y')}\n\n"
+            f"Terlampir file kalender (.ics) agar Anda dapat menambahkan jadwal sewa ini langsung ke Google Calendar atau Apple Calendar di ponsel Anda.\n\n"
+            f"Salam hangat,\nTim AeroRent Salatiga"
+        )
+        msg.attach(MIMEText(body_text, "plain"))
+        
+        # Buat attachment ICS
+        ics_bytes = generate_ics(booking, nama_kendaraan, tgl_mulai, tgl_selesai)
+        att = MIMEBase("text", "calendar", method="REQUEST")
+        att.set_payload(ics_bytes)
+        encoders.encode_base64(att)
+        att.add_header("Content-Disposition", "attachment", filename=f"AeroRent_{booking}.ics")
+        msg.attach(att)
+
+        await aiosmtplib.send(
+            msg, hostname=cfg.SMTP_HOST, port=cfg.SMTP_PORT,
+            username=cfg.SMTP_USER, password=cfg.SMTP_PASSWORD, start_tls=True
+        )
+        log.info(f"[SMTP] Email Booking {booking} terkirim ke {email_tujuan}")
+        return True
+    except Exception as exc:
+        log.error(f"[SMTP] Gagal kirim email booking ke {email_tujuan}: {exc}")
+        return False
 
 
 async def smtp_invoice(email_tujuan: str, nama: str, booking: str, pdf_bytes: bytes) -> bool:

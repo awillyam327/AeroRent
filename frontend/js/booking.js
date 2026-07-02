@@ -31,84 +31,109 @@ let S = {
 };
 
 async function initCheckout() {
-  const auth = requireAuth(['CUSTOMER'], 'login.html');
-  if (!auth) return; // requireAuth sudah redirect
-
-  const params = new URLSearchParams(location.search);
-  S.vehicleId = params.get('id');
-  if (!S.vehicleId) {
-    showCheckoutError('Tidak ada kendaraan yang dipilih. Silakan kembali ke halaman Armada.');
-    return;
-  }
-
-  S.vehicle = await fetchVehicleById(S.vehicleId);
-  if (!S.vehicle) {
-    showCheckoutError('Kendaraan tidak ditemukan.');
-    return;
-  }
-  if (S.vehicle.status !== 'TERSEDIA') {
-    showCheckoutError(`${S.vehicle.nama_kendaraan} sedang tidak tersedia untuk disewa saat ini.`);
-    return;
-  }
-
-  // Default tanggal mulai = besok
-  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-  S.startDate = tomorrow.toISOString().split('T')[0];
-  qs('jadwal-tanggal').value = S.startDate;
-  qs('jadwal-durasi').value = S.duration;
-
-  qs('co-loading').classList.add('hidden');
-  qs('co-content').classList.remove('hidden');
-  renderSummary();
-  validateStep1();
-
-  // Auto-isi Data Diri dari profil Customer yang sudah login, supaya tidak
-  // perlu mengetik ulang nama/telepon/alamat yang sudah pernah diisi
-  // (lihat profil.html). Field tetap bisa diedit manual jika perlu.
-  const profile = getDemoProfile();
-  qs('dd-nama').value = profile?.nama || auth.user.nama || '';
-  qs('dd-telp').value = profile?.telp || '';
-  qs('dd-alamat').value = profile?.alamat || '';
-  
-  // Ambil data pelanggan asli dari backend
   try {
-    const pId = auth.user.id || auth.user.sub;
-    if (pId && !pId.startsWith('plg-demo')) {
-      const res = await fetch(`${API_BASE}/pelanggan/${pId}`, {
-        headers: { 'Authorization': `Bearer ${auth.access_token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.nama) qs('dd-nama').value = data.nama;
-        if (data.telepon) qs('dd-telp').value = data.telepon;
-        if (data.alamat) qs('dd-alamat').value = data.alamat;
-        if (data.foto_ktp) {
-          S.ktpUrl = data.foto_ktp;
-          qs('ktp-empty').classList.add('hidden');
-          qs('ktp-done').classList.remove('hidden');
-          qs('ktp-filename').textContent = 'KTP sudah tersimpan di profil';
+    const auth = requireAuth(['CUSTOMER'], 'login.html');
+    if (!auth) return; // requireAuth sudah redirect
+
+    const params = new URLSearchParams(location.search);
+    S.vehicleId = params.get('id');
+    if (!S.vehicleId) {
+      showCheckoutError('Tidak ada kendaraan yang dipilih. Silakan kembali ke halaman Armada.');
+      return;
+    }
+
+    try {
+      S.vehicle = await fetchVehicleById(S.vehicleId);
+    } catch (fetchErr) {
+      console.error('fetchVehicleById error:', fetchErr);
+      S.vehicle = null;
+    }
+
+    if (!S.vehicle) {
+      showCheckoutError('Kendaraan tidak ditemukan atau server sedang tidak tersedia. Silakan coba lagi.');
+      return;
+    }
+    if (S.vehicle.status !== 'TERSEDIA') {
+      showCheckoutError(`${S.vehicle.nama_kendaraan} sedang tidak tersedia untuk disewa saat ini.`);
+      return;
+    }
+
+    try {
+      // Default tanggal mulai = besok
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+      S.startDate = tomorrow.toISOString().split('T')[0];
+      qs('jadwal-tanggal').value = S.startDate;
+      qs('jadwal-durasi').value = S.duration;
+
+      qs('co-loading').classList.add('hidden');
+      qs('co-content').classList.remove('hidden');
+      renderSummary();
+      validateStep1();
+    } catch (uiErr) {
+      console.error('initCheckout UI render error:', uiErr);
+      showCheckoutError('Terjadi kesalahan saat menampilkan halaman. Silakan refresh.');
+      return;
+    }
+
+    // Auto-isi Data Diri dari profil Customer yang sudah login
+    try {
+      const profile = getDemoProfile();
+      qs('dd-nama').value = profile?.nama || auth.user.nama || '';
+      qs('dd-telp').value = profile?.telp || '';
+      qs('dd-alamat').value = profile?.alamat || '';
+    } catch (_) {}
+
+    // Ambil data pelanggan asli dari backend
+    try {
+      const pId = auth.user.id || auth.user.sub;
+      if (pId && !pId.startsWith('plg-demo')) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(`${API_BASE}/pelanggan/${pId}`, {
+          headers: { 'Authorization': `Bearer ${auth.access_token}` },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.nama) qs('dd-nama').value = data.nama;
+          if (data.telepon) qs('dd-telp').value = data.telepon;
+          if (data.alamat) qs('dd-alamat').value = data.alamat;
+          if (data.foto_ktp) {
+            S.ktpUrl = data.foto_ktp;
+            qs('ktp-empty').classList.add('hidden');
+            qs('ktp-done').classList.remove('hidden');
+            qs('ktp-filename').textContent = 'KTP sudah tersimpan di profil';
+          }
         }
       }
+    } catch (e) {
+      console.warn("Gagal memuat profil pelanggan", e);
     }
-  } catch (e) {
-    console.warn("Gagal memuat profil pelanggan", e);
-  }
-  
-  onDataDiriChange();
-  // Load Midtrans Snap JS dynamically
-  try {
-    const res = await fetch(`${API_BASE}/config/midtrans`);
-    if (res.ok) {
-        const data = await res.json();
-        if (data.client_key) {
-            const script = document.createElement('script');
-            script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
-            script.setAttribute('data-client-key', data.client_key);
-            document.head.appendChild(script);
-        }
+
+    try { onDataDiriChange(); } catch (_) {}
+
+    // Load Midtrans Snap JS dynamically
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(`${API_BASE}/config/midtrans`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+          const data = await res.json();
+          if (data.client_key) {
+              const script = document.createElement('script');
+              script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+              script.setAttribute('data-client-key', data.client_key);
+              document.head.appendChild(script);
+          }
+      }
+    } catch (e) {
+      console.warn("Gagal memuat config midtrans", e);
     }
-  } catch (e) {
-    console.warn("Gagal memuat config midtrans", e);
+  } catch (err) {
+    console.error('Fatal initCheckout error:', err);
+    showCheckoutError('Terjadi kesalahan sistem yang tidak terduga. Silakan coba lagi nanti.');
   }
 }
 

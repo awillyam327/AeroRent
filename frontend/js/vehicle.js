@@ -47,11 +47,17 @@ async function fetchVehicles(filters = {}) {
 /** Versi apiJson tanpa requireAuth/redirect — katalog ini publik, harus bisa
  *  diakses tanpa login sama sekali (FR-02). */
 async function apiJsonPublic(path) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
   try {
-    const res = await fetch(API_BASE + path);
+    const res = await fetch(API_BASE + path, { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (res.ok) return await res.json();
     return null;
-  } catch (_) { return null; }
+  } catch (err) {
+    clearTimeout(timeoutId);
+    return null; 
+  }
 }
 
 /**

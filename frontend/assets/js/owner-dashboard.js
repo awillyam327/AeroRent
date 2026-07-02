@@ -829,7 +829,9 @@ function buildPesananActions(t) {
   } else if (t.status === 'AKTIF') {
     actions.push(`
       <button onclick="ownerUpdateStatus('${id}','SELESAI')"
-              class="btn-o px-3 py-1.5 rounded-xl text-xs font-semibold"><i class="ph-fill ph-check-circle" style="color: #10B981;"></i> Selesaikan</button>`);
+              class="btn-o px-3 py-1.5 rounded-xl text-xs font-semibold"><i class="ph-fill ph-check-circle" style="color: #10B981;"></i> Selesaikan</button>
+      <button onclick="ownerSendWaReminder('${id}')"
+              class="btn-o px-3 py-1.5 rounded-xl text-xs font-semibold text-green-500"><i class="ph-fill ph-whatsapp-logo"></i> Kirim Reminder WA</button>`);
   }
 
   actions.push(`
@@ -856,6 +858,17 @@ async function ownerUpdateStatus(id, status) {
     if (idx >= 0) S.transaksi[idx].status = status;
     renderPesanan();
     toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Mode Demo', `Status diubah secara lokal (API tidak tersedia).`);
+  }
+}
+
+async function ownerSendWaReminder(id) {
+  if (!confirm('Kirim pengingat WhatsApp ke kustomer?')) return;
+  toast('<div class="spin" style="width:14px;height:14px;"></div>', 'Memproses', 'Mengirim pesan WA...');
+  const r = await api(`/transaksi/${id}/remind-wa`, { method: 'POST' });
+  if (r?.ok) {
+    toast('<i class="ph-fill ph-whatsapp-logo" style="color: #10B981;"></i>', 'Terkirim', 'Reminder WA berhasil dikirim ke kustomer.');
+  } else {
+    toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal mengirim WA. Pastikan token Fonnte diset.');
   }
 }
 

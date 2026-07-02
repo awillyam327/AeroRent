@@ -84,8 +84,13 @@ async function apiFetch(path, options = {}, loginPath = '/login.html') {
   if (!(options.body instanceof FormData) && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
   }
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
   try {
-    const res = await fetch(API_BASE + path, { ...options, headers });
+    const res = await fetch(API_BASE + path, { ...options, headers, signal: controller.signal });
+    clearTimeout(timeoutId);
     if (res.status === 401) {
       clearAuth();
       location.href = loginPath;
@@ -93,6 +98,7 @@ async function apiFetch(path, options = {}, loginPath = '/login.html') {
     }
     return res;
   } catch (err) {
+    clearTimeout(timeoutId);
     console.warn(`[api] Network error saat memanggil ${path}:`, err.message);
     return null;
   }

@@ -382,6 +382,9 @@
       <button class="${cls} btn-a" onclick="openFotoModal('sesudah')">
         <i class="ph ph-package"></i> Proses Pengembalian (Upload Foto Kondisi)
       </button>
+      <button class="${cls} mt-1" style="background:#10B981; color:white;" onclick="sendWaReminder('${id}')">
+        <i class="ph ph-whatsapp-logo"></i> Kirim Reminder WA
+      </button>
       <button class="${cls} mt-1" style="background:#2563EB; color:white;" onclick="trackGps('${t.id_kendaraan}')">
         <i class="ph ph-map-pin"></i> Track GPS Kendaraan
       </button>`;
@@ -426,6 +429,21 @@
         refreshQueueBadge();
       }
       closeKonfirm();
+    }
+
+    async function sendWaReminder(id) {
+      if (!confirm('Kirim pengingat WhatsApp ke kustomer?')) return;
+      if (S.online) {
+        toast('<div class="spin" style="width:14px;height:14px;"></div>', 'Memproses', 'Mengirim pesan WA...');
+        const r = await api(`/transaksi/${id}/remind-wa`, { method: 'POST' });
+        if (r?.ok) {
+          toast('<i class="ph-fill ph-whatsapp-logo" style="color: #10B981;"></i>', 'Terkirim', 'Reminder WA berhasil dikirim.');
+        } else {
+          toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal mengirim WA. Pastikan token Fonnte sudah di-set.');
+        }
+      } else {
+        toast('<i class="ph-fill ph-wifi-slash"></i>', 'Offline', 'Fitur ini membutuhkan koneksi internet.');
+      }
     }
 
 
