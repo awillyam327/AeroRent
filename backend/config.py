@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     REFRESH_EXPIRE_DAYS:int   = 7
 
     IMGBB_API_KEY:      str   = ""
-    OCR_SPACE_API_KEY:  str   = ""
+    OCR_SPACE_API_KEY:  str   = "helloworld"
     MIDTRANS_SERVER_KEY:str   = ""
     MIDTRANS_CLIENT_KEY:str   = ""
     MIDTRANS_IS_PROD:   bool  = False
