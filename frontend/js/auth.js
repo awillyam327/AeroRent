@@ -236,15 +236,21 @@ async function scanRegKtp() {
     return;
   }
   
-  const file = inp.files[0];
+  let file = inp.files[0];
   const statusEl = document.getElementById('reg-ktp-status');
   const btn = document.getElementById('btn-scan-reg-ktp');
   
   statusEl.classList.remove('hidden', 'text-green-400', 'text-red-400');
   statusEl.classList.add('text-gray-500');
-  statusEl.innerHTML = '<div class="spin inline-block mx-auto" style="width:12px;height:12px;border-width:2px;vertical-align:-2px;margin-right:6px;"></div>Memproses OCR...';
+  statusEl.innerHTML = '<div class="spin inline-block mx-auto" style="width:12px;height:12px;border-width:2px;vertical-align:-2px;margin-right:6px;"></div>Mengompresi & Memproses OCR...';
   btn.disabled = true;
   
+  try {
+    file = await compressImageFile(file, 0.95); // Maks 950KB
+  } catch (e) {
+    console.error('Gagal kompresi:', e);
+  }
+
   const fd = new FormData();
   fd.append('file', file);
   

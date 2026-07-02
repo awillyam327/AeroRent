@@ -83,5 +83,65 @@ const DEMO_PROFILE_KEY = 'aerorent_demo_profile';
 
 function getDemoProfile() {
   try { return JSON.parse(localStorage.getItem(DEMO_PROFILE_KEY) || 'null'); }
-  catch (_) { return null; }
+} catch (_) { return null; }
+}
+
+/**
+ * Kompresi gambar client-side menggunakan HTML5 Canvas
+ * @param {File} file - File asli (gambar)
+ * @param {number} maxSizeMB - Batas maksimal dalam MB (default: 0.95MB untuk amannya API OCR)
+ * @returns {Promise<File>} - Resolves with compressed File, or original file if already small
+ */
+function compressImageFile(file, maxSizeMB = 0.95) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      return resolve(file);
+    }
+    
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    if (file.size <= maxSizeBytes) {
+      return resolve(file);
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1600; // Maksimal dimensi gambar
+
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > width && height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return resolve(file);
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          },
+          'image/jpeg',
+          0.7 // Kualitas JPEG (70%)
+        );
+      };
+      img.onerror = (e) => reject(e);
+    };
+    reader.onerror = (e) => reject(e);
+  });
 }
