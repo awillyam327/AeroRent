@@ -162,12 +162,28 @@ async function initProfil() {
   renderToastMarkup('toast-root');
 
   const saved = getDemoProfile();
-  const profile = {
-    nama: saved?.nama || auth.user.nama || '',
+  let profile = {
+    nama: auth.user.nama || '',
     email: auth.user.email || '',
     telp: saved?.telp || '',
     alamat: saved?.alamat || '',
   };
+
+  const pid = auth.user.sub || auth.user.id;
+  if (pid && !pid.startsWith('plg-demo')) {
+    try {
+      const res = await apiFetch(`/pelanggan/${pid}`, {}, '../../login.html');
+      if (res && res.ok) {
+        const data = await res.json();
+        profile.nama = data.nama || profile.nama;
+        profile.email = data.email || profile.email;
+        profile.telp = data.telepon || profile.telp;
+        profile.alamat = data.alamat || profile.alamat;
+      }
+    } catch (err) {
+      console.warn("Gagal memuat profil pelanggan dari server", err);
+    }
+  }
 
   qs('pf-avatar').innerHTML = auth.user.foto_profil_url ? `<img src="${auth.user.foto_profil_url}" style="width:100%;height:100%;object-fit:cover;">` : (profile.nama || '?')[0].toUpperCase();
   qs('pf-nama-display').textContent = profile.nama;
