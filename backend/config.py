@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     SMTP_FROM:          str   = "noreply@aerorent.id"
     FRONTEND_URL:       str   = "http://localhost:5500"
     APP_DEBUG:          bool  = False
+    FACEPP_API_KEY:     str   = ""
+    FACEPP_API_SECRET:  str   = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

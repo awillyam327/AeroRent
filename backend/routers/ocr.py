@@ -89,20 +89,76 @@ async def face_match_liveness(
     await cur.execute("SELECT foto_ktp_url, foto_sim_url FROM PELANGGAN WHERE id_pelanggan = %(id)s", {"id": user["id"]})
     plg = await cur.fetchone()
     
-    if not plg or not plg["foto_ktp_url"] or not plg["foto_sim_url"]:
-        raise HTTPException(400, "KTP atau SIM A belum diunggah. Lengkapi profil terlebih dahulu.")
+    if not plg or not plg["foto_ktp_url"]:
+        raise HTTPException(400, "Foto KTP belum diunggah. Lengkapi profil terlebih dahulu.")
+    if not plg.get("foto_sim_url"):
+        raise HTTPException(400, "Foto SIM A belum diunggah. Lengkapi profil terlebih dahulu.")
         
-    content = await selfie.read()
-    if not content:
+    selfie_bytes = await selfie.read()
+    if not selfie_bytes:
         raise HTTPException(400, "Selfie kosong.")
-        
-    # SIMULASI AI (Mock)
+
+    # ── Jalur B: Face++ Compare API (Real AI) ──
+    if cfg.FACEPP_API_KEY and cfg.FACEPP_API_SECRET:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Download foto KTP dari URL yang tersimpan
+            try:
+                ktp_resp = await client.get(plg["foto_ktp_url"])
+                ktp_resp.raise_for_status()
+                ktp_bytes = ktp_resp.content
+            except Exception:
+                raise HTTPException(502, "Gagal mengunduh foto KTP dari server.")
+
+            # Kirim ke Face++ Compare API
+            try:
+                facepp_resp = await client.post(
+                    "https://api-us.faceplusplus.com/facepp/v3/compare",
+                    data={
+                        "api_key": cfg.FACEPP_API_KEY,
+                        "api_secret": cfg.FACEPP_API_SECRET,
+                    },
+                    files={
+                        "image_file1": ("selfie.jpg", selfie_bytes, "image/jpeg"),
+                        "image_file2": ("ktp.jpg", ktp_bytes, "image/jpeg"),
+                    },
+                )
+                result = facepp_resp.json()
+            except Exception as e:
+                raise HTTPException(502, f"Gagal menghubungi Face++ API: {str(e)}")
+
+            # Handle Face++ error responses
+            if "error_message" in result:
+                err = result["error_message"]
+                if "NO_FACE_DETECTED" in err or "no face" in err.lower():
+                    raise HTTPException(
+                        400,
+                        "Wajah tidak terdeteksi. Pastikan selfie dan foto KTP menampilkan wajah dengan jelas."
+                    )
+                raise HTTPException(502, f"Face++ Error: {err}")
+
+            confidence = result.get("confidence", 0)
+            threshold = result.get("thresholds", {}).get("1e-5", 73.975)
+            match_score = round(confidence, 2)
+
+            if match_score >= 80:
+                return {
+                    "status": "success",
+                    "match_score": match_score,
+                    "threshold": round(threshold, 2),
+                    "message": f"Wajah cocok dengan KTP ({match_score}%). Verifikasi berhasil ✅",
+                }
+            else:
+                raise HTTPException(
+                    400,
+                    f"Wajah tidak cocok dengan KTP (skor: {match_score}%, minimal: 80%). "
+                    "Pastikan selfie Anda sesuai dengan foto di KTP."
+                )
+
+    # ── Fallback: Mock AI (jika Face++ belum dikonfigurasi) ──
     await asyncio.sleep(2)
-    
     match_score = round(random.uniform(85.0, 98.0), 2)
-    
     return {
         "status": "success",
         "match_score": match_score,
-        "message": f"Wajah cocok dengan KTP & SIM ({match_score}%)."
+        "message": f"Wajah cocok dengan KTP & SIM ({match_score}%). [Mode Simulasi]",
     }
