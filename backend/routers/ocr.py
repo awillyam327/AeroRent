@@ -3,7 +3,7 @@ import httpx
 from config import cfg
 import asyncio
 import random
-from deps import get_current_account, get_db
+from dependencies import get_current_account, get_db
 import aiomysql
 
 router = APIRouter(prefix="/ocr", tags=["OCR"])
