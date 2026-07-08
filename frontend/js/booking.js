@@ -629,18 +629,28 @@ function goToStep3(status = 'SUCCESS') {
     title.textContent = 'PEMESANAN DITUNDA';
     desc.innerHTML = `Terima kasih <strong style="color:#fff;">${userName}</strong>, pemesanan Anda (<span style="color:var(--color-amber);font-weight:700;">${bookingNum}</span>) telah dibuat, namun <strong>pembayaran belum diselesaikan</strong>. Silakan bayar melalui Dashboard, atau lanjutkan pembayaran sekarang.`;
     
-    // Add resume payment button if it doesn't exist
-    if (!document.getElementById('btn-resume-pay')) {
-        const btnPay = document.createElement('button');
-        btnPay.id = 'btn-resume-pay';
-        btnPay.className = 'btn btn-outline mt-4';
-        btnPay.style = 'display:inline-flex;padding:14px 28px;margin-left:12px;';
-        btnPay.innerHTML = '<i class="ph ph-wallet"></i> Lanjutkan Pembayaran';
-        btnPay.onclick = () => {
-            btnPay.innerHTML = '<span class="spinner"></span> Membuka...';
+    // Add floating bubble popup for payment resume
+    if (!document.getElementById('floating-pay-bubble')) {
+        const bubble = document.createElement('button');
+        bubble.id = 'floating-pay-bubble';
+        bubble.style = 'position:fixed; bottom:30px; right:30px; z-index:9999; background:var(--color-primary); color:#fff; border:none; border-radius:50px; padding:16px 24px; box-shadow:0 10px 25px rgba(139,92,246,0.5); font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:16px; transition: all 0.3s ease; animation: bounce 2s infinite;';
+        bubble.innerHTML = '<i class="ph ph-wallet" style="font-size:24px;"></i> Lanjutkan Pembayaran';
+        
+        bubble.onmouseover = () => { bubble.style.transform = 'scale(1.05)'; bubble.style.boxShadow = '0 15px 35px rgba(139,92,246,0.7)'; bubble.style.animation = 'none'; };
+        bubble.onmouseout = () => { bubble.style.transform = 'scale(1)'; bubble.style.boxShadow = '0 10px 25px rgba(139,92,246,0.5)'; bubble.style.animation = 'bounce 2s infinite'; };
+        
+        bubble.onclick = () => {
+            bubble.innerHTML = '<span class="spinner"></span> Membuka...';
             processMidtransPayment(S.bookingResult.id_transaksi, getAuth().access_token);
         };
-        p3.appendChild(btnPay);
+        document.body.appendChild(bubble);
+        
+        if (!document.getElementById('bubble-anim')) {
+            const style = document.createElement('style');
+            style.id = 'bubble-anim';
+            style.innerHTML = '@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }';
+            document.head.appendChild(style);
+        }
     }
   } else {
     icon.innerHTML = '✓';
@@ -650,8 +660,8 @@ function goToStep3(status = 'SUCCESS') {
     title.textContent = 'PEMESANAN BERHASIL!';
     desc.innerHTML = `Terima kasih <strong style="color:#fff;">${userName}</strong>, pemesanan Anda (<span style="color:var(--color-amber);font-weight:700;">${bookingNum}</span>) telah diterima sistem AeroRent Salatiga. Tim admin kami akan mengirimkan rincian invoice dan info supir via WhatsApp dalam waktu maksimal 10 menit.`;
     
-    const btnPay = document.getElementById('btn-resume-pay');
-    if (btnPay) btnPay.remove();
+    const bubble = document.getElementById('floating-pay-bubble');
+    if (bubble) bubble.remove();
   }
   
   if (S.bookingResult.demo) {

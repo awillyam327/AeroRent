@@ -162,17 +162,20 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
     tid = f"trx-{uuid.uuid4()}"
     kid_kasir = user["id"] if user["role"] in ("KASIR", "OWNER") else None
 
+    # Jika yang membuat adalah kasir/owner, status langsung DIKONFIRMASI. Jika dari website customer, status MENUNGGU.
+    initial_status = 'DIKONFIRMASI' if kid_kasir else 'MENUNGGU'
+
     await cur.execute(
         "INSERT INTO TRANSAKSI_SEWA (id_transaksi, nomor_booking, id_pelanggan, id_kendaraan, "
         "id_karyawan_kasir, tanggal_mulai, tanggal_selesai_rencana, durasi_hari_rencana, "
         "gunakan_supir, biaya_sewa, biaya_supir, total_biaya, "
         "metode_pembayaran, catatan_kasir, status) "
-        "VALUES (%(id)s, %(nb)s, %(pid)s, %(kid)s, %(kid_kasir)s, %(tmu)s, %(tse)s, %(dur)s, %(sup)s, %(bs)s, %(bsu)s, %(tot)s, %(met)s, %(cat)s, 'DIKONFIRMASI')",
+        "VALUES (%(id)s, %(nb)s, %(pid)s, %(kid)s, %(kid_kasir)s, %(tmu)s, %(tse)s, %(dur)s, %(sup)s, %(bs)s, %(bsu)s, %(tot)s, %(met)s, %(cat)s, %(stat)s)",
         {"id": tid, "nb": nomor_booking, "pid": body.id_pelanggan, "kid": body.id_kendaraan,
          "kid_kasir": kid_kasir,
          "tmu": body.tanggal_mulai, "tse": body.tanggal_selesai_rencana, "dur": durasi,
          "sup": body.gunakan_supir, "bs": b_sewa, "bsu": b_supir, "tot": total,
-         "met": body.metode_pembayaran, "cat": body.catatan_kasir},
+         "met": body.metode_pembayaran, "cat": body.catatan_kasir, "stat": initial_status},
     )
 
     pesan = (
