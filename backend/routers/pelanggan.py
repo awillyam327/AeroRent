@@ -13,6 +13,7 @@ class PelangganUpdateSaya(BaseModel):
     nama: str
     telp: str
     alamat: Optional[str] = None
+    nik: Optional[str] = None
 
 router = APIRouter(prefix="/pelanggan", tags=["Pelanggan"])
 @router.get("", tags=["👥 Pelanggan"])
@@ -35,9 +36,9 @@ async def update_pelanggan_saya(
         raise HTTPException(403, "Akses ditolak. Khusus pelanggan.")
         
     await cur.execute(
-        "UPDATE PELANGGAN SET nama_lengkap = %(n)s, no_telepon = %(t)s, alamat = %(a)s "
+        "UPDATE PELANGGAN SET nama_lengkap = %(n)s, no_telepon = %(t)s, alamat = %(a)s, no_ktp = COALESCE(%(nik)s, no_ktp) "
         "WHERE id_pelanggan = %(id)s",
-        {"n": body.nama, "t": body.telp, "a": body.alamat, "id": user["id"]}
+        {"n": body.nama, "t": body.telp, "a": body.alamat, "nik": body.nik, "id": user["id"]}
     )
     return {"message": "Profil berhasil diperbarui."}
 

@@ -104,6 +104,7 @@ async function initCheckout() {
           if (data.nama) qs('dd-nama').value = data.nama;
           if (data.telepon) qs('dd-telp').value = data.telepon;
           if (data.alamat) qs('dd-alamat').value = data.alamat;
+          if (data.no_ktp) qs('dd-nik').value = data.no_ktp;
           if (data.foto_ktp) {
             S.ktpUrl = data.foto_ktp;
             qs('ktp-empty').classList.add('hidden');
@@ -216,6 +217,8 @@ function goToStep2() {
 
 /* ---------- STEP 2: Data Diri ---------- */
 function onDataDiriChange() {
+  S.nik = qs('dd-nik') ? qs('dd-nik').value.replace(/\D/g, '') : '';
+  if (qs('dd-nik')) qs('dd-nik').value = S.nik; // auto format only numbers
   S.nama = qs('dd-nama').value.trim();
   S.telp = qs('dd-telp').value.trim();
   S.alamat = qs('dd-alamat').value.trim();
@@ -309,7 +312,8 @@ async function uploadSewaSim() {
 function validateStep2() {
   const simValid = S.useDriver ? true : !!(S.hasSim || S.simFile);
   const livenessValid = S.useDriver ? true : S.livenessPassed;
-  const valid = !!(S.nama && S.telp && S.alamat && (S.ktpFile || S.ktpUrl) && simValid && livenessValid && S.agreed);
+  const nikValid = S.nik && S.nik.length === 16;
+  const valid = !!(nikValid && S.nama && S.telp && S.alamat && (S.ktpFile || S.ktpUrl) && simValid && livenessValid && S.agreed);
   qs('btn-step2-submit').disabled = !valid;
   return valid;
 }
@@ -480,6 +484,26 @@ async function submitBooking() {
   btn.innerHTML = '<span class="spinner"></span> Memproses...';
 
   const auth = getAuth();
+  
+  // Sync Data Diri (termasuk NIK) ke Backend
+  try {
+    await fetch(`${API_BASE}/pelanggan/saya`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${auth.access_token}`
+      },
+      body: JSON.stringify({
+        nama: S.nama,
+        telp: S.telp,
+        alamat: S.alamat,
+        nik: S.nik
+      })
+    });
+  } catch(e) {
+    console.warn("Gagal update profil pelanggan sebelum checkout:", e);
+  }
+
   const tglMulai = S.startDate;
   const tglSelesai = addDays(S.startDate, S.duration);
 
