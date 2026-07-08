@@ -622,19 +622,36 @@ function goToStep3(status = 'SUCCESS') {
   const desc = p3.querySelector('p');
   
   if (status === 'PENDING') {
-    icon.textContent = '<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>';
+    icon.innerHTML = '<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>';
     icon.style.color = 'var(--color-amber)';
     icon.style.borderColor = 'rgba(245,158,11,0.2)';
     icon.style.backgroundColor = 'rgba(245,158,11,0.05)';
     title.textContent = 'PEMESANAN DITUNDA';
-    desc.innerHTML = `Terima kasih <strong style="color:#fff;">${userName}</strong>, pemesanan Anda (<span style="color:var(--color-amber);font-weight:700;">${bookingNum}</span>) telah dibuat, namun <strong>pembayaran belum diselesaikan</strong>. Silakan bayar melalui Dashboard.`;
+    desc.innerHTML = `Terima kasih <strong style="color:#fff;">${userName}</strong>, pemesanan Anda (<span style="color:var(--color-amber);font-weight:700;">${bookingNum}</span>) telah dibuat, namun <strong>pembayaran belum diselesaikan</strong>. Silakan bayar melalui Dashboard, atau lanjutkan pembayaran sekarang.`;
+    
+    // Add resume payment button if it doesn't exist
+    if (!document.getElementById('btn-resume-pay')) {
+        const btnPay = document.createElement('button');
+        btnPay.id = 'btn-resume-pay';
+        btnPay.className = 'btn btn-outline mt-4';
+        btnPay.style = 'display:inline-flex;padding:14px 28px;margin-left:12px;';
+        btnPay.innerHTML = '<i class="ph ph-wallet"></i> Lanjutkan Pembayaran';
+        btnPay.onclick = () => {
+            btnPay.innerHTML = '<span class="spinner"></span> Membuka...';
+            processMidtransPayment(S.bookingResult.id_transaksi, getAuth().access_token);
+        };
+        p3.appendChild(btnPay);
+    }
   } else {
-    icon.textContent = '✓';
+    icon.innerHTML = '✓';
     icon.style.color = '';
     icon.style.borderColor = '';
     icon.style.backgroundColor = '';
     title.textContent = 'PEMESANAN BERHASIL!';
     desc.innerHTML = `Terima kasih <strong style="color:#fff;">${userName}</strong>, pemesanan Anda (<span style="color:var(--color-amber);font-weight:700;">${bookingNum}</span>) telah diterima sistem AeroRent Salatiga. Tim admin kami akan mengirimkan rincian invoice dan info supir via WhatsApp dalam waktu maksimal 10 menit.`;
+    
+    const btnPay = document.getElementById('btn-resume-pay');
+    if (btnPay) btnPay.remove();
   }
   
   if (S.bookingResult.demo) {
