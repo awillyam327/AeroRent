@@ -237,39 +237,73 @@ function setMetodeBayar(metode) {
   qs('btn-cashless').classList.toggle('btn-ghost', metode !== 'MIDTRANS');
   renderSummary();
 }
-function onSimUpload(input) {
-  S.simFile = input.files[0] || null;
+async function onSimUpload(input) {
+  const rawFile = input.files[0] || null;
+  if (!rawFile) return;
+
+  // Kompresi gambar ke bawah 1MB
+  try {
+    S.simFile = await compressImageFile(rawFile, 0.95);
+  } catch (e) {
+    S.simFile = rawFile;
+  }
+
   qs('sim-empty').classList.toggle('hidden', !!S.simFile);
   qs('sim-done').classList.toggle('hidden', !S.simFile);
-  if (S.simFile) qs('sim-filename').textContent = S.simFile.name;
+  if (S.simFile) {
+    const sizeMB = (S.simFile.size / 1024 / 1024).toFixed(1);
+    qs('sim-filename').textContent = `${S.simFile.name} (${sizeMB} MB)`;
+  }
   validateStep2();
 }
 async function uploadSewaSim() {
   if (!S.simFile) return showToast('<i class="ph-fill ph-warning-circle" style="color:#F59E0B;"></i>', 'Perhatian', 'Pilih file SIM A terlebih dahulu.');
+  
+  // Validasi ukuran
+  if (S.simFile.size > 1 * 1024 * 1024) {
+    showToast('<i class="ph-fill ph-warning-circle" style="color:#F59E0B;"></i>', 'Terlalu Besar', `Foto SIM masih ${(S.simFile.size / 1024 / 1024).toFixed(1)} MB. Coba ambil foto dengan resolusi lebih rendah.`);
+    return;
+  }
+
   const btn = qs('btn-upload-sewa-sim');
+  const statusEl = qs('sewa-sim-status');
   const ori = btn.innerHTML;
-  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#111;"></span>';
+  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#111;"></span> Memvalidasi SIM...';
+  btn.disabled = true;
+  if (statusEl) { statusEl.classList.remove('hidden'); statusEl.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;"></span> Membaca nama di SIM via OCR...'; }
+
   const fd = new FormData();
   fd.append('foto_sim', S.simFile);
   const auth = getAuth();
   try {
-      const res = await fetch(`${API_BASE}/pelanggan/saya/sim`, {
+      const res = await fetch(`${API_BASE}/ocr/sim-validate`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${auth.access_token}` },
           body: fd
       });
+      const data = await res.json();
       if (res.ok) {
           S.hasSim = true;
-          showToast('<i class="ph-fill ph-check-circle" style="color:#10B981;"></i>', 'Berhasil', 'SIM A berhasil diunggah.');
+          if (data.validasi_nama === 'cocok') {
+            showToast('<i class="ph-fill ph-check-circle" style="color:#10B981;"></i>', 'SIM Valid ✅', data.message);
+            if (statusEl) { statusEl.innerHTML = `<i class="ph-fill ph-check-circle" style="color:#10B981;"></i> ${data.message}`; }
+          } else {
+            showToast('<i class="ph-fill ph-warning-circle" style="color:#F59E0B;"></i>', 'SIM Diunggah', data.message);
+            if (statusEl) { statusEl.innerHTML = `<i class="ph-fill ph-warning-circle" style="color:#F59E0B;"></i> ${data.message}`; }
+          }
           btn.style.display = 'none';
           validateStep2();
       } else {
-          showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'Gagal', 'Gagal mengunggah SIM A.');
+          const errMsg = data.detail || 'Gagal mengunggah SIM A.';
+          showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'SIM Ditolak', errMsg);
+          if (statusEl) { statusEl.innerHTML = `<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i> ${errMsg}`; }
       }
   } catch(e) {
       showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'Gagal', 'Terjadi kesalahan jaringan.');
+      if (statusEl) { statusEl.innerHTML = '<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i> Kesalahan jaringan.'; }
   } finally {
       btn.innerHTML = ori;
+      btn.disabled = false;
   }
 }
 function validateStep2() {
@@ -320,26 +354,30 @@ async function captureLiveness() {
     
     // Auto-upload SIM if needed before matching
     if (!S.hasSim && S.simFile) {
-      qs('liveness-status-text').innerHTML = '<span class="spinner" style="width:12px;height:12px;"></span> Mengunggah SIM A...';
+      qs('liveness-status-text').innerHTML = '<span class="spinner" style="width:12px;height:12px;"></span> Memvalidasi SIM A via OCR...';
       const fd = new FormData();
       fd.append('foto_sim', S.simFile);
       const auth = getAuth();
       try {
-        const res = await fetch(`${API_BASE}/pelanggan/saya/sim`, {
+        const res = await fetch(`${API_BASE}/ocr/sim-validate`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${auth.access_token}` },
           body: fd
         });
+        const data = await res.json();
         if (res.ok) {
           S.hasSim = true;
           const btnSim = qs('btn-upload-sewa-sim');
           if(btnSim) btnSim.style.display = 'none';
         } else {
-          qs('liveness-status-text').innerHTML = '<span class="text-red-500">Gagal mengunggah SIM A</span>';
+          const errMsg = data.detail || 'Gagal mengunggah SIM A';
+          qs('liveness-status-text').innerHTML = `<span style="color:#EF4444;"><i class="ph-fill ph-x-circle"></i> ${errMsg}</span>`;
+          qs('btn-retake-camera').disabled = false;
           return;
         }
       } catch (e) {
-        qs('liveness-status-text').innerHTML = '<span class="text-red-500">Koneksi Error</span>';
+        qs('liveness-status-text').innerHTML = '<span style="color:#EF4444;">Koneksi Error</span>';
+        qs('btn-retake-camera').disabled = false;
         return;
       }
     }
@@ -408,22 +446,24 @@ async function submitBooking() {
   
   if (!S.useDriver && !S.hasSim && S.simFile) {
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Mengunggah SIM A...';
+      btn.innerHTML = '<span class="spinner"></span> Memvalidasi SIM A...';
       const fd = new FormData();
       fd.append('foto_sim', S.simFile);
       const auth = getAuth();
       try {
-          const res = await fetch(`${API_BASE}/pelanggan/saya/sim`, {
+          const res = await fetch(`${API_BASE}/ocr/sim-validate`, {
               method: 'POST',
               headers: { 'Authorization': `Bearer ${auth.access_token}` },
               body: fd
           });
+          const data = await res.json();
           if (res.ok) {
               S.hasSim = true;
               const btnSim = qs('btn-upload-sewa-sim');
               if(btnSim) btnSim.style.display = 'none';
           } else {
-              showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'Gagal', 'Gagal mengunggah SIM A.');
+              const errMsg = data.detail || 'Gagal mengunggah SIM A.';
+              showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'SIM Ditolak', errMsg);
               btn.disabled = false;
               btn.innerHTML = 'Konfirmasi & Sewa →';
               return;

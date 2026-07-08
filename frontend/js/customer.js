@@ -302,28 +302,59 @@ async function handleSimUploadProfil(event) {
   if (!file) return;
 
   const btnUpload = document.getElementById('btn-upload-sim');
+  const badgeSim = document.getElementById('badge-sim');
   const originalHtml = btnUpload.innerHTML;
-  btnUpload.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#111;"></span>';
+  btnUpload.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#111;"></span> Mengompresi...';
+  btnUpload.disabled = true;
+
+  // Kompresi gambar ke bawah 1MB
+  let compressedFile;
+  try {
+    compressedFile = await compressImageFile(file, 0.95);
+  } catch (e) {
+    console.error('Gagal kompresi SIM:', e);
+    compressedFile = file;
+  }
+
+  // Validasi ukuran setelah kompresi
+  if (compressedFile.size > 1 * 1024 * 1024) {
+    showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Terlalu Besar', `Foto SIM masih ${(compressedFile.size / 1024 / 1024).toFixed(1)} MB setelah kompresi. Coba ambil foto dengan resolusi lebih rendah.`);
+    btnUpload.innerHTML = originalHtml;
+    btnUpload.disabled = false;
+    return;
+  }
+
+  btnUpload.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#111;"></span> Memvalidasi SIM...';
 
   const formData = new FormData();
-  formData.append('foto_sim', file);
+  formData.append('foto_sim', compressedFile);
 
-  const res = await apiFetch('/pelanggan/saya/sim', {
+  const res = await apiFetch('/ocr/sim-validate', {
     method: 'POST',
     body: formData
   });
 
   btnUpload.innerHTML = originalHtml;
+  btnUpload.disabled = false;
 
   if (res && res.ok) {
-    showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', 'Foto SIM A berhasil diunggah.');
-    const badgeSim = document.getElementById('badge-sim');
+    const data = await res.json();
+    if (data.validasi_nama === 'cocok') {
+      showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'SIM Valid ✅', data.message);
+    } else {
+      showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'SIM Diunggah', data.message);
+    }
     if (badgeSim) {
       badgeSim.textContent = 'Terverifikasi';
       badgeSim.className = 'badge badge-aktif';
     }
     btnUpload.style.display = 'none';
   } else {
-    showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal mengunggah foto SIM A.');
+    let errMsg = 'Gagal mengunggah foto SIM A.';
+    try {
+      const errData = await res.json();
+      if (errData.detail) errMsg = errData.detail;
+    } catch (_) {}
+    showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', errMsg);
   }
 }
