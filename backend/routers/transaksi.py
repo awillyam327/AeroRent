@@ -178,14 +178,15 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
          "met": body.metode_pembayaran, "cat": body.catatan_kasir, "stat": initial_status},
     )
 
-    pesan = (
-        f"✅ *Booking AeroRent Berhasil!*\n\nHalo {plg['nama_lengkap']},\n📋 No. Booking: *{nomor_booking}*\n"
-        f"📅 {body.tanggal_mulai} s/d {body.tanggal_selesai_rencana} ({durasi} hari)\n💰 Total: Rp {total:,.0f}\n"
-    )
-    bt.add_task(fonnte_send, plg["no_telepon"], pesan)
-    
-    if plg.get("email"):
-        bt.add_task(smtp_booking_notification, plg["email"], plg["nama_lengkap"], nomor_booking, body.tanggal_mulai, body.tanggal_selesai_rencana, kend["nama_kendaraan"])
+    if initial_status == 'DIKONFIRMASI':
+        pesan = (
+            f"✅ *Booking AeroRent Berhasil!*\n\nHalo {plg['nama_lengkap']},\n📋 No. Booking: *{nomor_booking}*\n"
+            f"📅 {body.tanggal_mulai} s/d {body.tanggal_selesai_rencana} ({durasi} hari)\n💰 Total: Rp {total:,.0f}\n"
+        )
+        bt.add_task(fonnte_send, plg["no_telepon"], pesan)
+        
+        if plg.get("email"):
+            bt.add_task(smtp_booking_notification, plg["email"], plg["nama_lengkap"], nomor_booking, body.tanggal_mulai, body.tanggal_selesai_rencana, kend["nama_kendaraan"])
         
     return {"message": "Pemesanan berhasil.", "id_transaksi": tid, "nomor_booking": nomor_booking, "total_biaya": total}
 
@@ -221,7 +222,8 @@ async def update_status(tid: str, body: StatusUpd, bt: BackgroundTasks, user=Dep
     await cur.execute(
         "SELECT ts.status, ts.id_kendaraan, ts.tanggal_selesai_rencana, "
         "ts.biaya_sewa, ts.biaya_supir, k.harga_sewa_harian, "
-        "p.no_telepon, p.nama_lengkap, ts.nomor_booking, ts.id_transaksi "
+        "p.no_telepon, p.nama_lengkap, ts.nomor_booking, ts.id_transaksi, "
+        "p.email, ts.tanggal_mulai, ts.durasi_hari_rencana, ts.total_biaya, k.nama_kendaraan "
         "FROM TRANSAKSI_SEWA ts "
         "JOIN KENDARAAN k ON ts.id_kendaraan = k.id_kendaraan "
         "JOIN PELANGGAN  p ON ts.id_pelanggan = p.id_pelanggan "
@@ -279,6 +281,15 @@ async def update_status(tid: str, body: StatusUpd, bt: BackgroundTasks, user=Dep
 
     elif st_baru == "DIBATALKAN" and st_lama == "AKTIF":
         await cur.execute("UPDATE KENDARAAN SET status = 'TERSEDIA' WHERE id_kendaraan = %(id)s", {"id": kid})
+
+    elif st_baru == "DIKONFIRMASI" and st_lama == "MENUNGGU":
+        pesan = (
+            f"✅ *Booking AeroRent Berhasil!*\n\nHalo {nama_plg},\n📋 No. Booking: *{nb}*\n"
+            f"📅 {trx['tanggal_mulai']} s/d {tgl_rencana} ({trx['durasi_hari_rencana']} hari)\n💰 Total: Rp {trx['total_biaya']:,.0f}\n"
+        )
+        bt.add_task(fonnte_send, tel_plg, pesan)
+        if trx.get("email"):
+            bt.add_task(smtp_booking_notification, trx["email"], nama_plg, nb, trx["tanggal_mulai"], tgl_rencana, trx["nama_kendaraan"])
 
     await cur.execute(f"UPDATE TRANSAKSI_SEWA SET {', '.join(upd_sets)} WHERE id_transaksi = %(actual_id)s", upd_params)
     return {"message": f"Status berhasil diubah ke '{st_baru}'.", "nomor_booking": nb, "status_baru": st_baru}
