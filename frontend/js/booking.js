@@ -101,10 +101,10 @@ async function initCheckout() {
         clearTimeout(timeoutId);
         if (res.ok) {
           const data = await res.json();
-          if (data.nama) qs('dd-nama').value = data.nama;
-          if (data.telepon) qs('dd-telp').value = data.telepon;
-          if (data.alamat) qs('dd-alamat').value = data.alamat;
-          if (data.no_ktp) qs('dd-nik').value = data.no_ktp;
+          if (data.nama) { qs('dd-nama').value = data.nama; qs('dd-nama').readOnly = true; qs('dd-nama').style.opacity = '0.6'; }
+          if (data.telepon) { qs('dd-telp').value = data.telepon; qs('dd-telp').readOnly = true; qs('dd-telp').style.opacity = '0.6'; }
+          if (data.alamat) { qs('dd-alamat').value = data.alamat; qs('dd-alamat').readOnly = true; qs('dd-alamat').style.opacity = '0.6'; }
+          if (data.no_ktp) { qs('dd-nik').value = data.no_ktp; qs('dd-nik').readOnly = true; qs('dd-nik').style.opacity = '0.6'; }
           if (data.foto_ktp) {
             S.ktpUrl = data.foto_ktp;
             qs('ktp-empty').classList.add('hidden');
