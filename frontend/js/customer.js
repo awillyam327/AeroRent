@@ -68,6 +68,9 @@ async function initDashboard() {
       <td class="text-dim">${fmtD(b.mulai)}</td>
       <td>${renderStatusBadge(b.status)}</td>
       <td class="text-amber" style="text-align:right;font-weight:700;">${rp(b.total)}</td>
+      <td style="text-align:right;">
+        ${b.status === 'MENUNGGU' ? `<button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')" title="Batalkan Pesanan"><i class="ph ph-x-circle"></i></button>` : '—'}
+      </td>
     </tr>`).join('');
 }
 
@@ -111,6 +114,7 @@ async function initRiwayat() {
       <div class="flex gap-2 mt-4 flex-wrap">
         <button class="btn btn-outline" style="padding:8px 16px;font-size:12px;" onclick="printInvoice('${b.booking}')"><i class="ph ph-printer"></i> Cetak Invoice</button>
         ${canExtend ? `<button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;" onclick="handleExtendClick('${b.booking}')"><i class="ph ph-timer"></i> Extend Sewa (Perpanjang)</button>` : ''}
+        ${b.status === 'MENUNGGU' ? `<button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')"><i class="ph ph-x-circle"></i> Batalkan Pesanan</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -123,6 +127,24 @@ async function initRiwayat() {
 function handleExtendClick(nomorBooking) {
   showToast('<i class="ph-fill ph-traffic-cone" style="color: #F59E0B;"></i>', 'Belum Tersedia', `Perpanjangan sewa untuk ${nomorBooking} belum didukung backend saat ini.`);
 }
+
+async function handleCancelClick(nomorBooking) {
+  if (!confirm(`Apakah Anda yakin ingin membatalkan pesanan ${nomorBooking}?`)) return;
+  
+  try {
+    const res = await apiFetch(`/transaksi/${nomorBooking}/cancel`, { method: 'PUT' });
+    if (res && res.ok) {
+      showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Dibatalkan', `Pesanan ${nomorBooking} berhasil dibatalkan.`);
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      const data = await res.json();
+      showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Gagal', data.detail || 'Gagal membatalkan pesanan.');
+    }
+  } catch (err) {
+    showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Error', err.message);
+  }
+}
+
 
 /** Cetak invoice sederhana via window.print() — murni client-side, tidak
  *  bergantung pada endpoint backend manapun (pola sama seperti printReceipt()

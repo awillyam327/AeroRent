@@ -370,3 +370,22 @@ async def buat_snap(tid: str, user=Depends(get_current_account), cur=Depends(get
     )
     return {"snap_token": result.get("token"), "redirect_url": result.get("redirect_url"), "order_id": r["nomor_booking"]}
 
+
+@router.put("/{tid}/cancel", tags=["📋 Transaksi"])
+async def cancel_transaksi_by_customer(tid: str, user=Depends(get_current_account), cur=Depends(get_db)):
+    if user["role"] != "CUSTOMER":
+        raise HTTPException(403, "Akses ditolak. Fitur ini khusus untuk pelanggan.")
+        
+    await cur.execute("SELECT id_pelanggan, status, nomor_booking FROM TRANSAKSI_SEWA WHERE id_transaksi = %(id)s OR nomor_booking = %(nb)s", {"id": tid, "nb": tid.upper()})
+    trx = await cur.fetchone()
+    if not trx: raise HTTPException(404, "Transaksi tidak ditemukan.")
+    
+    if trx["id_pelanggan"] != user["id"]:
+        raise HTTPException(403, "Anda tidak memiliki akses untuk membatalkan pesanan ini.")
+        
+    if trx["status"] != "MENUNGGU":
+        raise HTTPException(400, "Hanya pesanan yang masih MENUNGGU pembayaran yang dapat dibatalkan melalui Dashboard.")
+        
+    await cur.execute("UPDATE TRANSAKSI_SEWA SET status = 'DIBATALKAN' WHERE id_transaksi = %(id)s OR nomor_booking = %(nb)s", {"id": tid, "nb": tid.upper()})
+    
+    return {"message": "Pemesanan berhasil dibatalkan."}
