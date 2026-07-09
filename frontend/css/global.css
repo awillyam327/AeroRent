@@ -225,26 +225,6 @@ h3 { font-size: 1.5rem; }
   .toast #toast-ttl { font-size: 13px !important; }
   .toast #toast-msg { font-size: 11px !important; }
 
-  /* Memaksa Midtrans Snap agar berbentuk pop-up kecil di tengah layar HP, tidak full screen */
-  body:has(iframe#snap-midtrans):not(:has(iframe#snap-midtrans[style*="display: none"])):not(:has(iframe#snap-midtrans[style*="display:none"]))::after {
-    content: '';
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.75);
-    backdrop-filter: blur(4px);
-    z-index: 99999; 
-    pointer-events: none;
-  }
-  iframe#snap-midtrans {
-    width: 90vw !important;
-    height: 80vh !important;
-    max-height: 650px !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8) !important;
-    z-index: 100000 !important;
-  }
 }
 @keyframes toast-in-mobile { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
 
