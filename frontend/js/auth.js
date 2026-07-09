@@ -209,6 +209,13 @@ async function handleRegisterSubmit(e) {
     btn.disabled = false;
     btn.textContent = 'Daftar Akun';
     qs('form-register').reset();
+    document.getElementById('reg-ktp-label').textContent = 'Silakan pilih foto KTP Anda...';
+    document.getElementById('reg-sim-label').textContent = 'Silakan pilih foto SIM A Anda...';
+    const statusEl = document.getElementById('reg-ktp-status');
+    if (statusEl) {
+      statusEl.innerHTML = '';
+      statusEl.className = 'hidden mt-2 text-sm text-center';
+    }
     switchTab('login'); // Kembali ke form login
     
     showToast('<i class="ph-fill ph-envelope-simple" style="color: #3B82F6;"></i>', 'Cek Email Anda', result.message || 'Registrasi berhasil. Silakan periksa email Anda untuk verifikasi.');
