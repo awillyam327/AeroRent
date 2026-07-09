@@ -210,10 +210,21 @@ h3 { font-size: 1.5rem; }
 
 /* -- Toast -- */
 .toast {
-  position: fixed; bottom: 20px; right: 20px; z-index: 200; max-width: 320px;
+  position: fixed; bottom: 30px; left: 30px; right: auto; z-index: 9999; max-width: 320px;
   animation: toast-in .25s var(--ease);
 }
 @keyframes toast-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 768px) {
+  .toast {
+    bottom: auto; top: 15px; left: 15px; right: 15px; margin: 0 auto; max-width: 340px;
+    animation: toast-in-mobile .25s var(--ease); padding: 12px 14px;
+  }
+  .toast #toast-ic { font-size: 20px !important; }
+  .toast #toast-ttl { font-size: 13px !important; }
+  .toast #toast-msg { font-size: 11px !important; }
+}
+@keyframes toast-in-mobile { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
 
 /* -- Spinner -- */
 .spinner {
