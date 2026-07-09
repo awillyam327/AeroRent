@@ -40,7 +40,7 @@ async function initDashboard() {
   const auth = requireAuth(['CUSTOMER'], '../../login.html');
   if (!auth) return;
 
-  renderCustomerSidebar('cs-sidebar', { active: 'dashboard', rootPath: '../../' });
+  renderNavbar('navbar', { active: 'dashboard', rootPath: '../../' });
   renderToastMarkup('toast-root');
 
   qs('cs-greeting').innerHTML = `HALO, ${auth.user.nama.toUpperCase()}! <i class="ph-fill ph-hand-waving"></i>`;
@@ -79,7 +79,7 @@ async function initRiwayat() {
   const auth = requireAuth(['CUSTOMER'], '../../login.html');
   if (!auth) return;
 
-  renderCustomerSidebar('cs-sidebar', { active: 'riwayat', rootPath: '../../' });
+  renderNavbar('navbar', { active: 'riwayat', rootPath: '../../' });
   renderToastMarkup('toast-root');
 
   const bookings = await fetchMyBookings();
@@ -259,7 +259,7 @@ async function initProfil() {
   const auth = requireAuth(['CUSTOMER'], '../../login.html');
   if (!auth) return;
 
-  renderCustomerSidebar('cs-sidebar', { active: 'profil', rootPath: '../../' });
+  renderNavbar('navbar', { active: 'profil', rootPath: '../../' });
   renderToastMarkup('toast-root');
 
   const saved = getDemoProfile();
