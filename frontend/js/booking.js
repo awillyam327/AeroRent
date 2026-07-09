@@ -638,14 +638,10 @@ function goToStep3(status = 'SUCCESS') {
     if (!bubble) {
         bubble = document.createElement('button');
         bubble.id = 'floating-pay-bubble';
-        bubble.style = 'position:fixed; bottom:30px; right:30px; z-index:9999; background:var(--color-primary); color:#fff; border:none; border-radius:50px; padding:16px 24px; box-shadow:0 10px 25px rgba(139,92,246,0.5); font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:16px; transition: all 0.3s ease; animation: bounce 2s infinite;';
         bubble.innerHTML = '<i class="ph ph-wallet" style="font-size:24px;"></i> Lanjutkan Pembayaran';
         
-        bubble.onmouseover = () => { bubble.style.transform = 'scale(1.05)'; bubble.style.boxShadow = '0 15px 35px rgba(139,92,246,0.7)'; bubble.style.animation = 'none'; };
-        bubble.onmouseout = () => { bubble.style.transform = 'scale(1)'; bubble.style.boxShadow = '0 10px 25px rgba(139,92,246,0.5)'; bubble.style.animation = 'bounce 2s infinite'; };
-        
         bubble.onclick = () => {
-            bubble.innerHTML = '<span class="spinner"></span> Membuka...';
+            bubble.innerHTML = '<span class="spinner" style="margin-right:8px;"></span> Membuka...';
             processMidtransPayment(S.bookingResult.id_transaksi, getAuth().access_token);
         };
         document.body.appendChild(bubble);
@@ -653,7 +649,15 @@ function goToStep3(status = 'SUCCESS') {
         if (!document.getElementById('bubble-anim')) {
             const style = document.createElement('style');
             style.id = 'bubble-anim';
-            style.innerHTML = '@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }';
+            style.innerHTML = `
+                @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+                #floating-pay-bubble { position:fixed; bottom:30px; right:30px; z-index:9999; background:var(--color-primary); color:#fff; border:none; border-radius:50px; padding:16px 24px; box-shadow:0 10px 25px rgba(139,92,246,0.5); font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:16px; transition: all 0.3s ease; animation: bounce 2s infinite; }
+                #floating-pay-bubble:hover { transform: scale(1.05); box-shadow: 0 15px 35px rgba(139,92,246,0.7); animation: none; }
+                @media (max-width: 768px) {
+                    #floating-pay-bubble { bottom:20px; right:20px; padding:10px 16px; font-size:13px; gap:6px; box-shadow:0 6px 15px rgba(139,92,246,0.4); animation: none; }
+                    #floating-pay-bubble i { font-size: 18px !important; }
+                }
+            `;
             document.head.appendChild(style);
         }
     } else {
