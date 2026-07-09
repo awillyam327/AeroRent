@@ -59,6 +59,27 @@ function debounce(fn, delay = 300) {
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
 }
 
+/** Set batasan minimal tanggal ke hari ini untuk input tanggal pemesanan/transaksi */
+document.addEventListener('DOMContentLoaded', () => {
+  const d = new Date();
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  
+  // Daftar ID input tanggal yang tidak boleh memilih tanggal di masa lalu
+  const restrictedIds = [
+    'hero-tanggal',      // index.html
+    'armada-tanggal',    // armada.html
+    'jadwal-tanggal',    // sewa.html
+    'bt-tgl-mulai',      // pos-kasir.html (Buat Transaksi)
+    'po-tanggal',        // owner-dashboard.html (Purchase Order)
+    'mk-tgl'             // owner-dashboard.html (Maintanance)
+  ];
+  
+  restrictedIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.min = today;
+  });
+});
+
 /* ---------- Penyimpanan booking mode-demo (sesi browser lokal) ----------
  * Saat checkout.html gagal memanggil backend asli (lihat js/booking.js),
  * booking "demo" yang dihasilkan disimpan di sini, supaya tetap muncul di
