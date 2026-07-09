@@ -6,8 +6,8 @@
  * tanpa server lokal — masalah umum yang sering dialami saat development.
  * ==============================================================================
  */
-const BRAND_LOGO_SVG = `
-<img src="assets/logos/AERO-LOGO.png"
+const getBrandLogo = (rootPath = '') => `
+<img src="${rootPath}assets/logos/AERO-LOGO.png"
 alt=""
 style="width: 125px; height: 85px; object-fit:contain;">
 `;
@@ -57,7 +57,8 @@ function renderNavbar(containerId, opts = {}) {
   el.innerHTML = `
     <div class="navbar-inner container">
       <a href="${rootPath}index.html" class="navbar-brand">
-        ${BRAND_LOGO_SVG}
+        ${getBrandLogo(rootPath)}
+        <span class="navbar-brand-text">AERO<span>RENT</span></span>
       </a>
       <nav class="navbar-links">
         <a href="${rootPath}index.html" class="nav-link ${isActive('beranda')}">Beranda</a>
@@ -106,8 +107,8 @@ function renderCustomerSidebar(containerId, opts = {}) {
 
   el.innerHTML = `
     <div class="cs-logo">
-      ${BRAND_LOGO_SVG}
-      <span class="navbar-brand-text" style="font-size:18px;">AERO<span style="color:#7C3AED;">RENT</span></span>
+      ${getBrandLogo(rootPath)}
+      <span class="navbar-brand-text" style="font-size:18px;">AERO<span style="color:#F59E0B;">RENT</span></span>
     </div>
     <div class="cs-userbox">
       <div class="cs-userbox-label">Customer Panel</div>
