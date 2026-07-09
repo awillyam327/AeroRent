@@ -586,6 +586,8 @@ async function processMidtransPayment(tid, token) {
         showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Pembayaran Gagal', 'Terjadi kesalahan saat memproses pembayaran.');
         qs('btn-step2-submit').disabled = false;
         qs('btn-step2-submit').textContent = 'Konfirmasi & Sewa →';
+        const bubble = document.getElementById('floating-pay-bubble');
+        if (bubble) bubble.innerHTML = '<i class="ph ph-wallet" style="font-size:24px;"></i> Lanjutkan Pembayaran';
       },
       onClose: function() {
         showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Pembayaran Ditunda', 'Anda menutup popup pembayaran. Anda dapat melanjutkannya nanti melalui Dashboard.');
@@ -596,6 +598,8 @@ async function processMidtransPayment(tid, token) {
     showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Error', err.message);
     qs('btn-step2-submit').disabled = false;
     qs('btn-step2-submit').textContent = 'Konfirmasi & Sewa →';
+    const bubble = document.getElementById('floating-pay-bubble');
+    if (bubble) bubble.innerHTML = '<i class="ph ph-wallet" style="font-size:24px;"></i> Lanjutkan Pembayaran';
   }
 }
 
@@ -630,8 +634,9 @@ function goToStep3(status = 'SUCCESS') {
     desc.innerHTML = `Terima kasih <strong style="color:#fff;">${userName}</strong>, pemesanan Anda (<span style="color:var(--color-amber);font-weight:700;">${bookingNum}</span>) telah dibuat, namun <strong>pembayaran belum diselesaikan</strong>. Silakan bayar melalui Dashboard, atau lanjutkan pembayaran sekarang.`;
     
     // Add floating bubble popup for payment resume
-    if (!document.getElementById('floating-pay-bubble')) {
-        const bubble = document.createElement('button');
+    let bubble = document.getElementById('floating-pay-bubble');
+    if (!bubble) {
+        bubble = document.createElement('button');
         bubble.id = 'floating-pay-bubble';
         bubble.style = 'position:fixed; bottom:30px; right:30px; z-index:9999; background:var(--color-primary); color:#fff; border:none; border-radius:50px; padding:16px 24px; box-shadow:0 10px 25px rgba(139,92,246,0.5); font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:16px; transition: all 0.3s ease; animation: bounce 2s infinite;';
         bubble.innerHTML = '<i class="ph ph-wallet" style="font-size:24px;"></i> Lanjutkan Pembayaran';
@@ -651,6 +656,9 @@ function goToStep3(status = 'SUCCESS') {
             style.innerHTML = '@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }';
             document.head.appendChild(style);
         }
+    } else {
+        // Reset button text if it already exists (e.g. after closing midtrans popup)
+        bubble.innerHTML = '<i class="ph ph-wallet" style="font-size:24px;"></i> Lanjutkan Pembayaran';
     }
   } else {
     icon.innerHTML = '✓';
