@@ -58,7 +58,6 @@ function renderNavbar(containerId, opts = {}) {
     <div class="navbar-inner container">
       <a href="${rootPath}index.html" class="navbar-brand">
         ${getBrandLogo(rootPath)}
-        <span class="navbar-brand-text">AERO<span>RENT</span></span>
       </a>
       <nav class="navbar-links">
         <a href="${rootPath}index.html" class="nav-link ${isActive('beranda')}">Beranda</a>
@@ -108,7 +107,6 @@ function renderCustomerSidebar(containerId, opts = {}) {
   el.innerHTML = `
     <div class="cs-logo">
       ${getBrandLogo(rootPath)}
-      <span class="navbar-brand-text" style="font-size:18px;">AERO<span style="color:#F59E0B;">RENT</span></span>
     </div>
     <div class="cs-userbox">
       <div class="cs-userbox-label">Customer Panel</div>
@@ -204,7 +202,7 @@ function renderFooter(containerId, rootPath = '') {
     <div class="container" style="padding-top:48px;padding-bottom:24px;">
       <div class="footer-grid">
         <div>
-          ${BRAND_LOGO_SVG}
+          ${getBrandLogo(rootPath)}
           <p class="text-dim mt-3" style="max-width:380px;font-size:14px;">
             Platform rental kendaraan premium di Salatiga. Menyediakan pilihan mobil dan
             minibus terbaik untuk perjalanan Anda dengan harga transparan.
