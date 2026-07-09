@@ -27,9 +27,9 @@ function fmtDT(d) {
 
 /** Hitung selisih hari antara dua tanggal (string YYYY-MM-DD) */
 function diffDays(dariStr, sampaiStr) {
-  const a = new Date(dariStr); a.setHours(0, 0, 0, 0);
-  const b = new Date(sampaiStr); b.setHours(0, 0, 0, 0);
-  return Math.round((b - a) / 86400000);
+  const a = new Date(dariStr);
+  const b = new Date(sampaiStr);
+  return Math.max(Math.ceil((b - a) / 86400000), 1);
 }
 
 /**
@@ -62,7 +62,8 @@ function debounce(fn, delay = 300) {
 /** Set batasan minimal tanggal ke hari ini untuk input tanggal pemesanan/transaksi */
 document.addEventListener('DOMContentLoaded', () => {
   const d = new Date();
-  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const todayDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const todayDateTime = `${todayDate}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   
   // Daftar ID input tanggal yang tidak boleh memilih tanggal di masa lalu
   const restrictedIds = [
@@ -76,7 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   restrictedIds.forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.min = today;
+    if (el) {
+      if (el.type === 'datetime-local') el.min = todayDateTime;
+      else el.min = todayDate;
+    }
   });
 });
 

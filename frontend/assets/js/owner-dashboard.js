@@ -160,7 +160,7 @@ async function loadDashboard() {
         <td class="font-medium">${t.pelanggan || '—'}</td>
         <td class="text-gray-400 text-xs">${t.kendaraan || '—'}</td>
         <td class="font-bold" style="color:#F59E0B;">${rp(t.total || t.total_biaya || 0)}</td>
-        <td class="text-gray-500 text-xs">${fmtD(t.mulai || t.tanggal_mulai)}</td>
+        <td class="text-gray-500 text-xs">${fmtDT(t.mulai || t.tanggal_mulai)}</td>
       </tr>`).join('');
   }
 }
@@ -793,7 +793,7 @@ function renderPesanan() {
               Pemesan: <strong class="text-gray-300">${t.pelanggan || '—'}</strong>
             </div>
             <div class="text-xs text-gray-600 mt-0.5">
-              ${fmtD(t.mulai || t.tanggal_mulai)} s/d ${fmtD(t.selesai_rencana || t.tanggal_selesai_rencana)}
+              ${fmtDT(t.mulai || t.tanggal_mulai)} s/d ${fmtDT(t.selesai_rencana || t.tanggal_selesai_rencana)}
               · ${t.durasi || t.durasi_hari || '?'} hari
             </div>
           </div>

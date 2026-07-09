@@ -65,7 +65,7 @@ async function initDashboard() {
     <tr>
       <td><span style="font-family:monospace;color:#D1D5DB;">${b.booking}</span></td>
       <td>${b.kendaraan}</td>
-      <td class="text-dim">${fmtD(b.mulai)}</td>
+      <td class="text-dim">${fmtDT(b.mulai)}</td>
       <td>${renderStatusBadge(b.status)}</td>
       <td class="text-amber" style="text-align:right;font-weight:700;">${rp(b.total)}</td>
       <td style="text-align:right;">
@@ -109,7 +109,7 @@ async function initRiwayat() {
       </div>
       <div class="mt-3" style="font-weight:700;">${b.kendaraan}</div>
       <div class="text-dim" style="font-size:12px;margin-top:2px;">
-        ${fmtD(b.mulai)} s/d ${fmtD(b.selesai_rencana)} (${b.durasi} hari)
+        ${fmtDT(b.mulai)} s/d ${fmtDT(b.selesai_rencana)} (${b.durasi} hari)
       </div>
       <div class="flex gap-2 mt-4 flex-wrap">
         <button class="btn btn-outline" style="padding:8px 16px;font-size:12px;" onclick="printInvoice('${b.booking}')"><i class="ph ph-printer"></i> Cetak Invoice</button>
@@ -243,7 +243,7 @@ function printInvoice(nomorBooking) {
   <b>No. Booking:</b> ${b.booking}<br>
   <b>Pelanggan:</b> ${user?.nama || '—'}<br>
   <b>Kendaraan:</b> ${b.kendaraan}<br>
-  <b>Periode:</b> ${fmtD(b.mulai)} s/d ${fmtD(b.selesai_rencana)}<br>
+  <b>Periode:</b> ${fmtDT(b.mulai)} s/d ${fmtDT(b.selesai_rencana)}<br>
   <b>Durasi:</b> ${b.durasi} hari<hr>
   <b>TOTAL: <span class="r">${rp(b.total)}</span></b><br>
   <br>Status: ${b.status}<br><br>Terima kasih telah menggunakan AeroRent!

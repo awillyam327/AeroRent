@@ -10,6 +10,7 @@ from utils import fonnte_send, imgbb_upload, midtrans_snap, smtp_booking_notific
 import uuid
 import asyncio
 import json
+import math
 
 router = APIRouter(prefix="/transaksi", tags=["Transaksi"])
 @router.get("", tags=["📋 Transaksi"])
@@ -149,7 +150,7 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
     if body.gunakan_supir == 0 and not plg["foto_sim_url"]:
         raise HTTPException(400, "Untuk sewa lepas kunci, wajib mengunggah foto SIM A aktif.")
 
-    durasi  = max((body.tanggal_selesai_rencana - body.tanggal_mulai).days, 1)
+    durasi  = max(math.ceil((body.tanggal_selesai_rencana - body.tanggal_mulai).total_seconds() / 86400.0), 1)
     b_sewa  = float(kend["harga_sewa_harian"]) * durasi
     b_supir = float(kend["harga_supir_harian"]) * durasi if body.gunakan_supir else 0.0
     total   = b_sewa + b_supir

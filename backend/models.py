@@ -1,6 +1,6 @@
 from pydantic import BaseModel, field_validator
 from typing import Optional
-from datetime import date
+from datetime import date, datetime
 
 class TokenPair(BaseModel):
     access_token:  str
@@ -78,15 +78,15 @@ class PelangganIn(BaseModel):
 class TransaksiIn(BaseModel):
     id_pelanggan:           str
     id_kendaraan:           str
-    tanggal_mulai:          date
-    tanggal_selesai_rencana: date
+    tanggal_mulai:          datetime
+    tanggal_selesai_rencana: datetime
     gunakan_supir:          int             = 0
     metode_pembayaran:      Optional[str]   = None
     catatan_kasir:          Optional[str]   = None
 
     @field_validator("tanggal_selesai_rencana")
     @classmethod
-    def cek_tgl(cls, v: date, info) -> date:
+    def cek_tgl(cls, v: datetime, info) -> datetime:
         if "tanggal_mulai" in (info.data or {}) and v < info.data["tanggal_mulai"]:
             raise ValueError("Tanggal selesai tidak boleh lebih awal dari tanggal mulai.")
         return v

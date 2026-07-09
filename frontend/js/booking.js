@@ -180,7 +180,7 @@ function renderSummary() {
 
   // Elemen khusus step 2 (mungkin belum ada saat step 1)
   const tglEl = qs('sum-tanggal');
-  if (tglEl) tglEl.textContent = fmtD(S.startDate);
+  if (tglEl) tglEl.textContent = fmtDT(S.startDate);
   const metodeEl = qs('sum-metode');
   if (metodeEl) metodeEl.textContent = S.metodeBayar === 'TUNAI' ? 'Bayar di Tempat (Cash)' : 'Pelunasan Web (Cashless)';
 }

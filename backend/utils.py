@@ -142,13 +142,10 @@ async def traccar_posisi(device_id: str) -> Optional[dict]:
         log.error(f"[Traccar] Request error (device={device_id}): {exc}")
         return None
 
-def generate_ics(nomor_booking: str, nama_kendaraan: str, dt_mulai: datetime.date, dt_selesai_rencana: datetime.date) -> bytes:
+def generate_ics(nomor_booking: str, nama_kendaraan: str, dt_mulai: datetime.datetime, dt_selesai_rencana: datetime.datetime) -> bytes:
     """Generate ICS file bytes for booking rental dates."""
-    # ICS events use exclusive end dates for all day events.
-    end_exclusive = dt_selesai_rencana + datetime.timedelta(days=1)
-    
-    dtstart = dt_mulai.strftime('%Y%m%d')
-    dtend = end_exclusive.strftime('%Y%m%d')
+    dtstart = dt_mulai.strftime('%Y%m%dT%H%M%S')
+    dtend = dt_selesai_rencana.strftime('%Y%m%dT%H%M%S')
     now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     
     ics_content = f"""BEGIN:VCALENDAR
@@ -158,8 +155,8 @@ CALSCALE:GREGORIAN
 BEGIN:VEVENT
 UID:{nomor_booking}@aerorent.id
 DTSTAMP:{now}
-DTSTART;VALUE=DATE:{dtstart}
-DTEND;VALUE=DATE:{dtend}
+DTSTART:{dtstart}
+DTEND:{dtend}
 SUMMARY:Sewa {nama_kendaraan} - AeroRent
 DESCRIPTION:Nomor Booking: {nomor_booking}\\nKendaraan: {nama_kendaraan}\\nHarap kembalikan kendaraan sesuai tanggal selesai yang dijanjikan.
 END:VEVENT
@@ -167,7 +164,7 @@ END:VCALENDAR"""
     return ics_content.encode('utf-8')
 
 
-async def smtp_booking_notification(email_tujuan: str, nama: str, booking: str, tgl_mulai: datetime.date, tgl_selesai: datetime.date, nama_kendaraan: str) -> bool:
+async def smtp_booking_notification(email_tujuan: str, nama: str, booking: str, tgl_mulai: datetime.datetime, tgl_selesai: datetime.datetime, nama_kendaraan: str) -> bool:
     """Kirim email notifikasi booking sukses beserta attachment kalender ICS."""
     if not cfg.SMTP_USER:
         log.warning("[SMTP] Belum dikonfigurasi. Pengiriman email dilewati.")
@@ -183,7 +180,7 @@ async def smtp_booking_notification(email_tujuan: str, nama: str, booking: str, 
             f"Berikut adalah ringkasan pesanan Anda:\n"
             f"Nomor Booking: {booking}\n"
             f"Kendaraan: {nama_kendaraan}\n"
-            f"Tanggal Sewa: {tgl_mulai.strftime('%d %B %Y')} - {tgl_selesai.strftime('%d %B %Y')}\n\n"
+            f"Tanggal Sewa: {tgl_mulai.strftime('%d %B %Y %H:%M')} - {tgl_selesai.strftime('%d %B %Y %H:%M')}\n\n"
             f"Terlampir file kalender (.ics) agar Anda dapat menambahkan jadwal sewa ini langsung ke Google Calendar atau Apple Calendar di ponsel Anda.\n\n"
             f"Salam hangat,\nTim AeroRent Salatiga"
         )

@@ -221,7 +221,7 @@
         </div>
         <div class="text-right shrink-0">
           <div class="text-xs font-bold" style="color:#F59E0B;">${rp(t.total || 0)}</div>
-          <div class="text-xs text-gray-600 mt-0.5">${fmtD(t.mulai)}</div>
+          <div class="text-xs text-gray-600 mt-0.5">${fmtDT(t.mulai)}</div>
         </div>
       </div>`;
         l.appendChild(d);
@@ -306,8 +306,8 @@
       if (p.foto_ktp || p.foto_ktp_url) { ktpEl.classList.remove('hidden'); ktpEl.href = p.foto_ktp || p.foto_ktp_url; }
       else ktpEl.classList.add('hidden');
 
-      el('det-tgl-mulai').textContent = fmtD(t.tanggal_mulai);
-      el('det-tgl-selesai').textContent = fmtD(t.tanggal_selesai_rencana);
+      el('det-tgl-mulai').textContent = fmtDT(t.tanggal_mulai);
+      el('det-tgl-selesai').textContent = fmtDT(t.tanggal_selesai_rencana);
       el('det-durasi').textContent = (t.durasi_hari || t.durasi_hari_rencana || '?') + ' hari';
       el('det-supir').textContent = t.gunakan_supir ? 'Dengan Supir' : 'Mandiri';
       el('det-supir').style.color = t.gunakan_supir ? '#34D399' : '#9CA3AF';
@@ -998,7 +998,7 @@
       const dtMulai = new Date(tglStr);
       const dtSelesai = new Date(dtMulai);
       dtSelesai.setDate(dtSelesai.getDate() + durasi);
-      el('bt-tgl-selesai').textContent = fmtD(dtSelesai.toISOString().split('T')[0]);
+      el('bt-tgl-selesai').textContent = fmtDT(dtSelesai.toISOString());
 
       // Kalkulasi biaya
       const harga = k.harga_harian || 0;
@@ -1103,7 +1103,7 @@
   <b>Telepon:</b> ${p.telepon || p.no_telepon || '—'}<br>
   <b>Kendaraan:</b> ${k.nama || k.nama_kendaraan || '—'}<br>
   <b>Plat:</b> ${k.plat || k.nomor_plat || '—'}<br>
-  <b>Periode:</b> ${fmtD(t.tanggal_mulai)} s/d ${fmtD(t.tanggal_selesai_rencana)}<br>
+  <b>Periode:</b> ${fmtDT(t.tanggal_mulai)} s/d ${fmtDT(t.tanggal_selesai_rencana)}<br>
   <b>Durasi:</b> ${t.durasi_hari || t.durasi_hari_rencana || '?'} hari · ${t.gunakan_supir ? 'Dengan Supir' : 'Mandiri'}<hr>
   Biaya Sewa: <span class="r">${rp(t.biaya_sewa)}</span><br>
   ${t.gunakan_supir ? `Biaya Supir: <span class="r">${rp(t.biaya_supir)}</span><br>` : ''}
