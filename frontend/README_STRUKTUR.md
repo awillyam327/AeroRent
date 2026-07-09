@@ -231,3 +231,10 @@ didemokan utuh.
 Lihat `AeroRent_Analisis_Phase1-2.md` untuk daftar gap lengkap. Dokumen ini
 hanya melacak status build frontend secara teknis, bukan menggantikan laporan
 analisis tersebut.
+
+## Riwayat Perubahan (Changelog) Terkini
+
+### [Juli 2026] Fitur Pilihan Jam Sewa (Datetime Local)
+- **Database**: Memperbarui kolom `tanggal_mulai` dan `tanggal_selesai_rencana` pada tabel `TRANSAKSI_SEWA` dari `DATE` menjadi `DATETIME`.
+- **Backend**: Perhitungan harga sewa kini akurat berdasarkan perbandingan waktu absolut (per 24 jam dengan pembulatan ke atas) di `routers/transaksi.py`. Modul `models.py` diperbarui menggunakan tipe data `datetime`.
+- **Frontend**: Seluruh *input* pemesanan diubah menjadi `<input type="datetime-local">`. Semua dasbor portal (Kasir, Customer, dan Owner) kini menggunakan fungsi `fmtDT()` untuk mencetak riwayat jam/waktu transaksi dengan lengkap, dan tidak lagi terpotong ke skala hari saja.
