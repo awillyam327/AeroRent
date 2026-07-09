@@ -16,6 +16,30 @@ from email.mime.base import MIMEBase
 from email import encoders
 from fastapi import HTTPException, BackgroundTasks
 from config import cfg, log
+import io
+from PIL import Image
+
+async def compress_image(image_bytes: bytes, quality: int = 80, max_size: tuple = (1200, 1200)) -> bytes:
+    """
+    Mengkompresi gambar menggunakan Pillow agar ukurannya lebih kecil (untuk menghemat bandwidth dan biaya OCR/ImgBB).
+    """
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        
+        # Konversi ke RGB jika format RGBA/P
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+            
+        # Resize jika terlalu besar
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+        
+        output = io.BytesIO()
+        img.save(output, format="JPEG", quality=quality, optimize=True)
+        return output.getvalue()
+    except Exception as e:
+        log.error(f"[ImageCompress] Gagal mengkompresi gambar: {e}")
+        return image_bytes  # Fallback ke bytes asli jika gagal
+
 
 async def imgbb_upload(file_bytes: bytes, filename: str) -> str:
     """

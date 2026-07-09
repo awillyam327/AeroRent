@@ -41,75 +41,69 @@ def _names_match(name_a: str, name_b: str) -> bool:
     max_words = max(len(words_a), len(words_b))
     return len(common) / max_words >= 0.6
 
-@router.post("/ktp", tags=["📷 OCR"])
-async def ocr_ktp(file: UploadFile = File(...)):
+async def perform_ocr(content: bytes) -> str:
+    """Helper function to call OCR.space API and return raw text."""
     if not cfg.OCR_SPACE_API_KEY:
         raise HTTPException(500, "Kunci API OCR.space belum dikonfigurasi di backend.")
-
-    content = await file.read()
-    
-    # OCR.space API endpoint
-    # Note: KTP language is Indonesian (ind) or English (eng)
+        
     data = {
         "apikey": cfg.OCR_SPACE_API_KEY,
-        "language": "eng", # "ind" may not be available on free tier, eng works fine for numbers/names
+        "language": "eng",
         "isOverlayRequired": False,
         "OCREngine": 2
     }
+    files = {"file": ("image.jpg", content, "image/jpeg")}
     
-    files = {"file": (file.filename, content, file.content_type)}
-
     async with httpx.AsyncClient() as client:
         try:
             r = await client.post("https://api.ocr.space/parse/image", data=data, files=files, timeout=30.0)
             r.raise_for_status()
             res = r.json()
-            
             if res.get("IsErroredOnProcessing"):
                 raise HTTPException(500, f"OCR Error: {res.get('ErrorMessage')}")
-                
-            parsed_results = res.get("ParsedResults", [])
-            if not parsed_results:
+            parsed = res.get("ParsedResults", [])
+            if not parsed:
                 raise HTTPException(400, "Tidak ada teks yang terdeteksi.")
-                
-            raw_text = parsed_results[0].get("ParsedText", "")
-            
-            # Simple Regex for Indonesian KTP
-            import re
-            
-            nik = ""
-            nama = ""
-            alamat = ""
-            
-            # Find NIK (16 digits)
-            nik_match = re.search(r'\b\d{16}\b', raw_text)
-            if nik_match:
-                nik = nik_match.group(0)
-            
-            # Find Nama
-            # Look for "Nama" or "Narna" followed by anything, capture the rest of the line
-            nama_match = re.search(r'(?i)Nama\s*[:;]?\s*(.+)', raw_text)
-            if nama_match:
-                nama = nama_match.group(1).strip()
-            
-            # Find Alamat
-            alamat_match = re.search(r'(?i)Alamat\s*[:;]?\s*(.+)', raw_text)
-            if alamat_match:
-                alamat = alamat_match.group(1).strip()
-                
-            return {
-                "text": raw_text,
-                "nik": nik,
-                "nama": nama,
-                "alamat": alamat
-            }
-            
+            return parsed[0].get("ParsedText", "")
         except httpx.HTTPStatusError as e:
             err_text = e.response.text if e.response else str(e)
             raise HTTPException(502, f"OCR API Error ({e.response.status_code if e.response else 'Unknown'}): {err_text}")
         except httpx.RequestError as e:
             raise HTTPException(503, f"Gagal menghubungi layanan OCR: {str(e)}")
 
+@router.post("/ktp", tags=["📷 OCR"])
+async def ocr_ktp(file: UploadFile = File(...)):
+    content = await file.read()
+    raw_text = await perform_ocr(content)
+    
+    # Simple Regex for Indonesian KTP
+    import re
+    
+    nik = ""
+    nama = ""
+    alamat = ""
+    
+    # Find NIK (16 digits)
+    nik_match = re.search(r'\b\d{16}\b', raw_text)
+    if nik_match:
+        nik = nik_match.group(0)
+    
+    # Find Nama
+    nama_match = re.search(r'(?i)Nama\s*[:;]?\s*(.+)', raw_text)
+    if nama_match:
+        nama = nama_match.group(1).strip()
+    
+    # Find Alamat
+    alamat_match = re.search(r'(?i)Alamat\s*[:;]?\s*(.+)', raw_text)
+    if alamat_match:
+        alamat = alamat_match.group(1).strip()
+        
+    return {
+        "text": raw_text,
+        "nik": nik,
+        "nama": nama,
+        "alamat": alamat
+    }
 @router.post("/face-match", tags=["📷 OCR"])
 async def face_match_liveness(
     selfie: UploadFile = File(...),

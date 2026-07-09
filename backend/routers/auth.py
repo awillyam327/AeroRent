@@ -104,14 +104,45 @@ async def register_customer(
     hashed = hash_pwd(password)
     
     ktp_url = None
-    if foto_ktp:
-        img_bytes = await foto_ktp.read()
-        ktp_url = await imgbb_upload(img_bytes, foto_ktp.filename)
-        
     sim_url = None
-    if foto_sim:
-        sim_bytes = await foto_sim.read()
-        sim_url = await imgbb_upload(sim_bytes, foto_sim.filename)
+    
+    if foto_ktp or foto_sim:
+        from utils import compress_image
+        from routers.ocr import perform_ocr, _names_match
+        import re
+
+        if foto_ktp:
+            ktp_bytes = await compress_image(await foto_ktp.read())
+            try:
+                ktp_raw = await perform_ocr(ktp_bytes)
+                # Verify KTP name with input name if possible
+                nama_match = re.search(r'(?i)Nama\s*[:;]?\s*(.+)', ktp_raw)
+                if nama_match:
+                    ktp_name = nama_match.group(1).strip()
+                    if not _names_match(nama_lengkap, ktp_name):
+                        raise HTTPException(400, "Nama di KTP tidak sama dengan Nama Lengkap yang diinput.")
+            except HTTPException as e:
+                raise e
+            except Exception as e:
+                log.error(f"[OCR Auth] KTP Error: {e}")
+                raise HTTPException(502, "Layanan verifikasi OCR sedang sibuk. Coba lagi nanti.")
+            
+            ktp_url = await imgbb_upload(ktp_bytes, foto_ktp.filename)
+
+        if foto_sim:
+            sim_bytes = await compress_image(await foto_sim.read())
+            try:
+                sim_raw = await perform_ocr(sim_bytes)
+                # Always check SIM text against nama_lengkap
+                if not _names_match(nama_lengkap, sim_raw):
+                    raise HTTPException(400, "Nama pada SIM A tidak cocok dengan pendaftaran. Harap unggah dokumen asli milik sendiri.")
+            except HTTPException as e:
+                raise e
+            except Exception as e:
+                log.error(f"[OCR Auth] SIM Error: {e}")
+                raise HTTPException(502, "Layanan verifikasi OCR sedang sibuk. Coba lagi nanti.")
+                
+            sim_url = await imgbb_upload(sim_bytes, foto_sim.filename)
 
     await cur.execute(
         "INSERT INTO PELANGGAN (id_pelanggan, nama_lengkap, email, no_telepon, no_ktp, alamat, password_hash, foto_ktp_url, foto_sim_url, is_verified) "
