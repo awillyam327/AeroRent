@@ -69,7 +69,7 @@ async function initDashboard() {
       <td>${renderStatusBadge(b.status)}</td>
       <td class="text-amber" style="text-align:right;font-weight:700;">${rp(b.total)}</td>
       <td style="text-align:right;">
-        ${b.status === 'MENUNGGU' ? `<button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')" title="Batalkan Pesanan"><i class="ph ph-x-circle"></i></button>` : '—'}
+        ${b.status === 'MENUNGGU' ? `<div style="display:flex;gap:4px;justify-content:flex-end;"><button class="btn btn-primary" style="padding:4px 8px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)" title="Bayar Sekarang"><i class="ph ph-wallet"></i> Bayar</button><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')" title="Batalkan Pesanan"><i class="ph ph-x-circle"></i></button></div>` : '—'}
       </td>
     </tr>`).join('');
 }
@@ -114,7 +114,7 @@ async function initRiwayat() {
       <div class="flex gap-2 mt-4 flex-wrap">
         <button class="btn btn-outline" style="padding:8px 16px;font-size:12px;" onclick="printInvoice('${b.booking}')"><i class="ph ph-printer"></i> Cetak Invoice</button>
         ${canExtend ? `<button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;" onclick="handleExtendClick('${b.booking}')"><i class="ph ph-timer"></i> Extend Sewa (Perpanjang)</button>` : ''}
-        ${b.status === 'MENUNGGU' ? `<button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')"><i class="ph ph-x-circle"></i> Batalkan Pesanan</button>` : ''}
+        ${b.status === 'MENUNGGU' ? `<button class="btn btn-primary" style="padding:8px 16px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)"><i class="ph ph-wallet"></i> Bayar Sekarang</button><button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')"><i class="ph ph-x-circle"></i> Batalkan Pesanan</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -142,6 +142,85 @@ async function handleCancelClick(nomorBooking) {
     }
   } catch (err) {
     showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Error', err.message);
+  }
+}
+
+async function loadMidtransScript() {
+  if (window.snap) return true;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(`${API_BASE}/config/midtrans`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+        const data = await res.json();
+        if (data.client_key) {
+            await new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+                script.setAttribute('data-client-key', data.client_key);
+                script.onload = resolve;
+                document.head.appendChild(script);
+            });
+            return true;
+        }
+    }
+  } catch (e) {
+    console.warn("Gagal memuat config midtrans", e);
+  }
+  return false;
+}
+
+async function handlePayClick(tid, event) {
+  if (event) event.stopPropagation();
+  const btn = event.currentTarget;
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:4px;"></span> Tunggu...';
+  btn.disabled = true;
+
+  try {
+    const loaded = await loadMidtransScript();
+    if (!loaded) throw new Error("Sistem pembayaran belum siap, silakan coba lagi.");
+
+    const auth = getAuth();
+    if (!auth || !auth.access_token) throw new Error("Sesi telah habis, silakan login kembali.");
+
+    const res = await fetch(`${API_BASE}/transaksi/${tid}/midtrans-snap`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${auth.access_token}` }
+    });
+    
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Gagal mendapatkan token pembayaran.');
+    }
+    const data = await res.json();
+    
+    window.snap.pay(data.snap_token, {
+      onSuccess: function(result) {
+        showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Pembayaran Berhasil', 'Terima kasih, pembayaran Anda telah diterima.');
+        setTimeout(() => window.location.reload(), 1500);
+      },
+      onPending: function(result) {
+        showToast('<i class="ph-fill ph-hourglass-high" style="color: #3B82F6;"></i>', 'Menunggu Pembayaran', 'Silakan selesaikan pembayaran Anda.');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      },
+      onError: function(result) {
+        showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Pembayaran Gagal', 'Terjadi kesalahan saat memproses pembayaran.');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      },
+      onClose: function() {
+        showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Pembayaran Ditunda', 'Anda menutup popup pembayaran.');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+    });
+  } catch (err) {
+    showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Error', err.message);
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
   }
 }
 
