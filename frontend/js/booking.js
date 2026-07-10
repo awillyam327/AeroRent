@@ -18,6 +18,7 @@ let S = {
   step: 1,
   vehicleId: null,
   vehicle: null,
+  paketSewa: 'HARIAN', // 'HARIAN' atau 'BULANAN'
   startDate: '',
   duration: 1,
   useDriver: false,
@@ -32,6 +33,10 @@ let S = {
   stream: null,
   metodeBayar: 'TUNAI', // 'TUNAI' (Cash) | 'MIDTRANS' (Cashless)
   agreed: false,
+  ktpUrl: null,
+  simUrl: null,
+  validCount: 0,
+  nextIsPromo: false,
   bookingResult: null,
 };
 
@@ -120,6 +125,11 @@ async function initCheckout() {
             const btnSim = qs('btn-upload-sewa-sim');
             if (btnSim) btnSim.style.display = 'none';
           }
+          if (data.stats) {
+            S.validCount = data.stats.valid_count;
+            S.nextIsPromo = data.stats.next_is_promo;
+            qs('loyalty-badge').classList.toggle('hidden', !S.nextIsPromo);
+          }
         }
       }
     } catch (e) {
@@ -159,7 +169,21 @@ function showCheckoutError(msg) {
 }
 
 /* ---------- Kalkulasi biaya ---------- */
-function calcBiayaSewa() { return (S.vehicle?.harga_sewa_harian || 0) * S.duration; }
+function calcBiayaSewa() { 
+  let basePrice = S.vehicle?.harga_sewa_harian || 0;
+  let totalSewa = 0;
+  if (S.paketSewa === 'BULANAN') {
+    let durasiBulan = Math.max(1, Math.round(S.duration / 30));
+    totalSewa = basePrice * durasiBulan * 22; // 22 hari per bulan
+  } else {
+    totalSewa = basePrice * S.duration;
+  }
+  
+  if (S.nextIsPromo) {
+    totalSewa = totalSewa * 0.8; // Diskon 20%
+  }
+  return totalSewa;
+}
 function calcBiayaSupir() { return S.useDriver ? (S.vehicle?.harga_supir_harian || 150000) * S.duration : 0; }
 function calcTotal() { return calcBiayaSewa() + calcBiayaSupir(); }
 
@@ -186,9 +210,34 @@ function renderSummary() {
 }
 
 /* ---------- STEP 1: Jadwal & Layanan ---------- */
+function setPaketSewa(paket) {
+  S.paketSewa = paket;
+  qs('btn-paket-harian').classList.toggle('btn-primary', paket === 'HARIAN');
+  qs('btn-paket-harian').classList.toggle('btn-ghost', paket !== 'HARIAN');
+  qs('btn-paket-bulanan').classList.toggle('btn-primary', paket === 'BULANAN');
+  qs('btn-paket-bulanan').classList.toggle('btn-ghost', paket !== 'BULANAN');
+  
+  qs('group-durasi-harian').classList.toggle('hidden', paket === 'BULANAN');
+  qs('group-durasi-bulanan').classList.toggle('hidden', paket === 'HARIAN');
+  
+  if (paket === 'BULANAN') {
+    qs('jadwal-supir').checked = false;
+    qs('jadwal-supir').disabled = true;
+    S.useDriver = false;
+  } else {
+    qs('jadwal-supir').disabled = false;
+  }
+  
+  onJadwalChange();
+}
+
 function onJadwalChange() {
   S.startDate = qs('jadwal-tanggal').value;
-  S.duration = Math.max(1, parseInt(qs('jadwal-durasi').value || '1', 10));
+  if (S.paketSewa === 'BULANAN') {
+    S.duration = parseInt(qs('jadwal-durasi-bulanan').value || '30', 10);
+  } else {
+    S.duration = Math.max(1, parseInt(qs('jadwal-durasi').value || '1', 10));
+  }
   renderSummary();
   validateStep1();
 }
@@ -504,17 +553,17 @@ async function submitBooking() {
     console.warn("Gagal update profil pelanggan sebelum checkout:", e);
   }
 
-  const tglMulai = S.startDate;
+  const tglMulai = S.startDate + ':00'; // ensure format YYYY-MM-DDTHH:mm:00
   const tglSelesai = addDays(S.startDate, S.duration);
 
   const payload = {
     id_pelanggan: auth.user.sub || auth.user.id,
-    id_kendaraan: S.vehicleId,
+    id_kendaraan: S.vehicle.id_kendaraan,
     tanggal_mulai: tglMulai,
     tanggal_selesai_rencana: tglSelesai,
     gunakan_supir: S.useDriver ? 1 : 0,
     metode_pembayaran: S.metodeBayar,
-    catatan_kasir: null,
+    paket_sewa: S.paketSewa
   };
 
   try {

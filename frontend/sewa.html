@@ -54,14 +54,38 @@
         <div id="panel-step1" class="checkout-panel glass-card">
           <div class="checkout-panel-title"><i class="ph ph-calendar"></i> Detail Waktu &amp; Layanan</div>
           <div id="err-step1" class="text-red-500 text-sm mb-4" style="display:none; color: #EF4444;"></div>
+          
+          <div class="form-group">
+            <label class="form-label">Paket Sewa</label>
+            <div class="payment-toggle" style="margin-top: 4px;">
+              <button type="button" id="btn-paket-harian" class="btn btn-primary" onclick="setPaketSewa('HARIAN')">
+                Harian
+              </button>
+              <button type="button" id="btn-paket-bulanan" class="btn btn-ghost" onclick="setPaketSewa('BULANAN')">
+                Bulanan <span class="pm-sub" style="color: #F59E0B;">Hemat!</span>
+              </button>
+            </div>
+          </div>
+
           <div class="form-group">
             <label class="form-label" for="jadwal-tanggal">Tanggal Mulai Sewa</label>
             <input type="datetime-local" id="jadwal-tanggal" class="form-input" onchange="onJadwalChange()">
           </div>
-          <div class="form-group">
+
+          <div class="form-group" id="group-durasi-harian">
             <label class="form-label" for="jadwal-durasi">Durasi (Hari)</label>
             <input type="number" id="jadwal-durasi" class="form-input" min="1" value="1" oninput="onJadwalChange()">
           </div>
+
+          <div class="form-group hidden" id="group-durasi-bulanan">
+            <label class="form-label" for="jadwal-durasi-bulanan">Durasi (Bulan)</label>
+            <select id="jadwal-durasi-bulanan" class="form-input" onchange="onJadwalChange()">
+              <option value="30">1 Bulan (30 Hari)</option>
+              <option value="60">2 Bulan (60 Hari)</option>
+              <option value="90">3 Bulan (90 Hari)</option>
+            </select>
+          </div>
+
           <div class="driver-toggle-row">
             <div>
               <div class="label">Gunakan Jasa Supir?</div>
@@ -199,6 +223,9 @@
 
       <!-- ===== KOLOM KANAN: RINGKASAN ===== -->
       <div id="summary-panel" class="summary-panel glass-card">
+        <div id="loyalty-badge" class="hidden" style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10B981; color: #10B981; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+          <i class="ph-fill ph-ticket text-xl"></i> <span>Hore! Ini sewa ke-3 Anda. Diskon Loyalitas 20% khusus sewa aktif!</span>
+        </div>
         <div class="summary-vehicle">
           <div class="photo" id="sum-foto"></div>
           <div>

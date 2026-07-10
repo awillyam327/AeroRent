@@ -113,6 +113,20 @@ async def detail_pelanggan(pid: str, user=Depends(get_current_account), cur=Depe
         t["total"] = fmt_float(t["total"])
         
     r["riwayat_transaksi"] = txs
+
+    # Statistik Loyalitas
+    await cur.execute(
+        "SELECT COUNT(*) AS count_valid FROM TRANSAKSI_SEWA "
+        "WHERE id_pelanggan = %(pid)s AND status IN ('SELESAI', 'DIKONFIRMASI', 'AKTIF')",
+        {"pid": pid}
+    )
+    loyal = await cur.fetchone()
+    count_valid = loyal["count_valid"] if loyal else 0
+    r["stats"] = {
+        "valid_count": count_valid,
+        "next_is_promo": (count_valid % 3 == 2)
+    }
+
     return r
 
 

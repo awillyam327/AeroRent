@@ -113,19 +113,76 @@ async function initRiwayat() {
       </div>
       <div class="flex gap-2 mt-4 flex-wrap">
         <button class="btn btn-outline" style="padding:8px 16px;font-size:12px;" onclick="printInvoice('${b.booking}')"><i class="ph ph-printer"></i> Cetak Invoice</button>
-        ${canExtend ? `<button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;" onclick="handleExtendClick('${b.booking}')"><i class="ph ph-timer"></i> Extend Sewa (Perpanjang)</button>` : ''}
-        ${b.status === 'MENUNGGU' ? `<button class="btn btn-primary" style="padding:8px 16px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)"><i class="ph ph-wallet"></i> Bayar Sekarang</button><button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')"><i class="ph ph-x-circle"></i> Batalkan Pesanan</button>` : ''}
+        ${canExtend ? `<button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;" onclick="openExtendModal('${b.booking}')"><i class="ph ph-timer"></i> Extend Sewa (Perpanjang)</button>` : ''}
+        ${b.status_bayar === 'BELUM_LUNAS' && b.metode === 'MIDTRANS' ? `<button class="btn btn-primary" style="padding:8px 16px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)"><i class="ph ph-wallet"></i> Bayar Sekarang</button><button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')"><i class="ph ph-x-circle"></i> Batalkan Pesanan</button>` : ''}
       </div>
     </div>`;
   }).join('');
 }
 
-/** FR terkait "Tambah Waktu Sewa" ADA di SRS & Use Case Diagram, tapi backend
- *  belum punya endpoint maupun kolom untuk ini sama sekali (lihat laporan
- *  Phase 1-2). Daripada berpura-pura berhasil, tombol ini jujur memberi tahu
- *  bahwa fitur belum tersedia. */
-function handleExtendClick(nomorBooking) {
-  showToast('<i class="ph-fill ph-traffic-cone" style="color: #F59E0B;"></i>', 'Belum Tersedia', `Perpanjangan sewa untuk ${nomorBooking} belum didukung backend saat ini.`);
+let currentExtendId = null;
+let currentExtPaket = 'HARIAN';
+
+function openExtendModal(nomorBooking) {
+  currentExtendId = nomorBooking;
+  currentExtPaket = 'HARIAN';
+  setExtPaket('HARIAN');
+  qs('ext-hari').value = '1';
+  qs('extend-modal').classList.remove('hidden');
+}
+
+function setExtPaket(paket) {
+  currentExtPaket = paket;
+  qs('btn-ext-harian').classList.toggle('btn-primary', paket === 'HARIAN');
+  qs('btn-ext-harian').classList.toggle('btn-ghost', paket !== 'HARIAN');
+  qs('btn-ext-bulanan').classList.toggle('btn-primary', paket === 'BULANAN');
+  qs('btn-ext-bulanan').classList.toggle('btn-ghost', paket !== 'BULANAN');
+  
+  qs('group-ext-harian').classList.toggle('hidden', paket === 'BULANAN');
+  qs('group-ext-bulanan').classList.toggle('hidden', paket === 'HARIAN');
+}
+
+async function submitExtend() {
+  if (!currentExtendId) return;
+  
+  const btn = qs('btn-ext-submit');
+  btn.disabled = true;
+  btn.innerHTML = 'Memproses...';
+  qs('ext-err').classList.add('hidden');
+  
+  let tambahan_hari = parseInt(qs('ext-hari').value || '1', 10);
+  if (currentExtPaket === 'BULANAN') {
+    tambahan_hari = parseInt(qs('ext-bulan').value, 10);
+  }
+
+  try {
+    const payload = {
+      paket_sewa: currentExtPaket,
+      tambahan_hari: tambahan_hari
+    };
+    
+    const res = await apiFetch(`/transaksi/${currentExtendId}/perpanjang`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    
+    if (res && res.ok) {
+      const data = await res.json();
+      showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', data.message);
+      qs('extend-modal').classList.add('hidden');
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      const data = await res.json();
+      qs('ext-err').textContent = data.detail || 'Gagal memperpanjang sewa';
+      qs('ext-err').classList.remove('hidden');
+    }
+  } catch (err) {
+    qs('ext-err').textContent = err.message;
+    qs('ext-err').classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Proses';
+  }
 }
 
 async function handleCancelClick(nomorBooking) {

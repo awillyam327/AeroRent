@@ -83,6 +83,7 @@ class TransaksiIn(BaseModel):
     gunakan_supir:          int             = 0
     metode_pembayaran:      Optional[str]   = None
     catatan_kasir:          Optional[str]   = None
+    paket_sewa:             str             = "HARIAN"
 
     @field_validator("tanggal_selesai_rencana")
     @classmethod
@@ -96,6 +97,10 @@ class StatusUpd(BaseModel):
     status:                 str
     catatan_kasir:          Optional[str]   = None
     biaya_denda_kerusakan:  Optional[float] = None
+
+class PerpanjanganIn(BaseModel):
+    paket_sewa: str = "HARIAN" # HARIAN / BULANAN
+    tambahan_hari: int = 1 # Jika paket_sewa == BULANAN, tambahan_hari diasumsikan kelipatan 30
     biaya_tambahan_lain:    Optional[float] = None
 
 

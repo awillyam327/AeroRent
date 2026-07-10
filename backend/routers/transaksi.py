@@ -5,7 +5,7 @@ import aiomysql
 from datetime import date, datetime, timezone
 from database import get_db
 from dependencies import req_kasir_or_owner, req_owner, get_current_account
-from models import TransaksiIn, StatusUpd
+from models import TransaksiIn, StatusUpd, PerpanjanganIn
 from utils import fonnte_send, imgbb_upload, midtrans_snap, smtp_booking_notification
 import uuid
 import asyncio
@@ -150,11 +150,36 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
     if body.gunakan_supir == 0 and not plg["foto_sim_url"]:
         raise HTTPException(400, "Untuk sewa lepas kunci, wajib mengunggah foto SIM A aktif.")
 
+    if body.paket_sewa == "BULANAN" and body.gunakan_supir == 1:
+        raise HTTPException(400, "Sewa bulanan tidak dapat dipesan beserta jasa supir secara langsung.")
+
     durasi  = max(math.ceil((body.tanggal_selesai_rencana - body.tanggal_mulai).total_seconds() / 86400.0), 1)
-    b_sewa  = float(kend["harga_sewa_harian"]) * durasi
+    
+    # Penghitungan Sewa Bulanan
+    catatan_final = body.catatan_kasir or ""
+    if body.paket_sewa == "BULANAN":
+        durasi_bulan = round(durasi / 30)
+        if durasi_bulan < 1: durasi_bulan = 1
+        b_sewa = float(kend["harga_sewa_harian"]) * durasi_bulan * 22
+        catatan_final = (f"Paket Sewa Bulanan ({durasi_bulan} Bulan)\n" + catatan_final).strip()
+    else:
+        b_sewa = float(kend["harga_sewa_harian"]) * durasi
+
+    # Pengecekan Loyalitas (Setiap 3 kali sewa dapat diskon 20%)
+    await cur.execute(
+        "SELECT COUNT(*) AS count_valid FROM TRANSAKSI_SEWA "
+        "WHERE id_pelanggan = %(id)s AND status IN ('SELESAI', 'DIKONFIRMASI', 'AKTIF')",
+        {"id": body.id_pelanggan}
+    )
+    loyal = await cur.fetchone()
+    count_valid = loyal["count_valid"] if loyal else 0
+
+    if count_valid % 3 == 2:
+        b_sewa = b_sewa * 0.8
+        catatan_final = ("Sewa ke-3 (Promo Loyalitas Diskon 20%)\n" + catatan_final).strip()
+
     b_supir = float(kend["harga_supir_harian"]) * durasi if body.gunakan_supir else 0.0
     total   = b_sewa + b_supir
-
     
     tahun_ini     = datetime.now().strftime("%Y")
     unique_suffix = uuid.uuid4().hex[:8].upper()          # 8 karakter hex unik
@@ -176,7 +201,7 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
          "kid_kasir": kid_kasir,
          "tmu": body.tanggal_mulai, "tse": body.tanggal_selesai_rencana, "dur": durasi,
          "sup": body.gunakan_supir, "bs": b_sewa, "bsu": b_supir, "tot": total,
-         "met": body.metode_pembayaran, "cat": body.catatan_kasir, "stat": initial_status},
+         "met": body.metode_pembayaran, "cat": catatan_final, "stat": initial_status},
     )
 
     if initial_status == 'DIKONFIRMASI':
@@ -390,3 +415,73 @@ async def cancel_transaksi_by_customer(tid: str, user=Depends(get_current_accoun
     await cur.execute("UPDATE TRANSAKSI_SEWA SET status = 'DIBATALKAN' WHERE id_transaksi = %(id)s OR nomor_booking = %(nb)s", {"id": tid, "nb": tid.upper()})
     
     return {"message": "Pemesanan berhasil dibatalkan."}
+
+@router.post("/{tid}/perpanjang", tags=["📋 Transaksi"])
+async def perpanjang_transaksi(tid: str, body: PerpanjanganIn, user=Depends(get_current_account), cur=Depends(get_db)):
+    if user["role"] != "CUSTOMER":
+        raise HTTPException(403, "Hanya pelanggan yang dapat memperpanjang sewa dari portal.")
+
+    await cur.execute(
+        "SELECT t.id_transaksi, t.id_pelanggan, t.nomor_booking, t.tanggal_selesai_rencana, t.durasi_hari_rencana, "
+        "t.biaya_sewa, t.total_biaya, t.catatan_kasir, t.status, "
+        "k.harga_sewa_harian "
+        "FROM TRANSAKSI_SEWA t JOIN KENDARAAN k ON t.id_kendaraan = k.id_kendaraan "
+        "WHERE (t.id_transaksi = %(id)s OR t.nomor_booking = %(nb)s)",
+        {"id": tid, "nb": tid.upper()}
+    )
+    trx = await cur.fetchone()
+    if not trx: raise HTTPException(404, "Transaksi tidak ditemukan.")
+    if trx["id_pelanggan"] != user["id"]: raise HTTPException(403, "Akses ditolak.")
+    if trx["status"] not in ("DIKONFIRMASI", "AKTIF"):
+        raise HTTPException(400, "Hanya sewa yang sedang aktif atau telah dikonfirmasi yang dapat diperpanjang.")
+
+    durasi_tambahan = body.tambahan_hari
+    if durasi_tambahan <= 0: raise HTTPException(400, "Durasi perpanjangan harus lebih dari 0 hari.")
+
+    b_sewa_tambahan = 0
+    catatan_promo = ""
+    durasi_bulan = 0
+    if body.paket_sewa == "BULANAN":
+        durasi_bulan = max(1, round(durasi_tambahan / 30))
+        b_sewa_tambahan = float(trx["harga_sewa_harian"]) * durasi_bulan * 22
+        durasi_tambahan = durasi_bulan * 30 # memastikan ekstensi genap 30 hari kelipatan
+    else:
+        b_sewa_tambahan = float(trx["harga_sewa_harian"]) * durasi_tambahan
+
+    # Cek loyalitas
+    await cur.execute(
+        "SELECT COUNT(*) AS count_valid FROM TRANSAKSI_SEWA "
+        "WHERE id_pelanggan = %(pid)s AND status IN ('SELESAI', 'DIKONFIRMASI', 'AKTIF')",
+        {"pid": user["id"]}
+    )
+    loyal = await cur.fetchone()
+    count_valid = loyal["count_valid"] if loyal else 0
+
+    if count_valid % 3 == 2:
+        b_sewa_tambahan = b_sewa_tambahan * 0.8
+        catatan_promo = " (Promo Loyalitas 20% khusus perpanjangan)"
+
+    new_catatan = trx["catatan_kasir"] or ""
+    ket_paket = f"Paket Bulanan ({durasi_bulan} Bulan)" if body.paket_sewa == "BULANAN" else f"Paket Harian ({durasi_tambahan} Hari)"
+    new_catatan = (new_catatan + f"\n[EXT] Perpanjangan {ket_paket}{catatan_promo}").strip()
+
+    ext_suffix = uuid.uuid4().hex[:4].upper()
+    new_midtrans_oid = f"{trx['nomor_booking']}-EX{ext_suffix}"
+
+    await cur.execute(
+        "UPDATE TRANSAKSI_SEWA SET "
+        "durasi_hari_rencana = durasi_hari_rencana + %(dur)s, "
+        "tanggal_selesai_rencana = DATE_ADD(tanggal_selesai_rencana, INTERVAL %(dur)s DAY), "
+        "biaya_sewa = biaya_sewa + %(bs)s, "
+        "total_biaya = total_biaya + %(bs)s, "
+        "status_pembayaran = 'BELUM_LUNAS', "
+        "midtrans_order_id = %(oid)s, "
+        "catatan_kasir = %(cat)s "
+        "WHERE id_transaksi = %(tid)s",
+        {
+            "dur": durasi_tambahan, "bs": b_sewa_tambahan,
+            "oid": new_midtrans_oid, "cat": new_catatan, "tid": trx["id_transaksi"]
+        }
+    )
+
+    return {"message": "Sewa berhasil diperpanjang. Silakan lakukan pembayaran tambahan.", "new_order_id": new_midtrans_oid}
