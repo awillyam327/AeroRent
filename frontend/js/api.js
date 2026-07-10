@@ -100,6 +100,11 @@ async function apiFetch(path, options = {}, loginPath = '/login.html') {
   } catch (err) {
     clearTimeout(timeoutId);
     console.warn(`[api] Network error saat memanggil ${path}:`, err.message);
+    if (typeof showToast === 'function') {
+        showToast('<i class="ph ph-wifi-slash"></i>', 'Koneksi Error', 'Koneksi terputus atau server tidak merespons. Silakan periksa jaringan Anda.');
+    } else {
+        alert('Koneksi terputus atau server tidak merespons. Silakan periksa jaringan Anda.');
+    }
     return null;
   }
 }
@@ -117,8 +122,6 @@ async function apiJson(path, options = {}, loginPath = '/login.html') {
 
 /**
  * Login Kasir/Owner — endpoint NYATA, sudah ada di main.py (/auth/login).
- * FastAPI OAuth2PasswordRequestForm mewajibkan field 'username' (diisi email)
- * & 'password', dikirim sebagai application/x-www-form-urlencoded — BUKAN JSON.
  * Melempar Error jika gagal, supaya pemanggil bisa fallback ke mode demo.
  */
 async function apiLoginStaff(email, password) {
@@ -126,13 +129,20 @@ async function apiLoginStaff(email, password) {
   body.append('username', email);
   body.append('password', password);
 
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body,
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body,
+    });
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('<i class="ph ph-wifi-slash"></i>', 'Koneksi Error', 'Gagal menghubungi server.');
+    throw new Error('Koneksi terputus atau server tidak merespons.');
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || 'Email atau password salah.');
@@ -142,16 +152,22 @@ async function apiLoginStaff(email, password) {
 
 /**
  * Login Customer — endpoint POST /auth/login-customer di auth.py.
- * Mengirim email & password sebagai JSON body.
  */
 async function apiLoginCustomer(email, password) {
-  const res = await fetch(`${API_BASE}/auth/login-customer`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ email, password }),
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/auth/login-customer`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('<i class="ph ph-wifi-slash"></i>', 'Koneksi Error', 'Gagal menghubungi server.');
+    throw new Error('Koneksi terputus atau server tidak merespons.');
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || 'Login gagal.');
@@ -161,13 +177,19 @@ async function apiLoginCustomer(email, password) {
 
 /**
  * Registrasi Customer — endpoint POST /auth/register-customer di auth.py.
- * Mengirim FormData (multipart) karena mungkin ada upload foto KTP.
  */
 async function apiRegisterCustomer(formData) {
-  const res = await fetch(`${API_BASE}/auth/register-customer`, {
-    method: 'POST',
-    body: formData, // multipart/form-data (ada upload foto KTP)
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/auth/register-customer`, {
+      method: 'POST',
+      body: formData, // multipart/form-data (ada upload foto KTP)
+    });
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('<i class="ph ph-wifi-slash"></i>', 'Koneksi Error', 'Gagal menghubungi server.');
+    throw new Error('Koneksi terputus atau server tidak merespons.');
+  }
+
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
     throw new Error(errData.detail || 'Pendaftaran gagal (Terjadi kesalahan server)');
@@ -179,13 +201,20 @@ async function apiRegisterCustomer(formData) {
  * Verifikasi Email Customer
  */
 async function apiVerifyEmail(token) {
-  const res = await fetch(`${API_BASE}/auth/verify-email`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ token }),
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/auth/verify-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ token }),
+    });
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('<i class="ph ph-wifi-slash"></i>', 'Koneksi Error', 'Gagal menghubungi server.');
+    throw new Error('Koneksi terputus atau server tidak merespons.');
+  }
+
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
     throw new Error(errData.detail || 'Verifikasi gagal atau token tidak valid.');

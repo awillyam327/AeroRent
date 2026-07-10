@@ -271,16 +271,19 @@ async def validate_and_upload_sim(
             logging.warning(f"[OCR SIM] Gagal membaca SIM: {e}")
 
     # ── Validasi: Cocokkan nama SIM dengan nama KTP ──
-    if nama_sim:
-        if not _names_match(nama_ktp, nama_sim):
-            raise HTTPException(
-                400,
-                f"Nama di SIM tidak cocok dengan nama di KTP. "
-                f"Nama KTP: '{nama_ktp}', Nama SIM: '{nama_sim}'. "
-                "Pastikan SIM yang diunggah milik Anda."
-            )
-    # Jika OCR tidak bisa membaca nama (blur/tidak jelas), tetap izinkan upload
-    # tapi beri peringatan di response
+    if not nama_sim:
+        raise HTTPException(
+            400,
+            "Gagal membaca nama dari foto (teks tidak ditemukan). Pastikan Anda mengunggah foto SIM A yang asli dan jelas terbaca."
+        )
+        
+    if not _names_match(nama_ktp, nama_sim):
+        raise HTTPException(
+            400,
+            f"Nama di SIM tidak cocok dengan nama di KTP. "
+            f"Nama KTP: '{nama_ktp}', Nama SIM: '{nama_sim}'. "
+            "Pastikan SIM yang diunggah milik Anda."
+        )
 
     # ── Upload ke ImgBB & simpan ke database ──
     foto_url = await imgbb_upload(sim_bytes, f"sim_{user['id']}")

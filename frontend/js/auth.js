@@ -95,6 +95,10 @@ function switchTab(tab) {
     ? 'Silakan masuk untuk menyewa armada AeroRent.'
     : 'Daftarkan identitas KTP Anda untuk memulai.';
   hideError();
+  
+  // Bersihkan form saat berpindah tab
+  qs('form-login').reset();
+  qs('form-register').reset();
 }
 
 
@@ -110,6 +114,13 @@ function hideError() { qs('auth-error').classList.add('hidden'); }
 async function handleLoginSubmit(e) {
   e.preventDefault();
   hideError();
+  
+  const form = qs('form-login');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
   const email = qs('login-email').value.trim();
   const password = qs('login-password').value;
   const btn = qs('btn-login-submit');
@@ -124,7 +135,13 @@ async function handleLoginSubmit(e) {
     setTimeout(() => { location.href = getPostLoginRedirect(result.user.role); }, 600);
     return;
   } catch (staffErr) {
-    // Email ini mungkin memang akun Customer, atau backend sedang tidak aktif — lanjut ke fallback.
+    // Jika koneksi putus (ditandai dengan lemparan Error jaringan spesifik dari api.js), hentikan proses
+    if (staffErr.message && staffErr.message.toLowerCase().includes('koneksi')) {
+        btn.disabled = false;
+        btn.textContent = 'Masuk Sekarang';
+        showError(staffErr.message);
+        return;
+    }
   }
 
   try {
@@ -134,6 +151,13 @@ async function handleLoginSubmit(e) {
     location.href = getPostLoginRedirect('CUSTOMER');
     return;
   } catch (custErr) {
+    // Jika koneksi putus
+    if (custErr.message && custErr.message.toLowerCase().includes('koneksi')) {
+        btn.disabled = false;
+        btn.textContent = 'Masuk Sekarang';
+        showError(custErr.message);
+        return;
+    }
     // Jika backend mengirim error spesifik (misal belum verifikasi), tampilkan error tersebut dan hentikan fallback.
     if (custErr.message && custErr.message.toLowerCase().includes('diverifikasi')) {
       btn.disabled = false;
@@ -141,7 +165,7 @@ async function handleLoginSubmit(e) {
       showError(custErr.message);
       return;
     }
-    // Jika bukan error verifikasi (misal salah password / API mati), lanjut ke mode demo.
+    // Jika bukan error jaringan/verifikasi (misal salah password), lanjut ke mode demo.
   }
 
   // 3) Mode demo lokal (backend belum mendukung / sedang tidak tersedia).
@@ -168,6 +192,13 @@ async function handleLoginSubmit(e) {
 async function handleRegisterSubmit(e) {
   e.preventDefault();
   hideError();
+  
+  const form = qs('form-register');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
   const nama = qs('reg-nama').value.trim();
   const telp = qs('reg-telp').value.trim();
   const email = qs('reg-email').value.trim();
@@ -290,6 +321,7 @@ async function scanRegKtp() {
   } catch (e) {
     statusEl.innerHTML = '<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i> Terjadi kesalahan jaringan.';
     statusEl.classList.add('text-red-400');
+    if (typeof showToast === 'function') showToast('<i class="ph-fill ph-wifi-slash"></i>', 'Koneksi Error', 'Koneksi terputus atau server tidak merespons.');
   }
   btn.disabled = false;
 }

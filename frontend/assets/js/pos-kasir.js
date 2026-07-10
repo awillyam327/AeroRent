@@ -104,7 +104,11 @@
             body: JSON.stringify(item.body)
           });
           if (r.ok) { await idbDel('offline_queue', item.id); toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Sync OK', `${item.nb || item.endpoint} tersinkronisasi.`); }
-        } catch (_) { }
+        } catch (err) {
+          if (err.name === 'TypeError' || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('fetch')) {
+            toast('<i class="ph-fill ph-wifi-slash" style="color: #EF4444;"></i>', 'Koneksi Error', 'Terjadi kesalahan saat sinkronisasi ke server.');
+          }
+        }
       }
       refreshQueueBadge();
     }
@@ -130,7 +134,12 @@
           return null;
         }
         return r;
-      } catch (_) { return null; }
+      } catch (err) {
+        if (err.name === 'TypeError' || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('fetch')) {
+          toast('<i class="ph-fill ph-wifi-slash" style="color: #EF4444;"></i>', 'Koneksi Error', 'Terjadi kesalahan jaringan.');
+        }
+        return null;
+      }
     }
 
     // ============================================================

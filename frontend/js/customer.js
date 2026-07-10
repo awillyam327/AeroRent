@@ -68,8 +68,11 @@ async function initDashboard() {
       <td class="text-dim">${fmtDT(b.mulai)}</td>
       <td>${renderStatusBadge(b.status)}</td>
       <td class="text-amber" style="text-align:right;font-weight:700;">${rp(b.total)}</td>
-      <td style="text-align:right;">
-        ${b.status === 'MENUNGGU' ? `<div style="display:flex;gap:4px;justify-content:flex-end;"><button class="btn btn-primary" style="padding:4px 8px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)" title="Bayar Sekarang"><i class="ph ph-wallet"></i> Bayar</button><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')" title="Batalkan Pesanan"><i class="ph ph-x-circle"></i></button></div>` : '—'}
+        ${b.status === 'MENUNGGU' ? `<div style="display:flex;gap:4px;justify-content:flex-end;"><button class="btn btn-primary" style="padding:4px 8px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)" title="Bayar Sekarang"><i class="ph ph-wallet"></i> Bayar</button><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')" title="Batalkan Pesanan"><i class="ph ph-x-circle"></i></button></div>` : ''}
+        ${b.status === 'AKTIF' || b.status === 'DIKONFIRMASI' ? `<div style="display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap;">
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="openExtendModal('${b.booking}')" title="Perpanjang Sewa"><i class="ph ph-timer"></i> Extend</button>
+          ${!b.gunakan_supir ? `<button class="btn btn-outline" style="padding:4px 8px;font-size:12px;" onclick="openSupirModal('${b.booking}')" title="Tambah Supir"><i class="ph ph-steering-wheel"></i> +Supir</button>` : ''}
+        </div>` : ''}
       </td>
     </tr>`).join('');
 }
@@ -114,6 +117,7 @@ async function initRiwayat() {
       <div class="flex gap-2 mt-4 flex-wrap">
         <button class="btn btn-outline" style="padding:8px 16px;font-size:12px;" onclick="printInvoice('${b.booking}')"><i class="ph ph-printer"></i> Cetak Invoice</button>
         ${canExtend ? `<button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;" onclick="openExtendModal('${b.booking}')"><i class="ph ph-timer"></i> Extend Sewa (Perpanjang)</button>` : ''}
+        ${canExtend && !b.gunakan_supir ? `<button class="btn btn-primary" style="padding:8px 16px;font-size:12px;" onclick="openSupirModal('${b.booking}')"><i class="ph ph-steering-wheel"></i> Sewa Sopir Tambahan</button>` : ''}
         ${b.status_bayar === 'BELUM_LUNAS' && b.metode === 'MIDTRANS' ? `<button class="btn btn-primary" style="padding:8px 16px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)"><i class="ph ph-wallet"></i> Bayar Sekarang</button><button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')"><i class="ph ph-x-circle"></i> Batalkan Pesanan</button>` : ''}
       </div>
     </div>`;
@@ -184,6 +188,54 @@ async function submitExtend() {
     btn.innerHTML = 'Proses';
   }
 }
+
+let currentSupirId = null;
+
+function openSupirModal(nomorBooking) {
+  currentSupirId = nomorBooking;
+  qs('supir-hari').value = '1';
+  qs('supir-modal').classList.remove('hidden');
+}
+
+async function submitSupir() {
+  if (!currentSupirId) return;
+  
+  const btn = qs('btn-supir-submit');
+  btn.disabled = true;
+  btn.innerHTML = 'Memproses...';
+  qs('supir-err').classList.add('hidden');
+  
+  const durasi_hari = parseInt(qs('supir-hari').value || '1', 10);
+
+  try {
+    const payload = {
+      durasi_hari: durasi_hari
+    };
+    
+    const res = await apiFetch(`/transaksi/${currentSupirId}/tambah-supir`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    
+    if (res && res.ok) {
+      const data = await res.json();
+      showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', data.message);
+      qs('supir-modal').classList.add('hidden');
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      const data = await res.json();
+      qs('supir-err').textContent = data.detail || 'Gagal menambahkan supir';
+      qs('supir-err').classList.remove('hidden');
+    }
+  } catch (err) {
+    qs('supir-err').textContent = err.message;
+    qs('supir-err').classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Proses';
+  }
+}
+
 
 async function handleCancelClick(nomorBooking) {
   if (!confirm(`Apakah Anda yakin ingin membatalkan pesanan ${nomorBooking}?`)) return;

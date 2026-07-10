@@ -94,7 +94,10 @@ async function api(path, opts = {}) {
     }
 
     return r;
-  } catch (_) {
+  } catch (err) {
+    if (err.name === 'TypeError' || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('fetch')) {
+      toast('<i class="ph-fill ph-wifi-slash" style="color: #EF4444;"></i>', 'Koneksi Error', 'Terjadi kesalahan jaringan.');
+    }
     return null;
   }
 }
@@ -346,7 +349,12 @@ async function savePengeluaran() {
         body: fd
       });
       saved = r && r.ok;
-    } catch (_) { }
+    } catch (err) {
+      if (err.name === 'TypeError' || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('fetch')) {
+        toast('<i class="ph-fill ph-wifi-slash" style="color: #EF4444;"></i>', 'Koneksi Error', 'Terjadi kesalahan jaringan.');
+        return;
+      }
+    }
   }
 
   // Simpan ke state lokal untuk tampilan

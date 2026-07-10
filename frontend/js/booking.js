@@ -351,11 +351,13 @@ async function uploadSewaSim() {
           if (statusEl) { statusEl.innerHTML = `<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i> ${errMsg}`; }
       }
   } catch(e) {
-      showToast('<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i>', 'Gagal', 'Terjadi kesalahan jaringan.');
-      if (statusEl) { statusEl.innerHTML = '<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i> Kesalahan jaringan.'; }
+      showToast('<i class="ph-fill ph-wifi-slash" style="color:#EF4444;"></i>', 'Gagal', 'Terjadi kesalahan jaringan.');
+      if (statusEl) { statusEl.innerHTML = '<i class="ph-fill ph-wifi-slash" style="color:#EF4444;"></i> Kesalahan jaringan.'; }
   } finally {
-      btn.innerHTML = ori;
-      btn.disabled = false;
+      if (btn.style.display !== 'none') {
+        btn.innerHTML = ori;
+        btn.disabled = false;
+      }
   }
 }
 function validateStep2() {
@@ -429,8 +431,9 @@ async function captureLiveness() {
           return;
         }
       } catch (e) {
-        qs('liveness-status-text').innerHTML = '<span style="color:#EF4444;">Koneksi Error</span>';
+        qs('liveness-status-text').innerHTML = '<span style="color:#EF4444;"><i class="ph-fill ph-wifi-slash"></i> Koneksi Error</span>';
         qs('btn-retake-camera').disabled = false;
+        if (typeof showToast === 'function') showToast('<i class="ph-fill ph-wifi-slash"></i>', 'Koneksi Error', 'Terjadi kesalahan jaringan.');
         return;
       }
     }
@@ -463,8 +466,9 @@ async function captureLiveness() {
         qs('btn-retake-camera').disabled = false;
       }
     } catch (e) {
-      qs('liveness-status-text').innerHTML = '<span style="color:#EF4444;">Kesalahan jaringan saat verifikasi.</span>';
+      qs('liveness-status-text').innerHTML = '<span style="color:#EF4444;"><i class="ph-fill ph-wifi-slash"></i> Kesalahan jaringan saat verifikasi.</span>';
       qs('btn-retake-camera').disabled = false;
+      if (typeof showToast === 'function') showToast('<i class="ph-fill ph-wifi-slash"></i>', 'Koneksi Error', 'Kesalahan jaringan saat verifikasi wajah.');
     }
     
   }, 'image/jpeg', 0.8);
@@ -585,6 +589,15 @@ async function submitBooking() {
         return; // processMidtransPayment will call goToStep3()
     }
   } catch (err) {
+    // Bedakan antara network error dan error lainnya
+    if (err.name === 'TypeError' || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('fetch')) {
+      showToast('<i class="ph-fill ph-wifi-slash"></i>', 'Koneksi Error', 'Terjadi kesalahan jaringan. Gagal memproses transaksi.');
+      btn.disabled = false;
+      btn.innerHTML = 'Konfirmasi & Sewa →';
+      return;
+    }
+
+    // Jika bukan network error (misal: backend tolak karena id demo), lanjut fallback Demo.
     const fakeSeq = Math.floor(1000 + Math.random() * 8999);
     S.bookingResult = {
       nomorBooking: `AR-${new Date().getFullYear()}${fakeSeq}`,
