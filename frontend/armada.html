@@ -27,7 +27,6 @@
 
   <div class="search-box glass-card" style="margin-top:30px;">
     <input type="text" id="armada-search" class="form-input" placeholder="Cari kategori: '5 Seater', 'Avanza'...">
-    <input type="datetime-local" id="armada-tanggal" class="form-input">
     <button class="btn btn-amber" onclick="applyFilters()"><i class="ph ph-magnifying-glass"></i> Cari</button>
   </div>
 
@@ -119,7 +118,6 @@
     const params = new URLSearchParams(location.search);
     const tipeParam = params.get('tipe') || '';
     const qParam = params.get('q') || '';
-    if (params.get('tanggal')) qs('armada-tanggal').value = params.get('tanggal');
     if (qParam) qs('armada-search').value = qParam;
 
     document.querySelectorAll('#filter-tabs .filter-tab').forEach((btn) => {

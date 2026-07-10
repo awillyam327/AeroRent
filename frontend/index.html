@@ -32,7 +32,6 @@
 </div>
     <div class="search-box-inline">
       <input type="text" id="hero-search-text" class="form-input" placeholder="Cari kategori: '5 Seater', 'Avanza'...">
-      <input type="datetime-local" id="hero-tanggal" class="form-input hero-date-input">
       <button class="btn btn-amber hero-search-btn" onclick="goToArmada()" aria-label="Cari"><i class="ph ph-magnifying-glass"></i></button>
     </div>
 
@@ -173,10 +172,8 @@
 <script>
   function goToArmada() {
     const q = qs('hero-search-text').value.trim();
-    const tgl = qs('hero-tanggal').value;
     const params = new URLSearchParams();
     if (q) params.append('q', q);
-    if (tgl) params.append('tanggal', tgl);
     location.href = 'armada.html' + (params.toString() ? '?' + params.toString() : '');
   }
 
