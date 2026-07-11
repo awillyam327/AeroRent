@@ -640,7 +640,28 @@
     </div>
   </div>
 
-  <!-- ===== MODAL: KONFIRMASI UMUM ===== -->
+  <!-- Modal Pilih Supir -->
+    <div id="modal-pilih-supir" class="overlay hidden">
+      <div class="modal-box p-6 max-w-sm">
+        <div class="text-center mb-5">
+          <div class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-4 text-3xl glass"><i class="ph-fill ph-user-circle" style="color: #60A5FA;"></i></div>
+          <div class="font-bebas text-2xl tracking-wider">TUGASKAN SUPIR</div>
+          <p class="text-sm text-gray-400 mt-2">Pilih supir yang akan ditugaskan untuk pesanan ini.</p>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Pilih Supir</label>
+          <select id="msupir-select" class="g-input w-full rounded-xl px-3 py-2.5 text-sm bg-transparent">
+            <option value="">-- Memuat Data --</option>
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="closeSupirModal()" class="flex-1 btn-o py-2.5 rounded-xl text-sm font-semibold">Batal</button>
+          <button id="btn-submit-supir" class="flex-1 btn-a py-2.5 rounded-xl text-sm font-semibold">Tugaskan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: KONFIRMASI UMUM ===== -->
   <div id="modal-konfirm" class="overlay hidden">
     <div class="modal-box p-6 max-w-sm">
       <div class="text-center mb-5">

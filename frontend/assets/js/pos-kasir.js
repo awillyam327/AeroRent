@@ -375,19 +375,27 @@
       const cls = 'w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2';
       bar.innerHTML = '';
 
+      let btnSupir = '';
+      if (t.gunakan_supir === 1 && !t.id_supir && ['MENUNGGU', 'DIKONFIRMASI'].includes(t.status)) {
+        btnSupir = `
+        <button class="${cls} mb-2" style="background:#3B82F6; color:white;" onclick="openSupirModal('${id}')">
+          <i class="ph ph-user-circle text-lg"></i> Tugaskan Supir
+        </button>`;
+      }
+
       if (t.status === 'MENUNGGU') {
-        bar.innerHTML = `
+        bar.innerHTML = btnSupir + `
       <button class="${cls} btn-p"
         onclick="doKonfirm('Konfirmasi Booking?','Booking ${nb} akan dikonfirmasi.',()=>updateStatus('${id}','DIKONFIRMASI'))">
         ✓ Konfirmasi Booking
       </button>`;
       } else if (t.status === 'DIKONFIRMASI') {
-        bar.innerHTML = `
+        bar.innerHTML = btnSupir + `
       <button class="${cls} btn-g" onclick="openFotoModal('sebelum')">
         <i class="ph ph-car"></i> Serahkan Kendaraan (Upload Foto Kondisi)
       </button>`;
       } else if (t.status === 'AKTIF') {
-        bar.innerHTML = `
+        bar.innerHTML = btnSupir + `
       <button class="${cls} btn-a" onclick="openFotoModal('sesudah')">
         <i class="ph ph-package"></i> Proses Pengembalian (Upload Foto Kondisi)
       </button>
@@ -398,8 +406,7 @@
         <i class="ph ph-map-pin"></i> Track GPS Kendaraan
       </button>`;
       } else if (['SELESAI', 'DIBATALKAN'].includes(t.status)) {
-        bar.innerHTML = `<div class="text-center text-gray-600 text-sm py-2">
-      ${t.status === 'SELESAI' ? '<i class="ph-fill ph-check-circle" style="color: #10B981;"></i> Transaksi selesai' : '✕ Transaksi dibatalkan'}</div>`;
+        bar.innerHTML = btnSupir + `<div class="text-center text-xs text-gray-500 py-2">Tidak ada aksi tersedia</div>`;
         return;
       }
 

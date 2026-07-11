@@ -252,6 +252,49 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
         raise HTTPException(500, "Gagal membuat pemesanan. Silakan coba lagi.")
 
 
+@router.put("/{tid}/supir", tags=["📋 Transaksi"])
+async def assign_supir(tid: str, body: SupirUpd, bt: BackgroundTasks, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
+    try:
+        await cur.execute(
+            "SELECT ts.id_transaksi, ts.id_supir, ts.gunakan_supir, ts.status, p.nama_lengkap AS pelanggan, k.nama_kendaraan, ts.tanggal_mulai, ts.tanggal_selesai_rencana, ts.durasi_hari_rencana "
+            "FROM TRANSAKSI_SEWA ts "
+            "JOIN PELANGGAN p ON ts.id_pelanggan = p.id_pelanggan "
+            "JOIN KENDARAAN k ON ts.id_kendaraan = k.id_kendaraan "
+            "WHERE ts.id_transaksi = %(id)s OR ts.nomor_booking = %(nb)s",
+            {"id": tid, "nb": tid.upper()}
+        )
+        trx = await cur.fetchone()
+        if not trx: raise HTTPException(404, "Transaksi tidak ditemukan.")
+        if trx["gunakan_supir"] != 1: raise HTTPException(400, "Transaksi ini tidak menggunakan jasa supir.")
+
+        await cur.execute("SELECT id_karyawan, nama_lengkap, no_telepon FROM KARYAWAN WHERE id_karyawan = %(id)s AND role = 'SUPIR'", {"id": body.id_supir})
+        supir = await cur.fetchone()
+        if not supir: raise HTTPException(404, "Supir tidak ditemukan.")
+
+        await cur.execute(
+            "UPDATE TRANSAKSI_SEWA SET id_supir = %(id_supir)s WHERE id_transaksi = %(id)s",
+            {"id_supir": body.id_supir, "id": trx["id_transaksi"]}
+        )
+
+        if supir["no_telepon"]:
+            pesan_supir = (
+                f"🚗 *Tugas Supir Baru*\n\nHalo {supir['nama_lengkap']},\nAnda ditugaskan untuk mengantar:\n"
+                f"Pelanggan: *{trx['pelanggan']}*\n"
+                f"Kendaraan: *{trx['nama_kendaraan']}*\n"
+                f"Mulai: *{trx['tanggal_mulai']}*\n"
+                f"Selesai: *{trx['tanggal_selesai_rencana']}* ({trx['durasi_hari_rencana']} hari)\n"
+                f"Mohon bersiap tepat waktu."
+            )
+            bt.add_task(fonnte_send, supir["no_telepon"], pesan_supir)
+
+        return {"message": "Supir berhasil ditugaskan."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error(f"[Transaksi] Gagal update supir transaksi {tid}: {e}")
+        raise HTTPException(500, "Gagal menugaskan supir.")
+
+
 @router.post("/{tid}/remind-wa", tags=["📋 Transaksi"])
 async def send_wa_reminder(tid: str, bt: BackgroundTasks, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
     try:

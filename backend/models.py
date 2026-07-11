@@ -141,6 +141,9 @@ class TransaksiIn(BaseModel):
         return v
 
 
+class SupirUpd(BaseModel):
+    id_supir: str = Field(..., max_length=100)
+
 class StatusUpd(BaseModel):
     status:                 str = Field(..., min_length=1)
     catatan_kasir:          Optional[str]   = Field(None, max_length=1000)
