@@ -165,9 +165,12 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
             raise HTTPException(400, "Untuk sewa lepas kunci, wajib mengunggah foto SIM A aktif.")
 
         if body.paket_sewa == "BULANAN" and body.gunakan_supir == 1:
-            raise HTTPException(400, "Sewa bulanan tidak dapat dipesan beserta jasa supir secara langsung.")
+            raise HTTPException(400, "Sewa bulanan tidak dapat menggunakan jasa supir.")
 
         durasi  = max(math.ceil((body.tanggal_selesai_rencana - body.tanggal_mulai).total_seconds() / 86400.0), 1)
+        
+        if body.paket_sewa == "HARIAN" and body.gunakan_supir == 1 and durasi > 7:
+            raise HTTPException(400, "Untuk sewa harian, jasa supir maksimal hanya dapat digunakan selama 7 hari.")
         
         # Penghitungan Sewa Bulanan
         catatan_final = body.catatan_kasir or ""

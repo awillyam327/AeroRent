@@ -998,8 +998,15 @@
 
     function btHitung() {
       const tglStr = el('bt-tgl-mulai').value;
-      const durasi = Math.max(1, parseInt(el('bt-durasi').value) || 1);
+      let durasi = Math.max(1, parseInt(el('bt-durasi').value) || 1);
       const supir = el('bt-supir-chk').checked;
+      
+      if (supir && durasi > 7) {
+        durasi = 7;
+        el('bt-durasi').value = 7;
+        toast('<i class="ph ph-info"></i>', 'Info Sewa Supir', 'Sewa harian dengan supir dibatasi maksimal 7 hari.');
+      }
+      
       const k = BT.kendaraan;
       if (!k || !tglStr) return;
 
@@ -1046,6 +1053,7 @@
       if (!tglMulai) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Tanggal Wajib Diisi', 'Pilih tanggal mulai sewa.'); return; }
       if (!BT.pelanggan || !BT.kendaraan) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Data Tidak Lengkap', 'Pelanggan dan kendaraan wajib dipilih.'); return; }
       if (supir && !supirId) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Supir Belum Dipilih', 'Silakan pilih supir yang tersedia.'); return; }
+      if (supir && durasi > 7) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Durasi Supir Maksimal', 'Sewa dengan supir dibatasi maksimal 7 hari.'); return; }
 
       // Hitung tanggal selesai
       const dtMulai = new Date(tglMulai);

@@ -223,9 +223,11 @@ function setPaketSewa(paket) {
   if (paket === 'BULANAN') {
     qs('jadwal-supir').checked = false;
     qs('jadwal-supir').disabled = true;
+    qs('jadwal-supir').closest('.driver-toggle-row').style.display = 'none';
     S.useDriver = false;
   } else {
     qs('jadwal-supir').disabled = false;
+    qs('jadwal-supir').closest('.driver-toggle-row').style.display = 'flex';
   }
   
   onJadwalChange();
@@ -238,11 +240,23 @@ function onJadwalChange() {
   } else {
     S.duration = Math.max(1, parseInt(qs('jadwal-durasi').value || '1', 10));
   }
+  
+  if (S.paketSewa === 'HARIAN' && S.useDriver && S.duration > 7) {
+    S.duration = 7;
+    qs('jadwal-durasi').value = 7;
+    if (typeof showToast !== 'undefined') showToast('<i class="ph ph-info"></i>', 'Info Sewa', 'Sewa dengan sopir dibatasi maksimal 7 hari.');
+  }
+
   renderSummary();
   validateStep1();
 }
 function toggleDriver() {
   S.useDriver = qs('jadwal-supir').checked;
+  if (S.useDriver && S.paketSewa === 'HARIAN' && S.duration > 7) {
+    S.duration = 7;
+    qs('jadwal-durasi').value = 7;
+    if (typeof showToast !== 'undefined') showToast('<i class="ph ph-info"></i>', 'Info Sewa', 'Sewa dengan sopir dibatasi maksimal 7 hari.');
+  }
   renderSummary();
 }
 function validateStep1() {
