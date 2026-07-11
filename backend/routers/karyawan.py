@@ -56,7 +56,7 @@ async def tambah_karyawan(body: KaryawanIn, user=Depends(req_owner), cur=Depends
             raise HTTPException(409, f"Email '{body.email}' sudah terdaftar.")
 
         # 2. Masukkan data ke database
-        kid = f"k-{uuid.uuid4()}"
+        kid = f"EMP-{uuid.uuid4().hex[:6].upper()}"
         await cur.execute(
             "INSERT INTO KARYAWAN (id_karyawan, nama_lengkap, email, no_telepon, "
             "password_hash, role, gaji_per_bulan) VALUES (%(id)s, %(n)s, %(e)s, %(t)s, %(h)s, %(r)s, %(g)s)",

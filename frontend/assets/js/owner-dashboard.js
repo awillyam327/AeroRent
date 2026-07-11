@@ -653,6 +653,7 @@ function openKaryawanModal(id = null) {
   if (id) {
     const k = S.karyawan.find(x => x.id === id);
     if (k) {
+      el('mk-nip').value = k.id || '';
       el('mk-nama').value = k.nama || k.nama_lengkap || '';
       el('mk-email').value = k.email || '';
       el('mk-role').value = k.role || 'KASIR';
