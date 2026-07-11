@@ -5,7 +5,7 @@ import aiomysql
 from datetime import date, datetime, timezone
 from database import get_db, get_db_transaction
 from dependencies import req_kasir_or_owner, req_owner, get_current_account
-from models import TransaksiIn, StatusUpd, PerpanjanganIn
+from models import TransaksiIn, StatusUpd, PerpanjanganIn, SupirUpd
 from utils import fonnte_send, fonnte_send_file, generate_invoice_pdf, imgbb_upload, midtrans_snap, smtp_booking_notification
 import uuid
 import asyncio
