@@ -320,7 +320,7 @@ async def update_status(tid: str, body: StatusUpd, bt: BackgroundTasks, user=Dep
             # Safely handle tgl_rencana if it's returned as string or datetime
             if isinstance(tgl_rencana, str):
                 tgl_rencana = datetime.strptime(tgl_rencana, "%Y-%m-%d").date()
-            elif hasattr(tgl_rencana, 'date') and not isinstance(tgl_rencana, type(today)):
+            elif type(tgl_rencana) is not type(today) and hasattr(tgl_rencana, 'date'):
                 tgl_rencana = tgl_rencana.date()
                 
             denda_tlbt = 0.0
