@@ -88,10 +88,11 @@ async def detail_transaksi(tid: str, user=Depends(req_kasir_or_owner), cur=Depen
             "ts.biaya_denda_kerusakan, ts.biaya_tambahan_lain, ts.total_biaya, "
             "ts.metode_pembayaran, ts.status_pembayaran, ts.status, "
             "ts.foto_kondisi_sebelum, ts.foto_kondisi_sesudah, "
-            "ts.catatan_kerusakan, ts.catatan_kasir, ts.created_at "
+            "ts.catatan_kerusakan, ts.catatan_kasir, ts.created_at, ts.id_supir, s.nama_lengkap AS nama_supir "
             "FROM TRANSAKSI_SEWA ts "
             "JOIN PELANGGAN p ON ts.id_pelanggan = p.id_pelanggan "
             "JOIN KENDARAAN k ON ts.id_kendaraan = k.id_kendaraan "
+            "LEFT JOIN KARYAWAN s ON ts.id_supir = s.id_karyawan "
             "WHERE ts.id_transaksi = %(id)s OR ts.nomor_booking = %(nb)s",
             {"id": tid, "nb": tid.upper()},
         )
@@ -115,6 +116,8 @@ async def detail_transaksi(tid: str, user=Depends(req_kasir_or_owner), cur=Depen
             "tanggal_selesai_aktual":  fmt_date(r["tanggal_selesai_aktual"]),
             "durasi_hari":   r["durasi_hari_rencana"],
             "gunakan_supir": r["gunakan_supir"],
+            "id_supir":      r["id_supir"],
+            "nama_supir":    r["nama_supir"],
             "biaya_sewa":    fmt_float(r["biaya_sewa"]),
             "biaya_supir":   fmt_float(r["biaya_supir"]),
             "denda_terlambat": fmt_float(r["biaya_denda_terlambat"]),

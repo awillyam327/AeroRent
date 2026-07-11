@@ -318,7 +318,7 @@
       el('det-tgl-mulai').textContent = fmtDT(t.tanggal_mulai);
       el('det-tgl-selesai').textContent = fmtDT(t.tanggal_selesai_rencana);
       el('det-durasi').textContent = (t.durasi_hari || t.durasi_hari_rencana || '?') + ' hari';
-      el('det-supir').textContent = t.gunakan_supir ? 'Dengan Supir' : 'Mandiri';
+      el('det-supir').textContent = t.gunakan_supir ? (t.id_supir ? `Supir = ${t.nama_supir || t.id_supir}` : 'Dengan Supir (Belum Ditentukan)') : 'Mandiri';
       el('det-supir').style.color = t.gunakan_supir ? '#34D399' : '#9CA3AF';
 
       // Alert keterlambatan
@@ -701,7 +701,11 @@
       });
       if (res && res.ok) {
         toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', 'Supir berhasil ditugaskan.');
-        await loadTransaksi();
+        await loadList();
+        if (activeSupirTxId) {
+          await selectTrx(activeSupirTxId);
+        }
+        closeSupirModal();
       }
     }
 
