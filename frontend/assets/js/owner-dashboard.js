@@ -339,7 +339,7 @@ async function savePengeluaran() {
       fd.append('deskripsi', ket);
       fd.append('kategori', kat);
       fd.append('jumlah', nom.toString());
-      fd.append('tanggal_pengeluaran', tgl);
+      fd.append('tanggal_pengeluaran', tgl.split('T')[0]);
 
       const r = await fetch(API + '/pengeluaran', {
         method: 'POST',
@@ -991,7 +991,7 @@ function doLogout() {
 // ============================================================
 let toastTimer;
 function toast(icon, title, msg) {
-  el('t-ic').textContent = icon;
+  el('t-ic').innerHTML = icon;
   el('t-ttl').textContent = title;
   el('t-msg').textContent = msg;
   el('toast').classList.remove('hidden');
