@@ -949,7 +949,7 @@
 
         return `
       <div class="bt-kend-card ${sel ? 'selected' : ''}" onclick='btPilihKend(${payload.replace(/'/g, "&#39;")})'>
-        <div class="relative" style="height:110px;overflow:hidden;background:rgba(255,255,255,.04);">
+        <div class="relative" style="height:180px;overflow:hidden;background:rgba(255,255,255,.04);">
           ${foto
             ? `<img src="${foto}" alt="${nama}" class="w-full h-full object-cover" style="opacity:${sel ? 1 : .8};">`
             : `<div class="w-full h-full flex items-center justify-center text-5xl text-gray-700"><i class="ph ph-car"></i></div>`}
