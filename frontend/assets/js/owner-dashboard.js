@@ -726,39 +726,50 @@ async function saveKaryawan() {
   }
 
   let ok = false;
-  if (S.editKaryId) {
-    // UPDATE
-    const payload = { nama_lengkap: nama, is_aktif: aktif, gaji_per_bulan: gaji };
-    if (role === 'SUPIR') payload.no_telepon = telepon;
+  try {
+    if (S.editKaryId) {
+      // UPDATE
+      const payload = { nama_lengkap: nama, is_aktif: aktif, gaji_per_bulan: gaji };
+      if (role === 'SUPIR') payload.no_telepon = telepon;
 
-    const r = await api(`/karyawan/${S.editKaryId}`, { method: 'PUT', body: JSON.stringify(payload) });
-    ok = r && r.ok;
-    if (ok) {
+      const r = await api(`/karyawan/${S.editKaryId}`, { method: 'PUT', body: JSON.stringify(payload) });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.detail || "Gagal memperbarui data karyawan");
+      }
+      ok = true;
       // Update lokal state
       const idx = S.karyawan.findIndex(k => k.id === S.editKaryId);
       if (idx >= 0) S.karyawan[idx] = { ...S.karyawan[idx], nama, is_aktif: aktif, gaji_per_bulan: gaji };
       if (role === 'SUPIR' && idx >= 0) S.karyawan[idx].telepon = telepon;
-    }
-  } else {
-    // INSERT
-    const payload = { nama_lengkap: nama, role, gaji_per_bulan: gaji, is_aktif: aktif };
-    if (role === 'SUPIR') {
-      payload.no_telepon = telepon;
     } else {
-      payload.email = email;
-      payload.password = pass;
-    }
+      // INSERT
+      const payload = { nama_lengkap: nama, role, gaji_per_bulan: gaji, is_aktif: aktif };
+      if (role === 'SUPIR') {
+        payload.no_telepon = telepon;
+      } else {
+        payload.email = email;
+        payload.password = pass;
+      }
 
-    const r = await api('/karyawan', { method: 'POST', body: JSON.stringify(payload) });
-    ok = r && r.ok;
-    if (ok) {
-      const res = await r.json().catch(() => ({}));
-      S.karyawan.unshift({ id: res.id_karyawan || 'k-new-' + Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
-    } else if (!S.token) {
-      // Demo mode: simpan lokal
-      S.karyawan.unshift({ id: 'k-local-' + Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
-      ok = true;
+      const r = await api('/karyawan', { method: 'POST', body: JSON.stringify(payload) });
+      if (r && !r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.detail || "Gagal menambahkan karyawan baru");
+      }
+      ok = r && r.ok;
+      if (ok) {
+        const res = await r.json().catch(() => ({}));
+        S.karyawan.unshift({ id: res.id_karyawan || 'k-new-' + Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
+      } else if (!S.token) {
+        // Demo mode: simpan lokal
+        S.karyawan.unshift({ id: 'k-local-' + Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
+        ok = true;
+      }
     }
+  } catch (e) {
+    toast('<i class="ph-fill ph-warning-circle" style="color: #EF4444;"></i>', 'Error', e.message);
+    return;
   }
 
   renderKaryawanTable();

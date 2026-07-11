@@ -233,7 +233,7 @@ function setPaketSewa(paket) {
   onJadwalChange();
 }
 
-function onJadwalChange() {
+async function onJadwalChange() {
   S.startDate = qs('jadwal-tanggal').value;
   if (S.paketSewa === 'BULANAN') {
     S.duration = parseInt(qs('jadwal-durasi-bulanan').value || '30', 10);
@@ -249,7 +249,41 @@ function onJadwalChange() {
 
   renderSummary();
   validateStep1();
+  
+  if (S.startDate && S.paketSewa === 'HARIAN') {
+      await checkSupirAvailability();
+  }
 }
+
+async function checkSupirAvailability() {
+  try {
+    const dtMulai = new Date(S.startDate);
+    const dtSelesai = new Date(dtMulai);
+    dtSelesai.setDate(dtSelesai.getDate() + S.duration);
+    
+    const pad = n => n.toString().padStart(2, '0');
+    const tglMulaiFmt = `${dtMulai.getFullYear()}-${pad(dtMulai.getMonth()+1)}-${pad(dtMulai.getDate())}T${pad(dtMulai.getHours())}:${pad(dtMulai.getMinutes())}`;
+    const tglSelesaiFmt = `${dtSelesai.getFullYear()}-${pad(dtSelesai.getMonth()+1)}-${pad(dtSelesai.getDate())}T${pad(dtSelesai.getHours())}:${pad(dtSelesai.getMinutes())}`;
+    
+    const r = await fetch(`${API_BASE}/karyawan/supir-tersedia?tanggal_mulai=${tglMulaiFmt}&tanggal_selesai=${tglSelesaiFmt}`);
+    if (r.ok) {
+        const data = await r.json();
+        const chk = qs('jadwal-supir');
+        if (data.tersedia <= 0) {
+            chk.disabled = true;
+            chk.checked = false;
+            S.useDriver = false;
+            if (typeof showToast !== 'undefined') showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Supir Penuh', 'Maaf, semua supir kami sedang bertugas pada rentang tanggal tersebut.');
+        } else {
+            chk.disabled = false;
+        }
+        renderSummary();
+    }
+  } catch (e) {
+    console.error("Gagal cek supir", e);
+  }
+}
+
 function toggleDriver() {
   S.useDriver = qs('jadwal-supir').checked;
   if (S.useDriver && S.paketSewa === 'HARIAN' && S.duration > 7) {

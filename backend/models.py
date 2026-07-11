@@ -120,6 +120,7 @@ class TransaksiIn(BaseModel):
     tanggal_mulai:          datetime
     tanggal_selesai_rencana: datetime
     gunakan_supir:          int = Field(0, ge=0, le=1)
+    id_supir:               Optional[str]   = Field(None, max_length=100)
     metode_pembayaran:      Optional[str]   = Field(None, max_length=30)
     catatan_kasir:          Optional[str]   = Field(None, max_length=1000)
     paket_sewa:             str             = "HARIAN"

@@ -14,7 +14,8 @@ router = APIRouter(prefix="/karyawan", tags=["Karyawan"])
 async def list_supir_aktif(user=Depends(get_current_user), cur=Depends(get_db)):
     try:
         await cur.execute(
-            "SELECT id_karyawan AS id, nama_lengkap AS nama FROM KARYAWAN "
+            "SELECT id_karyawan AS id, nama_lengkap AS nama, no_telepon "
+            "FROM KARYAWAN "
             "WHERE role = 'SUPIR' AND is_aktif = 1 ORDER BY nama_lengkap ASC"
         )
         return await cur.fetchall()
@@ -22,7 +23,56 @@ async def list_supir_aktif(user=Depends(get_current_user), cur=Depends(get_db)):
         raise
     except Exception as e:
         log.error(f"[Karyawan] Gagal memuat daftar supir aktif: {e}")
-        raise HTTPException(500, "Gagal memuat daftar supir.")
+@router.get("/seed", tags=["👤 Karyawan"])
+async def seed_supir(cur=Depends(get_db)):
+    import uuid
+    supirs = [
+        ("Agus Prasetyo", "+628111111111"),
+        ("Bambang Santoso", "+628222222222"),
+        ("Cahyo Wibowo", "+628333333333"),
+        ("Dedi Firmansyah", "+628444444444"),
+        ("Eko Nugroho", "+628555555555"),
+        ("Fajar Hidayat", "+628666666666"),
+        ("Gunawan Setiawan", "+628777777777")
+    ]
+    pwd = "$2b$12$K1rZgD9sI/8W4P9d6C.K8uS/9Z5H1c9z9/D9/8Z9/8Z9/8Z9/8Z9." # Dummy hash for AeroRent123!
+    count = 0
+    for name, phone in supirs:
+        kid = f"EMP-{uuid.uuid4().hex[:6].upper()}"
+        email = f"{phone}@supir.aerorent.id"
+        
+        await cur.execute("SELECT id_karyawan FROM KARYAWAN WHERE nama_lengkap = %(n)s", {"n": name})
+        if not await cur.fetchone():
+            await cur.execute(
+                "INSERT INTO KARYAWAN (id_karyawan, nama_lengkap, email, no_telepon, password_hash, role, gaji_per_bulan) "
+                "VALUES (%(id)s, %(n)s, %(e)s, %(t)s, %(p)s, %(r)s, %(g)s)",
+                {"id": kid, "n": name, "e": email, "t": phone, "p": pwd, "r": "SUPIR", "g": 2500000}
+            )
+            count += 1
+    return {"message": f"Seeded {count} supir"}
+
+@router.get("/supir-tersedia", tags=["👤 Karyawan"])
+async def supir_tersedia(tanggal_mulai: str, tanggal_selesai: str, cur=Depends(get_db)):
+    try:
+        await cur.execute("SELECT COUNT(*) AS total_supir FROM KARYAWAN WHERE role = 'SUPIR' AND is_aktif = 1")
+        row_total = await cur.fetchone()
+        total_supir = row_total["total_supir"] if row_total else 0
+        
+        await cur.execute(
+            "SELECT COUNT(DISTINCT id_supir) AS supir_sibuk FROM TRANSAKSI_SEWA "
+            "WHERE gunakan_supir = 1 AND id_supir IS NOT NULL "
+            "AND status IN ('DIKONFIRMASI', 'AKTIF') "
+            "AND tanggal_mulai <= %(tse)s AND tanggal_selesai_rencana >= %(tmu)s",
+            {"tmu": tanggal_mulai, "tse": tanggal_selesai}
+        )
+        row_sibuk = await cur.fetchone()
+        supir_sibuk = row_sibuk["supir_sibuk"] if row_sibuk else 0
+        
+        tersedia = total_supir - supir_sibuk
+        return {"tersedia": max(tersedia, 0), "total": total_supir, "sibuk": supir_sibuk}
+    except Exception as e:
+        log.error(f"[Karyawan] Gagal cek ketersediaan supir: {e}")
+        raise HTTPException(500, "Gagal mengecek ketersediaan supir.")
 
 @router.get("", tags=["👤 Karyawan"])
 async def list_karyawan(user=Depends(req_owner), cur=Depends(get_db)):

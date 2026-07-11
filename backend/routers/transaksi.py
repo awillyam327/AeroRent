@@ -209,12 +209,12 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
 
         await cur.execute(
             "INSERT INTO TRANSAKSI_SEWA (id_transaksi, nomor_booking, id_pelanggan, id_kendaraan, "
-            "id_karyawan_kasir, tanggal_mulai, tanggal_selesai_rencana, durasi_hari_rencana, "
+            "id_karyawan_kasir, id_supir, tanggal_mulai, tanggal_selesai_rencana, durasi_hari_rencana, "
             "gunakan_supir, biaya_sewa, biaya_supir, total_biaya, "
             "metode_pembayaran, catatan_kasir, status) "
-            "VALUES (%(id)s, %(nb)s, %(pid)s, %(kid)s, %(kid_kasir)s, %(tmu)s, %(tse)s, %(dur)s, %(sup)s, %(bs)s, %(bsu)s, %(tot)s, %(met)s, %(cat)s, %(stat)s)",
+            "VALUES (%(id)s, %(nb)s, %(pid)s, %(kid)s, %(kid_kasir)s, %(sid)s, %(tmu)s, %(tse)s, %(dur)s, %(sup)s, %(bs)s, %(bsu)s, %(tot)s, %(met)s, %(cat)s, %(stat)s)",
             {"id": tid, "nb": nomor_booking, "pid": body.id_pelanggan, "kid": body.id_kendaraan,
-             "kid_kasir": kid_kasir,
+             "kid_kasir": kid_kasir, "sid": body.id_supir,
              "tmu": body.tanggal_mulai, "tse": body.tanggal_selesai_rencana, "dur": durasi,
              "sup": body.gunakan_supir, "bs": b_sewa, "bsu": b_supir, "tot": total,
              "met": body.metode_pembayaran, "cat": catatan_final, "stat": initial_status},
@@ -229,6 +229,20 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
             
             if plg.get("email"):
                 bt.add_task(smtp_booking_notification, plg["email"], plg["nama_lengkap"], nomor_booking, body.tanggal_mulai, body.tanggal_selesai_rencana, kend["nama_kendaraan"])
+            
+            if body.gunakan_supir and body.id_supir:
+                await cur.execute("SELECT nama_lengkap, no_telepon FROM KARYAWAN WHERE id_karyawan = %(id)s", {"id": body.id_supir})
+                supir_info = await cur.fetchone()
+                if supir_info and supir_info["no_telepon"]:
+                    pesan_supir = (
+                        f"🚗 *Tugas Supir Baru*\n\nHalo {supir_info['nama_lengkap']},\nAnda ditugaskan untuk mengantar:\n"
+                        f"Pelanggan: *{plg['nama_lengkap']}*\n"
+                        f"Kendaraan: *{kend['nama_kendaraan']}*\n"
+                        f"Mulai: *{body.tanggal_mulai}*\n"
+                        f"Selesai: *{body.tanggal_selesai_rencana}* ({durasi} hari)\n"
+                        f"Mohon bersiap tepat waktu."
+                    )
+                    bt.add_task(fonnte_send, supir_info["no_telepon"], pesan_supir)
             
         return {"message": "Pemesanan berhasil.", "id_transaksi": tid, "nomor_booking": nomor_booking, "total_biaya": total}
     except HTTPException:
