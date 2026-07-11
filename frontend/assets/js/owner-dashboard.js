@@ -295,6 +295,43 @@ async function loadLaporan() {
         </tr>`).join('');
 }
 
+async function downloadLaporanPDF() {
+  const dari = el('lk-dari').value;
+  const sampai = el('lk-sampai').value;
+  if (!dari || !sampai) {
+    toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Perhatian', 'Pilih rentang tanggal terlebih dahulu.');
+    return;
+  }
+  
+  const token = getToken();
+  if (!token) return;
+
+  try {
+    toast('<i class="ph-bold ph-spinner" style="color: #3B82F6;"></i>', 'Memproses', 'Sedang men-generate PDF laporan...');
+    const res = await fetch(`${API_BASE}/laporan/keuangan/pdf?dari=${dari}&sampai=${sampai}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Laporan_Keuangan_AeroRent_${dari}_to_${sampai}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } else {
+      toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal mengunduh laporan PDF.');
+    }
+  } catch (err) {
+    console.error("Gagal unduh laporan:", err);
+    toast('<i class="ph-fill ph-wifi-slash" style="color: #EF4444;"></i>', 'Error', 'Gagal terhubung ke server.');
+  }
+}
+
 // ============================================================
 // PENCATATAN OPERASIONAL
 // ============================================================

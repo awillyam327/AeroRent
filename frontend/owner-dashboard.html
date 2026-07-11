@@ -186,7 +186,12 @@
           <label class="text-xs text-gray-500 uppercase tracking-widest whitespace-nowrap">Sampai</label>
           <input type="date" id="lk-sampai" class="g-input px-3 py-2 text-sm">
         </div>
-        <button onclick="loadLaporan()" class="btn-a px-5 py-2 text-sm">Tampilkan</button>
+          <div class="flex items-center gap-3">
+            <button onclick="loadLaporan()" class="btn-a px-5 py-2 text-sm">Tampilkan</button>
+            <button onclick="downloadLaporanPDF()" class="btn-outline px-5 py-2 text-sm flex items-center gap-2">
+              <i class="ph-bold ph-file-pdf"></i> Unduh PDF
+            </button>
+          </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">

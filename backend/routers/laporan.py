@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
-from utils import fmt_float, fmt_date
+from fastapi import APIRouter, Depends, HTTPException, Response
+from utils import fmt_float, fmt_date, generate_laporan_keuangan_pdf
 from typing import Optional
 import aiomysql
 from datetime import date
@@ -113,3 +113,30 @@ async def laporan_armada(user=Depends(req_owner), cur=Depends(get_db)):
     except Exception as e:
         log.error(f"[Laporan] Gagal memuat laporan armada: {e}")
         raise HTTPException(500, "Gagal memuat laporan armada.")
+
+@router.get("/keuangan/pdf", tags=["Laporan"])
+async def laporan_keuangan_pdf(
+    dari:   Optional[date] = None,
+    sampai: Optional[date] = None,
+    user=Depends(req_owner),
+    cur=Depends(get_db),
+):
+    try:
+        # Get data using the existing endpoint logic
+        data = await laporan_keuangan(dari, sampai, user, cur)
+        
+        # Generate PDF
+        pdf_bytes = generate_laporan_keuangan_pdf(data)
+        
+        # Prepare response
+        filename = f"Laporan_Keuangan_AeroRent_{date.today().strftime('%Y%m%d')}.pdf"
+        headers = {
+            'Content-Disposition': f'inline; filename="{filename}"'
+        }
+        return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error(f"[Laporan] Gagal generate PDF laporan keuangan: {e}")
+        raise HTTPException(500, "Gagal generate PDF laporan keuangan.")

@@ -509,3 +509,116 @@ def fmt_date(val) -> Optional[str]:
 def fmt_float(val) -> float:
     return float(val) if val is not None else 0.0
 
+def generate_laporan_keuangan_pdf(data: dict) -> bytes:
+    """
+    Generate PDF Laporan Keuangan menggunakan ReportLab. Return raw bytes.
+    data = hasil response JSON dari /laporan/keuangan
+    """
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    import io
+    
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=25*mm, bottomMargin=20*mm, leftMargin=20*mm, rightMargin=20*mm)
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle('RptTitle', parent=styles['Title'], fontSize=18, textColor=colors.HexColor("#1a1a2e"), spaceAfter=6, fontName='Helvetica-Bold')
+    subtitle_style = ParagraphStyle('RptSub', parent=styles['Normal'], fontSize=10, textColor=colors.grey, spaceAfter=15, alignment=TA_CENTER)
+    heading_style = ParagraphStyle('RptH', parent=styles['Heading3'], fontSize=12, textColor=colors.HexColor("#1a1a2e"), spaceBefore=20, spaceAfter=10, fontName='Helvetica-Bold')
+    
+    def rp(val):
+        return f"Rp {float(val):,.0f}".replace(",", ".")
+        
+    elements = []
+    
+    # 1. Header
+    elements.append(Paragraph("LAPORAN KEUANGAN AERORENT", title_style))
+    periode = data.get("periode", {})
+    tgl_teks = f"Periode: {periode.get('dari', '-')} s/d {periode.get('sampai', '-')}"
+    elements.append(Paragraph(tgl_teks, subtitle_style))
+    
+    line_tbl = Table([[""]], colWidths=[170*mm])
+    line_tbl.setStyle(TableStyle([('LINEBELOW', (0,0), (-1,0), 1.5, colors.HexColor("#d4a017"))]))
+    elements.append(line_tbl)
+    elements.append(Spacer(1, 15))
+    
+    # 2. Ringkasan Finansial
+    elements.append(Paragraph("RINGKASAN FINANSIAL", heading_style))
+    ringkasan = data.get("ringkasan", {})
+    
+    ringkasan_data = [
+        ["Total Pendapatan Kotor", rp(ringkasan.get("total_pendapatan_kotor", 0))],
+        ["Total Biaya Operasional", rp(ringkasan.get("total_biaya_operasional", 0))],
+        ["Profit Bersih", rp(ringkasan.get("profit_bersih", 0))],
+        ["Margin Keuntungan", f"{ringkasan.get('margin_persen', 0)} %"],
+        ["Transaksi Selesai", f"{ringkasan.get('jumlah_transaksi_selesai', 0)} transaksi"],
+    ]
+    
+    ring_tbl = Table(ringkasan_data, colWidths=[90*mm, 80*mm])
+    ring_tbl.setStyle(TableStyle([
+        ('FONTSIZE', (0,0), (-1,-1), 11),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('TOPPADDING', (0,0), (-1,-1), 8),
+        ('LINEBELOW', (0,0), (-1,-1), 0.5, colors.lightgrey),
+        ('FONTNAME', (0,2), (1,2), 'Helvetica-Bold'), # Bold profit
+        ('TEXTCOLOR', (1,2), (1,2), colors.HexColor("#10B981") if float(ringkasan.get("profit_bersih", 0)) >= 0 else colors.HexColor("#EF4444")),
+    ]))
+    elements.append(ring_tbl)
+    
+    # 3. Distribusi Pengeluaran (Tabel Kategori)
+    elements.append(Paragraph("RINCIAN PENGELUARAN (BERDASARKAN KATEGORI)", heading_style))
+    dist_peng = data.get("distribusi_pengeluaran", {})
+    
+    if dist_peng:
+        peng_data = [["Kategori", "Jumlah (Rp)"]]
+        for k, v in dist_peng.items():
+            peng_data.append([str(k).upper(), rp(v)])
+            
+        peng_tbl = Table(peng_data, colWidths=[110*mm, 60*mm])
+        peng_tbl.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#374151")),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0,0), (-1,0), 8),
+            ('TOPPADDING', (0,0), (-1,0), 8),
+            ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('FONTSIZE', (0,0), (-1,-1), 10),
+        ]))
+        elements.append(peng_tbl)
+    else:
+        elements.append(Paragraph("<i>Tidak ada pengeluaran pada periode ini.</i>", ParagraphStyle('i', parent=styles['Normal'], textColor=colors.grey)))
+        
+    # 4. Top Kendaraan
+    elements.append(Paragraph("TOP 5 KENDARAAN (KONTRIBUSI PENDAPATAN TERBESAR)", heading_style))
+    top_kend = data.get("top_5_kendaraan", [])
+    
+    if top_kend:
+        kend_data = [["No", "Nama Kendaraan", "Jml Sewa", "Total Pendapatan"]]
+        for idx, k in enumerate(top_kend, start=1):
+            kend_data.append([str(idx), k.get("nama", "-"), str(k.get("jumlah_sewa", 0)), rp(k.get("total", 0))])
+            
+        kend_tbl = Table(kend_data, colWidths=[15*mm, 85*mm, 30*mm, 40*mm])
+        kend_tbl.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#374151")),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0,0), (-1,0), 8),
+            ('TOPPADDING', (0,0), (-1,0), 8),
+            ('ALIGN', (0,0), (0,-1), 'CENTER'),
+            ('ALIGN', (2,0), (-1,-1), 'RIGHT'),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('FONTSIZE', (0,0), (-1,-1), 10),
+        ]))
+        elements.append(kend_tbl)
+    else:
+        elements.append(Paragraph("<i>Tidak ada transaksi selesai pada periode ini.</i>", ParagraphStyle('i', parent=styles['Normal'], textColor=colors.grey)))
+        
+    doc.build(elements)
+    pdf_bytes = buf.getvalue()
+    buf.close()
+    return pdf_bytes
