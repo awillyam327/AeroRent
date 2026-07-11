@@ -135,7 +135,7 @@ async def fonnte_send(nomor: str, pesan: str) -> bool:
 
 async def fonnte_send_file(nomor: str, pesan: str, file_bytes: bytes, filename: str, mime: str = "application/pdf") -> bool:
     """
-    Kirim file/dokumen via WhatsApp Fonnte API (base64).
+    Kirim file/dokumen via WhatsApp Fonnte API (multipart file upload).
     Digunakan untuk: kirim invoice PDF ke pelanggan.
     """
     if not cfg.FONNTE_TOKEN:
@@ -143,7 +143,6 @@ async def fonnte_send_file(nomor: str, pesan: str, file_bytes: bytes, filename: 
         return False
 
     nomor_bersih = nomor.replace("+", "").replace("-", "").replace(" ", "")
-    b64_file = base64.b64encode(file_bytes).decode()
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
@@ -152,12 +151,14 @@ async def fonnte_send_file(nomor: str, pesan: str, file_bytes: bytes, filename: 
                 data={
                     "target": nomor_bersih,
                     "message": pesan,
-                    "file": b64_file,
-                    "filename": filename,
                     "countryCode": "62",
                 },
+                files={
+                    "file": (filename, file_bytes, mime),
+                },
             )
-        ok = resp.json().get("status", False)
+        result = resp.json()
+        ok = result.get("status", False)
         if ok:
             log.info(f"[Fonnte] File WA '{filename}' terkirim ke {nomor}")
         else:
