@@ -648,17 +648,25 @@ async function deleteKaryawan(id) {
 }
 
 function toggleRoleFields() {
-  const role = el('mk-role').value;
+  const roleEl = el('mk-role');
+  if (!roleEl) return;
+  const role = roleEl.value;
+  
+  const divEmail = el('div-mk-email');
+  const divPass = el('div-mk-pass');
+  const divBuatAkun = el('div-mk-buatakun');
+  const divTelepon = el('div-mk-telepon');
+  
   if (role === 'SUPIR') {
-    el('div-mk-email').style.display = 'none';
-    el('div-mk-pass').style.display = 'none';
-    el('div-mk-buatakun').style.display = 'none';
-    el('div-mk-telepon').style.display = 'block';
+    if (divEmail) divEmail.style.display = 'none';
+    if (divPass) divPass.style.display = 'none';
+    if (divBuatAkun) divBuatAkun.style.display = 'none';
+    if (divTelepon) divTelepon.style.display = 'block';
   } else {
-    el('div-mk-email').style.display = 'block';
-    el('div-mk-pass').style.display = 'block';
-    el('div-mk-buatakun').style.display = 'block';
-    el('div-mk-telepon').style.display = 'none';
+    if (divEmail) divEmail.style.display = 'block';
+    if (divPass) divPass.style.display = 'block';
+    if (divBuatAkun) divBuatAkun.style.display = 'block';
+    if (divTelepon) divTelepon.style.display = 'none';
   }
 }
 
@@ -668,22 +676,26 @@ function openKaryawanModal(id = null) {
   if (id) {
     const k = S.karyawan.find(x => x.id === id);
     if (k) {
-      el('mk-nip').value = k.id || '';
-      el('mk-nama').value = k.nama || k.nama_lengkap || '';
-      el('mk-email').value = k.email || '';
-      el('mk-telepon').value = k.telepon || k.no_telepon || '';
-      el('mk-role').value = k.role || 'KASIR';
-      el('mk-tgl').value = k.tanggal_masuk || '';
-      el('mk-gaji').value = k.gaji || k.gaji_per_bulan || '';
-      el('mk-status').value = k.is_aktif === 1 ? '1' : '0';
-      el('mk-pass').value = '';
+      if(el('mk-nip')) el('mk-nip').value = k.id || '';
+      if(el('mk-nama')) el('mk-nama').value = k.nama || k.nama_lengkap || '';
+      if(el('mk-email')) el('mk-email').value = k.email || '';
+      if(el('mk-telepon')) el('mk-telepon').value = k.telepon || k.no_telepon || '';
+      if(el('mk-role')) el('mk-role').value = k.role || 'KASIR';
+      if(el('mk-tgl')) el('mk-tgl').value = k.tanggal_masuk || '';
+      if(el('mk-gaji')) el('mk-gaji').value = k.gaji || k.gaji_per_bulan || '';
+      if(el('mk-status')) el('mk-status').value = k.is_aktif === 1 ? '1' : '0';
+      if(el('mk-pass')) el('mk-pass').value = '';
     }
   } else {
-    el('mk-nama').value = el('mk-email').value = el('mk-telepon').value = el('mk-pass').value = el('mk-nip').value = '';
-    el('mk-gaji').value = '';
-    el('mk-role').value = 'KASIR';
-    el('mk-status').value = '1';
-    el('mk-buatakun').checked = true;
+    if(el('mk-nama')) el('mk-nama').value = '';
+    if(el('mk-email')) el('mk-email').value = '';
+    if(el('mk-telepon')) el('mk-telepon').value = '';
+    if(el('mk-pass')) el('mk-pass').value = '';
+    if(el('mk-nip')) el('mk-nip').value = '';
+    if(el('mk-gaji')) el('mk-gaji').value = '';
+    if(el('mk-role')) el('mk-role').value = 'KASIR';
+    if(el('mk-status')) el('mk-status').value = '1';
+    if(el('mk-buatakun')) el('mk-buatakun').checked = true;
   }
   toggleRoleFields();
   el('modal-kary').classList.remove('hidden');
