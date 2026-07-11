@@ -663,6 +663,7 @@ async function submitBooking() {
       durasi: S.duration,
       total: S.bookingResult.total,
       status: 'MENUNGGU',
+      status_bayar: 'BELUM_LUNAS',
       created_at: new Date().toISOString(),
     });
     
