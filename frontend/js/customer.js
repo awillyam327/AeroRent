@@ -15,13 +15,18 @@
 
 const DEMO_BOOKINGS = [];
 
+/** Cache global untuk semua bookings yang sudah di-fetch, agar fungsi
+ *  printInvoice() bisa mengakses data tanpa harus fetch ulang. */
+let _cachedBookings = [];
+
 /** Endpoint yang DIHARAPKAN ada (belum diimplementasikan backend) untuk
  *  Customer mengambil booking miliknya sendiri berdasarkan token JWT-nya. */
 async function fetchMyBookings() {
   const real = await apiJson('/transaksi/saya', {}, '../../login.html');
   const seed = Array.isArray(real) ? real : DEMO_BOOKINGS;
   const localDemo = getDemoBookings(); // booking yang baru dibuat di sesi ini (lihat utils.js)
-  return [...localDemo, ...seed];
+  _cachedBookings = [...localDemo, ...seed];
+  return _cachedBookings;
 }
 
 function renderStatusBadge(status) {
@@ -338,7 +343,7 @@ async function handlePayClick(tid, event) {
  *  bergantung pada endpoint backend manapun (pola sama seperti printReceipt()
  *  di pos-kasir.html). */
 function printInvoice(nomorBooking) {
-  const all = [...getDemoBookings(), ...DEMO_BOOKINGS];
+  const all = [..._cachedBookings, ...getDemoBookings(), ...DEMO_BOOKINGS];
   const b = all.find((x) => x.booking === nomorBooking);
   if (!b) { showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Data invoice tidak ditemukan.'); return; }
   const user = getCurrentUser();
