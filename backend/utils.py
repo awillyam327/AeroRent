@@ -133,6 +133,151 @@ async def fonnte_send(nomor: str, pesan: str) -> bool:
         return False
 
 
+async def fonnte_send_file(nomor: str, pesan: str, file_bytes: bytes, filename: str, mime: str = "application/pdf") -> bool:
+    """
+    Kirim file/dokumen via WhatsApp Fonnte API (base64).
+    Digunakan untuk: kirim invoice PDF ke pelanggan.
+    """
+    if not cfg.FONNTE_TOKEN:
+        log.warning("[Fonnte] Token belum dikonfigurasi. Pengiriman file WA dilewati.")
+        return False
+
+    nomor_bersih = nomor.replace("+", "").replace("-", "").replace(" ", "")
+    b64_file = base64.b64encode(file_bytes).decode()
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                "https://api.fonnte.com/send",
+                headers={"Authorization": cfg.FONNTE_TOKEN},
+                data={
+                    "target": nomor_bersih,
+                    "message": pesan,
+                    "file": b64_file,
+                    "filename": filename,
+                    "countryCode": "62",
+                },
+            )
+        ok = resp.json().get("status", False)
+        if ok:
+            log.info(f"[Fonnte] File WA '{filename}' terkirim ke {nomor}")
+        else:
+            log.warning(f"[Fonnte] Gagal kirim file ke {nomor}: {resp.text[:200]}")
+        return ok
+    except Exception as exc:
+        log.error(f"[Fonnte] Exception saat kirim file: {exc}")
+        return False
+
+
+def generate_invoice_pdf(data: dict) -> bytes:
+    """
+    Generate invoice PDF menggunakan ReportLab. Return raw bytes.
+    data harus berisi: booking, pelanggan, kendaraan, mulai, selesai, durasi, total, status, biaya_sewa, biaya_supir, dll.
+    """
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=25*mm, bottomMargin=20*mm, leftMargin=20*mm, rightMargin=20*mm)
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle('InvTitle', parent=styles['Title'], fontSize=20, textColor=colors.HexColor("#1a1a2e"), spaceAfter=4)
+    subtitle_style = ParagraphStyle('InvSub', parent=styles['Normal'], fontSize=9, textColor=colors.grey, spaceAfter=12, alignment=TA_CENTER)
+    heading_style = ParagraphStyle('InvH', parent=styles['Heading3'], fontSize=11, textColor=colors.HexColor("#1a1a2e"), spaceBefore=14, spaceAfter=6)
+    normal_style = ParagraphStyle('InvN', parent=styles['Normal'], fontSize=10, leading=14)
+    right_style = ParagraphStyle('InvR', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT)
+    total_style = ParagraphStyle('InvTotal', parent=styles['Normal'], fontSize=13, alignment=TA_RIGHT, textColor=colors.HexColor("#d4a017"), leading=18)
+
+    def rp(val):
+        try:
+            return f"Rp {int(float(val)):,}".replace(",", ".")
+        except:
+            return f"Rp {val}"
+
+    elements = []
+
+    # Header
+    elements.append(Paragraph("AERORENT", title_style))
+    elements.append(Paragraph("Jl. Diponegoro No.123, Salatiga  |  Telp: +62 812-3456-7890", subtitle_style))
+
+    # Garis pemisah
+    line_data = [["" ]]
+    line_tbl = Table(line_data, colWidths=[170*mm])
+    line_tbl.setStyle(TableStyle([('LINEBELOW', (0,0), (-1,0), 1.5, colors.HexColor("#d4a017"))]))
+    elements.append(line_tbl)
+    elements.append(Spacer(1, 8))
+
+    # Info booking
+    elements.append(Paragraph("DETAIL INVOICE", heading_style))
+    info_data = [
+        ["No. Booking", f": {data.get('booking', '-')}"],
+        ["Status", f": {data.get('status', '-')}"],
+        ["Pelanggan", f": {data.get('pelanggan', '-')}"],
+        ["Kendaraan", f": {data.get('kendaraan', '-')}"],
+        ["Periode Sewa", f": {data.get('mulai', '-')}  s/d  {data.get('selesai', '-')}"],
+        ["Durasi", f": {data.get('durasi', '-')} hari"],
+    ]
+    info_tbl = Table(info_data, colWidths=[40*mm, 130*mm])
+    info_tbl.setStyle(TableStyle([
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+        ('TEXTCOLOR', (0,0), (0,-1), colors.grey),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+    ]))
+    elements.append(info_tbl)
+
+    # Rincian biaya
+    elements.append(Paragraph("RINCIAN BIAYA", heading_style))
+    cost_data = [["Komponen", "Jumlah"]]
+    cost_data.append(["Biaya Sewa", rp(data.get('biaya_sewa', 0))])
+    if float(data.get('biaya_supir', 0)) > 0:
+        cost_data.append(["Biaya Supir", rp(data.get('biaya_supir', 0))])
+    if float(data.get('denda_terlambat', 0)) > 0:
+        cost_data.append(["Denda Keterlambatan", rp(data.get('denda_terlambat', 0))])
+    if float(data.get('denda_kerusakan', 0)) > 0:
+        cost_data.append(["Denda Kerusakan", rp(data.get('denda_kerusakan', 0))])
+    if float(data.get('biaya_tambahan', 0)) > 0:
+        cost_data.append(["Biaya Tambahan Lain", rp(data.get('biaya_tambahan', 0))])
+
+    cost_tbl = Table(cost_data, colWidths=[110*mm, 60*mm])
+    cost_tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a2e")),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#e0e0e0")),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+    ]))
+    elements.append(cost_tbl)
+    elements.append(Spacer(1, 6))
+
+    # Total
+    total_data = [["TOTAL PEMBAYARAN", rp(data.get('total', 0))]]
+    total_tbl = Table(total_data, colWidths=[110*mm, 60*mm])
+    total_tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#d4a017")),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('FONTSIZE', (0,0), (-1,-1), 12),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ('FONTNAME', (0,0), (-1,-1), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('TOPPADDING', (0,0), (-1,-1), 8),
+    ]))
+    elements.append(total_tbl)
+    elements.append(Spacer(1, 20))
+
+    # Footer
+    elements.append(Paragraph("Terima kasih telah menggunakan layanan AeroRent!", ParagraphStyle('footer', parent=styles['Normal'], fontSize=9, textColor=colors.grey, alignment=TA_CENTER)))
+    elements.append(Paragraph("Invoice ini digenerate secara otomatis oleh sistem AeroRent.", ParagraphStyle('footer2', parent=styles['Normal'], fontSize=8, textColor=colors.lightgrey, alignment=TA_CENTER, spaceBefore=4)))
+
+    doc.build(elements)
+    return buf.getvalue()
+
+
 async def traccar_posisi(device_id: str) -> Optional[dict]:
     """
     Ambil posisi GPS terakhir kendaraan dari server Traccar (NFR-07).

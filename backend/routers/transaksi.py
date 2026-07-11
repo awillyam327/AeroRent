@@ -6,7 +6,7 @@ from datetime import date, datetime, timezone
 from database import get_db, get_db_transaction
 from dependencies import req_kasir_or_owner, req_owner, get_current_account
 from models import TransaksiIn, StatusUpd, PerpanjanganIn
-from utils import fonnte_send, imgbb_upload, midtrans_snap, smtp_booking_notification
+from utils import fonnte_send, fonnte_send_file, generate_invoice_pdf, imgbb_upload, midtrans_snap, smtp_booking_notification
 import uuid
 import asyncio
 import json
@@ -608,3 +608,79 @@ async def tambah_supir_transaksi(tid: str, body: TambahSupirIn, user=Depends(get
     except Exception as e:
         log.error(f"[Transaksi] Gagal menambah supir {tid}: {e}")
         raise HTTPException(500, "Gagal menambahkan jasa supir.")
+
+
+@router.post("/{tid}/invoice-wa", tags=["📋 Transaksi"])
+async def kirim_invoice_wa(
+    tid: str,
+    bt: BackgroundTasks,
+    user=Depends(get_current_account),
+    cur=Depends(get_db),
+):
+    """
+    Generate invoice PDF lalu kirim ke WhatsApp pelanggan via Fonnte.
+    Bisa dipanggil oleh Customer (untuk transaksi miliknya) atau Kasir/Owner.
+    """
+    try:
+        await cur.execute(
+            "SELECT ts.nomor_booking, ts.tanggal_mulai, ts.tanggal_selesai_rencana, "
+            "ts.durasi_hari_rencana, ts.biaya_sewa, ts.biaya_supir, "
+            "ts.biaya_denda_terlambat, ts.biaya_denda_kerusakan, ts.biaya_tambahan_lain, "
+            "ts.total_biaya, ts.status, ts.id_pelanggan, "
+            "p.nama_lengkap, p.no_telepon, k.nama_kendaraan "
+            "FROM TRANSAKSI_SEWA ts "
+            "JOIN PELANGGAN p ON ts.id_pelanggan = p.id_pelanggan "
+            "JOIN KENDARAAN k ON ts.id_kendaraan = k.id_kendaraan "
+            "WHERE (ts.id_transaksi = %(id)s OR ts.nomor_booking = %(nb)s)",
+            {"id": tid, "nb": tid.upper()},
+        )
+        r = await cur.fetchone()
+        if not r:
+            raise HTTPException(404, "Transaksi tidak ditemukan.")
+
+        # Cek akses: Customer hanya bisa akses transaksinya sendiri
+        if user["role"] == "CUSTOMER" and r["id_pelanggan"] != user["id"]:
+            raise HTTPException(403, "Anda tidak memiliki akses ke transaksi ini.")
+
+        no_telepon = r["no_telepon"]
+        if not no_telepon:
+            raise HTTPException(400, "Nomor telepon pelanggan belum terdaftar. Lengkapi profil terlebih dahulu.")
+
+        # Generate PDF
+        pdf_data = {
+            "booking": r["nomor_booking"],
+            "pelanggan": r["nama_lengkap"],
+            "kendaraan": r["nama_kendaraan"],
+            "mulai": fmt_date(r["tanggal_mulai"]) or "-",
+            "selesai": fmt_date(r["tanggal_selesai_rencana"]) or "-",
+            "durasi": r["durasi_hari_rencana"],
+            "biaya_sewa": fmt_float(r["biaya_sewa"]),
+            "biaya_supir": fmt_float(r["biaya_supir"]),
+            "denda_terlambat": fmt_float(r["biaya_denda_terlambat"]),
+            "denda_kerusakan": fmt_float(r["biaya_denda_kerusakan"]),
+            "biaya_tambahan": fmt_float(r["biaya_tambahan_lain"]),
+            "total": fmt_float(r["total_biaya"]),
+            "status": r["status"],
+        }
+        pdf_bytes = generate_invoice_pdf(pdf_data)
+        filename = f"Invoice_{r['nomor_booking']}.pdf"
+
+        pesan = (
+            f"📄 *Invoice AeroRent*\n\n"
+            f"No. Booking: *{r['nomor_booking']}*\n"
+            f"Kendaraan: {r['nama_kendaraan']}\n"
+            f"Total: Rp {int(fmt_float(r['total_biaya'])):,}\n\n"
+            f"Berikut terlampir invoice dalam format PDF.\n"
+            f"Terima kasih telah menggunakan AeroRent! 🚗"
+        ).replace(",", ".")
+
+        # Kirim via background task agar response cepat
+        bt.add_task(fonnte_send_file, no_telepon, pesan, pdf_bytes, filename)
+
+        log.info(f"[Invoice] PDF WA dikirim untuk {r['nomor_booking']} ke {no_telepon}")
+        return {"message": f"Invoice PDF sedang dikirim ke WhatsApp ({no_telepon})."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error(f"[Invoice] Gagal kirim invoice WA {tid}: {e}")
+        raise HTTPException(500, "Gagal mengirim invoice ke WhatsApp.")

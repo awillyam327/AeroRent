@@ -120,7 +120,7 @@ async function initRiwayat() {
         ${fmtDT(b.mulai)} s/d ${fmtDT(b.selesai_rencana)} (${b.durasi} hari)
       </div>
       <div class="flex gap-2 mt-4 flex-wrap">
-        <button class="btn btn-outline" style="padding:8px 16px;font-size:12px;" onclick="printInvoice('${b.booking}')"><i class="ph ph-printer"></i> Cetak Invoice</button>
+        <button class="btn btn-outline" style="padding:8px 16px;font-size:12px;" onclick="sendInvoiceWA('${b.booking}', this)"><i class="ph ph-whatsapp-logo"></i> Invoice</button>
         ${canExtend ? `<button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;" onclick="openExtendModal('${b.booking}')"><i class="ph ph-timer"></i> Extend Sewa (Perpanjang)</button>` : ''}
         ${canExtend && !b.gunakan_supir ? `<button class="btn btn-primary" style="padding:8px 16px;font-size:12px;" onclick="openSupirModal('${b.booking}')"><i class="ph ph-steering-wheel"></i> Sewa Sopir Tambahan</button>` : ''}
         ${b.status_bayar === 'BELUM_LUNAS' && b.metode === 'MIDTRANS' ? `<button class="btn btn-primary" style="padding:8px 16px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)"><i class="ph ph-wallet"></i> Bayar Sekarang</button><button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')"><i class="ph ph-x-circle"></i> Batalkan Pesanan</button>` : ''}
@@ -339,30 +339,32 @@ async function handlePayClick(tid, event) {
 }
 
 
-/** Cetak invoice sederhana via window.print() — murni client-side, tidak
- *  bergantung pada endpoint backend manapun (pola sama seperti printReceipt()
- *  di pos-kasir.html). */
-function printInvoice(nomorBooking) {
-  const all = [..._cachedBookings, ...getDemoBookings(), ...DEMO_BOOKINGS];
-  const b = all.find((x) => x.booking === nomorBooking);
-  if (!b) { showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Data invoice tidak ditemukan.'); return; }
-  const user = getCurrentUser();
+/** Kirim invoice PDF ke WhatsApp pelanggan via backend endpoint.
+ *  Menggantikan printInvoice() yang hanya window.print(). */
+async function sendInvoiceWA(nomorBooking, btnEl) {
+  const originalHtml = btnEl.innerHTML;
+  btnEl.disabled = true;
+  btnEl.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:4px;"></span> Mengirim...';
 
-  const w = window.open('', '_blank', 'width=400,height=600');
-  w.document.write(`<html><head><title>Invoice ${b.booking}</title>
-  <style>body{font-family:monospace;padding:20px;font-size:13px;}hr{border:1px dashed #000;}
-  .r{text-align:right;}.t{font-size:16px;font-weight:bold;}</style></head><body>
-  <div style="text-align:center"><b>AERORENT</b><br>Jl. Diponegoro No.123, Salatiga<br>
-  Telp: +62 812-3456-7890</div><hr>
-  <b>No. Booking:</b> ${b.booking}<br>
-  <b>Pelanggan:</b> ${user?.nama || '—'}<br>
-  <b>Kendaraan:</b> ${b.kendaraan}<br>
-  <b>Periode:</b> ${fmtDT(b.mulai)} s/d ${fmtDT(b.selesai_rencana)}<br>
-  <b>Durasi:</b> ${b.durasi} hari<hr>
-  <b>TOTAL: <span class="r">${rp(b.total)}</span></b><br>
-  <br>Status: ${b.status}<br><br>Terima kasih telah menggunakan AeroRent!
-  </body></html>`);
-  w.print();
+  try {
+    const res = await apiFetch(`/transaksi/${nomorBooking}/invoice-wa`, {
+      method: 'POST'
+    });
+
+    if (res && res.ok) {
+      const data = await res.json();
+      showToast('<i class="ph-fill ph-whatsapp-logo" style="color: #25D366;"></i>', 'Invoice Terkirim', data.message);
+    } else {
+      let msg = 'Gagal mengirim invoice.';
+      try { const err = await res.json(); msg = err.detail || msg; } catch(_) {}
+      showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', msg);
+    }
+  } catch (err) {
+    showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Error', err.message || 'Terjadi kesalahan jaringan.');
+  } finally {
+    btnEl.disabled = false;
+    btnEl.innerHTML = originalHtml;
+  }
 }
 
 /* ---------- PROFIL SAYA ---------- */
