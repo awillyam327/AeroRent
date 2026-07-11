@@ -74,11 +74,11 @@ async function initDashboard() {
       <td>${renderStatusBadge(b.status)}</td>
       <td class="text-amber" style="text-align:right;font-weight:700;">${rp(b.total)}</td>
       <td style="white-space: nowrap;">
-        ${(b.status_bayar === 'BELUM_LUNAS' && (b.status === 'MENUNGGU' || b.status === 'DIKONFIRMASI')) ? `<div style="display:flex;gap:4px;justify-content:flex-end;"><button class="btn btn-primary" style="padding:4px 8px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)" title="Bayar Sekarang"><i class="ph ph-wallet"></i> Bayar</button><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')" title="Batalkan Pesanan"><i class="ph ph-x-circle"></i></button></div>` : ''}
-        ${b.status === 'AKTIF' || b.status === 'DIKONFIRMASI' ? `<div style="display:flex;gap:4px;justify-content:flex-end;">
-          <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="openExtendModal('${b.booking}')" title="Perpanjang Sewa"><i class="ph ph-timer"></i> Extend</button>
-          ${!b.gunakan_supir ? `<button class="btn btn-outline" style="padding:4px 8px;font-size:12px;" onclick="openSupirModal('${b.booking}')" title="Tambah Supir"><i class="ph ph-steering-wheel"></i> +Supir</button>` : ''}
-        </div>` : ''}
+        <div style="display:flex; gap:6px; justify-content:flex-end; align-items:center;">
+          ${(b.status_bayar === 'BELUM_LUNAS' && (b.status === 'MENUNGGU' || b.status === 'DIKONFIRMASI')) ? `<button class="btn btn-primary" style="padding:4px 8px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)" title="Bayar Sekarang"><i class="ph ph-wallet"></i> Bayar</button><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')" title="Batalkan Pesanan"><i class="ph ph-x-circle"></i></button>` : ''}
+          ${b.status === 'AKTIF' || b.status === 'DIKONFIRMASI' ? `<button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="openExtendModal('${b.booking}')" title="Perpanjang Sewa"><i class="ph ph-timer"></i> Extend</button>
+          ${!b.gunakan_supir ? `<button class="btn btn-outline" style="padding:4px 8px;font-size:12px;" onclick="openSupirModal('${b.booking}')" title="Tambah Supir"><i class="ph ph-steering-wheel"></i> +Supir</button>` : ''}` : ''}
+        </div>
       </td>
     </tr>`).join('');
 }
