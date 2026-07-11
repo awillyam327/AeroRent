@@ -311,10 +311,18 @@ async def update_status(tid: str, body: StatusUpd, bt: BackgroundTasks, user=Dep
             await cur.execute("UPDATE KENDARAAN SET status = 'DISEWA' WHERE id_kendaraan = %(id)s", {"id": kid})
 
         elif st_baru == "SELESAI":
-            now = datetime.now(timezone.utc)
-            upd_sets.append("tanggal_selesai_aktual = %(ta)s"); upd_params["ta"] = now
-
+            now = datetime.now()
+            # MySQL DATETIME expects YYYY-MM-DD HH:MM:SS
+            now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+            upd_sets.append("tanggal_selesai_aktual = %(ta)s"); upd_params["ta"] = now_str
+            
             today = now.date()
+            # Safely handle tgl_rencana if it's returned as string or datetime
+            if isinstance(tgl_rencana, str):
+                tgl_rencana = datetime.strptime(tgl_rencana, "%Y-%m-%d").date()
+            elif hasattr(tgl_rencana, 'date') and not isinstance(tgl_rencana, type(today)):
+                tgl_rencana = tgl_rencana.date()
+                
             denda_tlbt = 0.0
             if today > tgl_rencana:
                 hari_tlbt   = (today - tgl_rencana).days
