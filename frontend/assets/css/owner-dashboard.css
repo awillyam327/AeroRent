@@ -5,8 +5,9 @@
       --glass-bg:rgba(255,255,255,.03); --glass-bd:rgba(255,255,255,.08);
     }
     *{box-sizing:border-box;margin:0;}
-    html,body{height:100%;overflow:hidden;}
+    html,body{height:100%;overflow:hidden;color-scheme:dark;}
     body{background:#0A0A14;font-family:'DM Sans',sans-serif;color:white;}
+    option { background-color: #0A0A14; color: white; }
     ::-webkit-scrollbar{width:4px;height:4px;}
     ::-webkit-scrollbar-track{background:transparent;}
     ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px;}
