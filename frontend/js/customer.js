@@ -73,6 +73,7 @@ async function initDashboard() {
       <td class="text-dim">${fmtDT(b.mulai)}</td>
       <td>${renderStatusBadge(b.status)}</td>
       <td class="text-amber" style="text-align:right;font-weight:700;">${rp(b.total)}</td>
+      <td>
         ${b.status === 'MENUNGGU' ? `<div style="display:flex;gap:4px;justify-content:flex-end;"><button class="btn btn-primary" style="padding:4px 8px;font-size:12px;" onclick="handlePayClick('${b.booking}', event)" title="Bayar Sekarang"><i class="ph ph-wallet"></i> Bayar</button><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:#EF4444;" onclick="handleCancelClick('${b.booking}')" title="Batalkan Pesanan"><i class="ph ph-x-circle"></i></button></div>` : ''}
         ${b.status === 'AKTIF' || b.status === 'DIKONFIRMASI' ? `<div style="display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap;">
           <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="openExtendModal('${b.booking}')" title="Perpanjang Sewa"><i class="ph ph-timer"></i> Extend</button>
