@@ -23,34 +23,6 @@ async def list_supir_aktif(user=Depends(get_current_user), cur=Depends(get_db)):
         raise
     except Exception as e:
         log.error(f"[Karyawan] Gagal memuat daftar supir aktif: {e}")
-@router.get("/seed", tags=["👤 Karyawan"])
-async def seed_supir(cur=Depends(get_db)):
-    import uuid
-    supirs = [
-        ("Agus Prasetyo", "+628111111111"),
-        ("Bambang Santoso", "+628222222222"),
-        ("Cahyo Wibowo", "+628333333333"),
-        ("Dedi Firmansyah", "+628444444444"),
-        ("Eko Nugroho", "+628555555555"),
-        ("Fajar Hidayat", "+628666666666"),
-        ("Gunawan Setiawan", "+628777777777")
-    ]
-    pwd = "$2b$12$K1rZgD9sI/8W4P9d6C.K8uS/9Z5H1c9z9/D9/8Z9/8Z9/8Z9/8Z9." # Dummy hash for AeroRent123!
-    count = 0
-    for name, phone in supirs:
-        kid = f"EMP-{uuid.uuid4().hex[:6].upper()}"
-        email = f"{phone}@supir.aerorent.id"
-        
-        await cur.execute("SELECT id_karyawan FROM KARYAWAN WHERE nama_lengkap = %(n)s", {"n": name})
-        if not await cur.fetchone():
-            await cur.execute(
-                "INSERT INTO KARYAWAN (id_karyawan, nama_lengkap, email, no_telepon, password_hash, role, gaji_per_bulan) "
-                "VALUES (%(id)s, %(n)s, %(e)s, %(t)s, %(p)s, %(r)s, %(g)s)",
-                {"id": kid, "n": name, "e": email, "t": phone, "p": pwd, "r": "SUPIR", "g": 2500000}
-            )
-            count += 1
-    return {"message": f"Seeded {count} supir"}
-
 @router.get("/supir-tersedia", tags=["👤 Karyawan"])
 async def supir_tersedia(tanggal_mulai: str, tanggal_selesai: str, cur=Depends(get_db)):
     try:
