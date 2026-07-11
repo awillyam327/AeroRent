@@ -949,24 +949,17 @@
 
         return `
       <div class="bt-kend-card ${sel ? 'selected' : ''}" onclick='btPilihKend(${payload.replace(/'/g, "&#39;")})'>
-        <div class="relative w-full aspect-video" style="overflow:hidden;background:rgba(255,255,255,.04);">
-          ${foto
-            ? `<img src="${foto}" alt="${nama}" class="w-full h-full object-cover" style="opacity:${sel ? 1 : .8};">`
-            : `<div class="w-full h-full flex items-center justify-center text-5xl text-gray-700"><i class="ph ph-car"></i></div>`}
-          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 60%);"></div>
-          <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;color:#fff;max-width:calc(100% - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${nama}</div>
-          ${sel
-            ? `<div style="position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;
-                background:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;">✓</div>`
-            : ''}
-        </div>
-        <div style="padding:12px;">
-          <div class="font-semibold text-white text-sm leading-tight">${nama}</div>
-          <div class="text-xs text-gray-500 mt-0.5">${tipe} • ${transmisi} • ${bbm}</div>
+        <div style="padding:16px; position:relative;">
+          <div class="font-semibold text-white text-base pr-8 leading-tight">${nama}</div>
+          <div class="text-xs text-gray-500 mt-1">${tipe} • ${transmisi} • ${bbm}</div>
           ${plat ? `<div class="text-xs text-gray-600 mt-0.5">${plat}</div>` : ''}
-          <div class="mt-2 font-bold text-sm" style="color:#F59E0B;">
+          <div class="mt-3 font-bold text-sm" style="color:#F59E0B;">
             ${rp(harga)}<span class="text-xs font-normal text-gray-500">/hari</span>
           </div>
+          ${sel
+            ? `<div style="position:absolute;top:16px;right:16px;width:24px;height:24px;border-radius:50%;
+                background:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;color:white;">✓</div>`
+            : ''}
         </div>
       </div>`;
       }).join('');
