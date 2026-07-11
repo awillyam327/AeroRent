@@ -344,7 +344,7 @@ async function handlePayClick(tid, event) {
 async function sendInvoiceWA(nomorBooking, btnEl) {
   const originalHtml = btnEl.innerHTML;
   btnEl.disabled = true;
-  btnEl.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:4px;"></span> Mengirim...';
+  btnEl.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:4px;"></span> Mengunduh...';
 
   try {
     const res = await apiFetch(`/transaksi/${nomorBooking}/invoice-wa`, {
@@ -352,10 +352,21 @@ async function sendInvoiceWA(nomorBooking, btnEl) {
     });
 
     if (res && res.ok) {
-      const data = await res.json();
-      showToast('<i class="ph-fill ph-whatsapp-logo" style="color: #25D366;"></i>', 'Invoice Terkirim', data.message);
+      // API mengembalikan file PDF
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `Invoice_${nomorBooking}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      
+      showToast('<i class="ph-fill ph-check-circle" style="color: #25D366;"></i>', 'Berhasil', 'Invoice PDF berhasil diunduh dan detail telah dikirim ke WhatsApp Anda.');
     } else {
-      let msg = 'Gagal mengirim invoice.';
+      let msg = 'Gagal memproses invoice.';
       try { const err = await res.json(); msg = err.detail || msg; } catch(_) {}
       showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', msg);
     }

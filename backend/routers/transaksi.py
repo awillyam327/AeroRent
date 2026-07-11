@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request, BackgroundTasks, Response
 from utils import fmt_float, fmt_date
 from typing import Optional
 import aiomysql
@@ -670,15 +670,19 @@ async def kirim_invoice_wa(
             f"No. Booking: *{r['nomor_booking']}*\n"
             f"Kendaraan: {r['nama_kendaraan']}\n"
             f"Total: Rp {int(fmt_float(r['total_biaya'])):,}\n\n"
-            f"Berikut terlampir invoice dalam format PDF.\n"
             f"Terima kasih telah menggunakan AeroRent! 🚗"
         ).replace(",", ".")
 
-        # Kirim via background task agar response cepat
-        bt.add_task(fonnte_send_file, no_telepon, pesan, pdf_bytes, filename)
+        # Kirim teks via background task (tanpa file PDF ke WA)
+        bt.add_task(fonnte_send, no_telepon, pesan)
+        log.info(f"[Invoice] Teks WA dikirim untuk {r['nomor_booking']} ke {no_telepon}")
 
-        log.info(f"[Invoice] PDF WA dikirim untuk {r['nomor_booking']} ke {no_telepon}")
-        return {"message": f"Invoice PDF sedang dikirim ke WhatsApp ({no_telepon})."}
+        # Return PDF untuk didownload browser
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
     except HTTPException:
         raise
     except Exception as e:
