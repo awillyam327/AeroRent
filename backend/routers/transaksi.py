@@ -28,10 +28,11 @@ async def list_transaksi(
             "SELECT ts.id_transaksi AS id, ts.nomor_booking AS booking, p.nama_lengkap AS pelanggan, k.nama_kendaraan AS kendaraan, "
             "ts.tanggal_mulai AS mulai, ts.tanggal_selesai_rencana AS selesai_rencana, ts.durasi_hari_rencana AS durasi, "
             "ts.total_biaya AS total, ts.status, ts.status_pembayaran AS status_bayar, ts.created_at, "
-            "ts.gunakan_supir, ts.metode_pembayaran AS metode, k.foto_url AS foto_kendaraan "
+            "ts.gunakan_supir, ts.id_supir, s.nama_lengkap AS nama_supir, ts.metode_pembayaran AS metode, k.foto_url AS foto_kendaraan "
             "FROM TRANSAKSI_SEWA ts "
             "JOIN PELANGGAN p ON ts.id_pelanggan = p.id_pelanggan "
-            "JOIN KENDARAAN k ON ts.id_kendaraan = k.id_kendaraan WHERE 1=1"
+            "JOIN KENDARAAN k ON ts.id_kendaraan = k.id_kendaraan "
+            "LEFT JOIN KARYAWAN s ON ts.id_supir = s.id_karyawan WHERE 1=1"
         )
         params: dict = {}
         if user["role"] == "CUSTOMER":

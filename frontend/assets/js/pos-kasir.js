@@ -376,11 +376,19 @@
       bar.innerHTML = '';
 
       let btnSupir = '';
-      if (t.gunakan_supir === 1 && !t.id_supir && ['MENUNGGU', 'DIKONFIRMASI'].includes(t.status)) {
-        btnSupir = `
-        <button class="${cls} mb-2" style="background:#3B82F6; color:white;" onclick="openSupirModal('${id}')">
-          <i class="ph ph-user-circle text-lg"></i> Tugaskan Supir
-        </button>`;
+      if (t.gunakan_supir === 1) {
+        if (!t.id_supir && ['MENUNGGU', 'DIKONFIRMASI'].includes(t.status)) {
+          btnSupir = `
+          <button class="${cls} mb-2" style="background:#3B82F6; color:white;" onclick="openSupirModal('${id}')">
+            <i class="ph-bold ph-user-circle text-lg"></i> Tugaskan Supir
+          </button>`;
+        } else if (t.id_supir) {
+          btnSupir = `
+          <div class="w-full mb-2 p-2 rounded-xl border border-blue-200 bg-blue-50/50 flex flex-col items-center justify-center text-xs text-blue-700">
+            <span class="font-semibold mb-0.5"><i class="ph-bold ph-steering-wheel align-middle"></i> Supir Ditugaskan:</span>
+            <span>${t.nama_supir || 'ID: ' + t.id_supir}</span>
+          </div>`;
+        }
       }
 
       if (t.status === 'MENUNGGU') {
