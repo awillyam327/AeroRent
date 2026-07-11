@@ -504,7 +504,7 @@
       </div>
       <div>
         <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Jabatan</label>
-        <select id="mk-role" class="g-input w-full px-3 py-2.5 text-sm bg-transparent">
+        <select id="mk-role" class="g-input w-full px-3 py-2.5 text-sm bg-transparent" onchange="toggleRoleFields()">
           <option value="KASIR">Kasir (bisa Admin)</option>
           <option value="SUPIR">Supir</option>
         </select>
@@ -523,15 +523,21 @@
         <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Gaji per Bulan (Rp)</label>
         <input type="number" id="mk-gaji" placeholder="3000000" class="g-input w-full px-3 py-2.5 text-sm">
       </div>
-      <div class="col-span-2">
+      
+      <div class="col-span-2" id="div-mk-telepon" style="display: none;">
+        <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Nomor WhatsApp</label>
+        <input type="text" id="mk-telepon" placeholder="08123456789" class="g-input w-full px-3 py-2.5 text-sm">
+      </div>
+
+      <div class="col-span-2" id="div-mk-email">
         <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Email</label>
         <input type="email" id="mk-email" placeholder="kasir@aerorent.id" class="g-input w-full px-3 py-2.5 text-sm">
       </div>
-      <div class="col-span-2">
+      <div class="col-span-2" id="div-mk-pass">
         <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Password Awal</label>
         <input type="password" id="mk-pass" placeholder="Min. 8 karakter" class="g-input w-full px-3 py-2.5 text-sm">
       </div>
-      <div class="col-span-2">
+      <div class="col-span-2" id="div-mk-buatakun">
         <label class="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" id="mk-buatakun" class="w-4 h-4 rounded" checked>
           <span class="text-sm text-gray-300">Buat akun login (role KASIR / ADMIN)</span>

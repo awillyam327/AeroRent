@@ -28,9 +28,9 @@ class TokenPair(BaseModel):
 
 class KaryawanIn(BaseModel):
     nama_lengkap:   str   = Field(..., min_length=2, max_length=200)
-    email:          str   = Field(..., min_length=5, max_length=200)
+    email:          Optional[str] = Field(None, max_length=200)
     no_telepon:     Optional[str]   = Field(None, max_length=20)
-    password:       str   = Field(..., min_length=6, max_length=200)
+    password:       Optional[str]   = Field(None, max_length=200)
     role:           str
     gaji_per_bulan: Optional[float] = Field(0, ge=0)
 
@@ -44,7 +44,9 @@ class KaryawanIn(BaseModel):
 
     @field_validator("email")
     @classmethod
-    def cek_email(cls, v: str) -> str:
+    def cek_email(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return None
         v = v.strip().lower()
         if not _EMAIL_RE.match(v):
             raise ValueError("Format email tidak valid.")

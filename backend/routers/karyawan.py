@@ -49,11 +49,19 @@ async def list_karyawan(user=Depends(req_owner), cur=Depends(get_db)):
 @router.post("", status_code=201, tags=["👤 Karyawan"])
 async def tambah_karyawan(body: KaryawanIn, user=Depends(req_owner), cur=Depends(get_db)):
     try:
-        # 1. Cek apakah email sudah ada
-        await cur.execute("SELECT COUNT(*) AS total FROM KARYAWAN WHERE email = %(e)s", {"e": body.email})
-        cek = await cur.fetchone()
-        if cek["total"] > 0:
-            raise HTTPException(409, f"Email '{body.email}' sudah terdaftar.")
+        # 1. Cek apakah email sudah ada, jika diberikan
+        if body.email:
+            await cur.execute("SELECT COUNT(*) AS total FROM KARYAWAN WHERE email = %(e)s", {"e": body.email})
+            cek = await cur.fetchone()
+            if cek["total"] > 0:
+                raise HTTPException(409, f"Email '{body.email}' sudah terdaftar.")
+        else:
+            # Auto-generate dummy email based on phone number if email is not provided
+            body.email = f"{body.no_telepon or uuid.uuid4().hex[:6]}@supir.aerorent.id"
+            
+        # Default password if not provided (e.g. for Supir)
+        if not body.password:
+            body.password = "AeroRent123!"
 
         # 2. Masukkan data ke database
         kid = f"EMP-{uuid.uuid4().hex[:6].upper()}"
