@@ -669,7 +669,7 @@
         sel.innerHTML = '<option value="">-- Tidak ada supir tersedia --</option>';
         return;
       }
-      sel.innerHTML = '<option value="">-- Pilih Supir --</option>' + data.map(k => `<option value="${k.id_karyawan}">${k.nama_lengkap} (${k.no_telepon || '-'})</option>`).join('');
+      sel.innerHTML = '<option value="">-- Pilih Supir --</option>' + data.map(k => `<option value="${k.id}">${k.nama} (${k.no_telepon || '-'})</option>`).join('');
     }
 
     function closeSupirModal() {
