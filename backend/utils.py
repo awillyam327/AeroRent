@@ -81,7 +81,7 @@ async def midtrans_snap(order_id: str, amount: float, nama: str, email: str) -> 
     if not cfg.MIDTRANS_SERVER_KEY:
         raise HTTPException(503, "MIDTRANS_SERVER_KEY belum dikonfigurasi di .env")
 
-    base = "https://api.midtrans.com" if cfg.MIDTRANS_IS_PROD else "https://api.sandbox.midtrans.com"
+    base = "https://app.midtrans.com" if cfg.MIDTRANS_IS_PROD else "https://app.sandbox.midtrans.com"
     auth = base64.b64encode(f"{cfg.MIDTRANS_SERVER_KEY}:".encode()).decode()
 
     payload = {
