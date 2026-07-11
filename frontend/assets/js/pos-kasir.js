@@ -1051,7 +1051,10 @@
       const dtMulai = new Date(tglMulai);
       const dtSelesai = new Date(dtMulai);
       dtSelesai.setDate(dtSelesai.getDate() + durasi);
-      const tglSelesai = dtSelesai.toISOString().split('T')[0];
+      
+      // Format manual YYYY-MM-DDTHH:mm agar sesuai zona waktu lokal (tidak bergeser karena toISOString)
+      const pad = n => n.toString().padStart(2, '0');
+      const tglSelesai = `${dtSelesai.getFullYear()}-${pad(dtSelesai.getMonth()+1)}-${pad(dtSelesai.getDate())}T${pad(dtSelesai.getHours())}:${pad(dtSelesai.getMinutes())}`;
 
       const payload = {
         id_pelanggan: BT.pelanggan.id,
@@ -1143,9 +1146,15 @@
     // ============================================================
     let toastTimer;
     function toast(icon, title, msg) {
-      el('toast-ic').textContent = icon;
+      el('toast-ic').innerHTML = icon;
       el('toast-ttl').textContent = title;
-      el('toast-msg').textContent = msg;
+      
+      let finalMsg = msg;
+      if (typeof msg === 'object' && msg !== null) {
+        finalMsg = Array.isArray(msg) ? msg.map(m => m.msg || JSON.stringify(m)).join(', ') : JSON.stringify(msg);
+      }
+      el('toast-msg').textContent = finalMsg;
+      
       el('toast').classList.remove('hidden');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(hideToast, 4500);
