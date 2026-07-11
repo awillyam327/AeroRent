@@ -651,6 +651,52 @@
       await updateStatus(id, 'SELESAI', { biaya_denda_kerusakan: dk, biaya_tambahan_lain: tb, catatan_kasir: cat || null });
     }
 
+    // ============================================================
+    // MODAL: PILIH SUPIR
+    // ============================================================
+    let activeSupirTxId = null;
+
+    async function openSupirModal(id) {
+      activeSupirTxId = id;
+      const m = el('modal-pilih-supir');
+      const sel = el('msupir-select');
+      sel.innerHTML = '<option value="">-- Memuat Data --</option>';
+      m.classList.remove('hidden');
+
+      const resAPI = await api('/karyawan/supir-aktif');
+      const data = resAPI && resAPI.ok ? await resAPI.json() : null;
+      if (!data || data.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada supir tersedia --</option>';
+        return;
+      }
+      sel.innerHTML = '<option value="">-- Pilih Supir --</option>' + data.map(k => `<option value="${k.id_karyawan}">${k.nama_lengkap} (${k.no_telepon || '-'})</option>`).join('');
+    }
+
+    function closeSupirModal() {
+      el('modal-pilih-supir').classList.add('hidden');
+      activeSupirTxId = null;
+      el('msupir-select').innerHTML = '<option value="">-- Memuat Data --</option>';
+    }
+
+    async function doSupirModal() {
+      if (!activeSupirTxId) return;
+      const idSupir = el('msupir-select').value;
+      if (!idSupir) {
+        toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Silakan pilih supir terlebih dahulu.');
+        return;
+      }
+
+      el('modal-pilih-supir').classList.add('hidden');
+      const res = await api(`/transaksi/${activeSupirTxId}/supir`, {
+        method: 'PUT',
+        body: JSON.stringify({ id_supir: idSupir })
+      });
+      if (res && res.ok) {
+        toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', 'Supir berhasil ditugaskan.');
+        await loadTransaksi();
+      }
+    }
+
 
     // ============================================================
     // MODAL: KONFIRMASI UMUM
