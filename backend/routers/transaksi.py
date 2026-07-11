@@ -357,8 +357,10 @@ async def update_status(tid: str, body: StatusUpd, bt: BackgroundTasks, user=Dep
         raise
     except Exception as e:
         await conn.rollback()
-        log.error(f"[Transaksi] Gagal update status transaksi {tid}: {e}")
-        raise HTTPException(500, "Gagal memperbarui status transaksi.")
+        import traceback
+        tb = traceback.format_exc()
+        log.error(f"[Transaksi] Gagal update status transaksi {tid}: {e}\n{tb}")
+        raise HTTPException(500, f"Gagal memperbarui status transaksi: {repr(e)}")
 
 
 @router.post("/{tid}/foto-kondisi", tags=["📋 Transaksi"])
