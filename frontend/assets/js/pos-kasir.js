@@ -954,6 +954,7 @@
             ? `<img src="${foto}" alt="${nama}" class="w-full h-full object-cover" style="opacity:${sel ? 1 : .8};">`
             : `<div class="w-full h-full flex items-center justify-center text-5xl text-gray-700"><i class="ph ph-car"></i></div>`}
           <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 60%);"></div>
+          <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;color:#fff;max-width:calc(100% - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${nama}</div>
           ${sel
             ? `<div style="position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;
                 background:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;">✓</div>`
