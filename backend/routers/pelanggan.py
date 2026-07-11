@@ -43,6 +43,11 @@ async def update_pelanggan_saya(
         if user["role"] != "CUSTOMER":
             raise HTTPException(403, "Akses ditolak. Khusus pelanggan.")
             
+        if body.nik and body.nik.strip():
+            await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE no_ktp = %(ktp)s AND id_pelanggan != %(id)s", {"ktp": body.nik, "id": user["id"]})
+            if await cur.fetchone():
+                raise HTTPException(400, "Nomor KTP ini sudah terdaftar pada akun lain.")
+            
         await cur.execute(
             "UPDATE PELANGGAN SET nama_lengkap = %(n)s, no_telepon = %(t)s, alamat = %(a)s, no_ktp = COALESCE(%(nik)s, no_ktp) "
             "WHERE id_pelanggan = %(id)s",
@@ -178,8 +183,13 @@ async def tambah_pelanggan(
     cur=Depends(get_db),
 ):
     try:
-        if not nama_lengkap or not nama_lengkap.strip():
-            raise HTTPException(400, "Nama lengkap wajib diisi.")
+        if not nama_lengkap or not email:
+            raise HTTPException(400, "Nama dan Email wajib diisi.")
+
+        if no_ktp and no_ktp.strip():
+            await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE no_ktp = %(ktp)s", {"ktp": no_ktp})
+            if await cur.fetchone():
+                raise HTTPException(400, "Nomor KTP ini sudah terdaftar pada akun pelanggan lain.")
         if not no_telepon or not no_telepon.strip():
             raise HTTPException(400, "Nomor telepon wajib diisi.")
 

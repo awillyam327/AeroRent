@@ -109,6 +109,12 @@ async def register_customer(
         if not password or len(password) < 6:
             raise HTTPException(400, "Password minimal 6 karakter.")
 
+        # Cek KTP ganda
+        if no_ktp and no_ktp.strip():
+            await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE no_ktp = %(ktp)s", {"ktp": no_ktp})
+            if await cur.fetchone():
+                raise HTTPException(400, "Nomor KTP ini sudah terdaftar pada akun lain.")
+
         # Cek apakah email sudah dipakai
         await cur.execute("SELECT id_pelanggan, is_verified FROM PELANGGAN WHERE email = %(e)s", {"e": email})
         row = await cur.fetchone()
