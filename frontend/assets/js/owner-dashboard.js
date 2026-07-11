@@ -53,13 +53,20 @@ async function init() {
   el('sb-nama').textContent = nama;
   el('sb-avatar').textContent = nama[0].toUpperCase();
 
-  // Set default dates
-  const today = new Date().toISOString().split('T')[0];
-  const first = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-  el('lk-dari').value = first;
-  el('lk-sampai').value = today;
-  el('po-tanggal').value = today;
-  el('mk-tgl').value = today;
+  // Set default dates to 1st and last day of current local month
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  
+  const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+  
+  el('lk-dari').value = `${y}-${m}-01`;
+  el('lk-sampai').value = `${y}-${m}-${lastDay}`;
+  
+  // For other inputs, we can just use the current day
+  const todayStr = `${y}-${m}-${String(now.getDate()).padStart(2, '0')}`;
+  el('po-tanggal').value = todayStr;
+  el('mk-tgl').value = todayStr;
 
   await loadDashboard();
 }
