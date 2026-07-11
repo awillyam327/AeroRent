@@ -22,7 +22,7 @@ async def laporan_keuangan(
 
         await cur.execute(
             "SELECT COALESCE(SUM(total_biaya),0) AS total, COUNT(*) AS jml FROM TRANSAKSI_SEWA "
-            "WHERE status = 'SELESAI' AND tanggal_mulai BETWEEN %(d)s AND %(s)s", p
+            "WHERE status IN ('DIKONFIRMASI', 'AKTIF', 'SELESAI') AND tanggal_mulai BETWEEN %(d)s AND %(s)s", p
         )
         pend_row = await cur.fetchone()
 
@@ -95,7 +95,7 @@ async def laporan_armada(user=Depends(req_owner), cur=Depends(get_db)):
             "COUNT(ts.id_transaksi) AS sewa_bulan_ini, COALESCE(SUM(ts.total_biaya),0) AS pendapatan_bulan_ini "
             "FROM KENDARAAN k "
             "LEFT JOIN TRANSAKSI_SEWA ts ON k.id_kendaraan = ts.id_kendaraan "
-            "AND ts.status = 'SELESAI' AND DATE_FORMAT(ts.tanggal_mulai, '%%Y-%%m') = DATE_FORMAT(CURRENT_DATE, '%%Y-%%m') "
+            "AND ts.status IN ('DIKONFIRMASI', 'AKTIF', 'SELESAI') AND DATE_FORMAT(ts.tanggal_mulai, '%%Y-%%m') = DATE_FORMAT(CURRENT_DATE, '%%Y-%%m') "
             "GROUP BY k.id_kendaraan, k.nama_kendaraan, k.tipe_kendaraan, "
             "k.status, k.foto_url, k.harga_sewa_harian "
             "ORDER BY sewa_bulan_ini DESC, pendapatan_bulan_ini DESC"
