@@ -647,6 +647,21 @@ async function deleteKaryawan(id) {
   }
 }
 
+function toggleRoleFields() {
+  const role = el('mk-role').value;
+  if (role === 'SUPIR') {
+    el('div-mk-email').style.display = 'none';
+    el('div-mk-pass').style.display = 'none';
+    el('div-mk-buatakun').style.display = 'none';
+    el('div-mk-telepon').style.display = 'block';
+  } else {
+    el('div-mk-email').style.display = 'block';
+    el('div-mk-pass').style.display = 'block';
+    el('div-mk-buatakun').style.display = 'block';
+    el('div-mk-telepon').style.display = 'none';
+  }
+}
+
 function openKaryawanModal(id = null) {
   S.editKaryId = id || null;
   el('mk-title').textContent = id ? 'Edit Data Karyawan' : 'Tambah Karyawan';
@@ -656,6 +671,7 @@ function openKaryawanModal(id = null) {
       el('mk-nip').value = k.id || '';
       el('mk-nama').value = k.nama || k.nama_lengkap || '';
       el('mk-email').value = k.email || '';
+      el('mk-telepon').value = k.telepon || k.no_telepon || '';
       el('mk-role').value = k.role || 'KASIR';
       el('mk-tgl').value = k.tanggal_masuk || '';
       el('mk-gaji').value = k.gaji || k.gaji_per_bulan || '';
@@ -663,11 +679,13 @@ function openKaryawanModal(id = null) {
       el('mk-pass').value = '';
     }
   } else {
-    el('mk-nama').value = el('mk-email').value = el('mk-pass').value = el('mk-nip').value = '';
+    el('mk-nama').value = el('mk-email').value = el('mk-telepon').value = el('mk-pass').value = el('mk-nip').value = '';
     el('mk-gaji').value = '';
     el('mk-role').value = 'KASIR';
     el('mk-status').value = '1';
+    el('mk-buatakun').checked = true;
   }
+  toggleRoleFields();
   el('modal-kary').classList.remove('hidden');
 }
 
@@ -679,29 +697,46 @@ function closeKaryawanModal() {
 async function saveKaryawan() {
   const nama = el('mk-nama').value.trim();
   const email = el('mk-email').value.trim();
+  const telepon = el('mk-telepon').value.trim();
   const role = el('mk-role').value;
   const tgl = el('mk-tgl').value;
   const gaji = parseFloat(el('mk-gaji').value || '0');
   const pass = el('mk-pass').value;
   const aktif = parseInt(el('mk-status').value);
 
-  if (!nama || !email) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nama dan email wajib diisi.'); return; }
-  if (!S.editKaryId && !pass) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Password awal wajib diisi untuk karyawan baru.'); return; }
+  if (!nama) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nama wajib diisi.'); return; }
+  
+  if (role === 'SUPIR') {
+    if (!telepon) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nomor WA wajib diisi untuk Supir.'); return; }
+  } else {
+    if (!email) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Email wajib diisi.'); return; }
+    if (!S.editKaryId && !pass) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Password awal wajib diisi untuk karyawan baru.'); return; }
+  }
 
   let ok = false;
   if (S.editKaryId) {
     // UPDATE
     const payload = { nama_lengkap: nama, is_aktif: aktif, gaji_per_bulan: gaji };
+    if (role === 'SUPIR') payload.no_telepon = telepon;
+
     const r = await api(`/karyawan/${S.editKaryId}`, { method: 'PUT', body: JSON.stringify(payload) });
     ok = r && r.ok;
     if (ok) {
       // Update lokal state
       const idx = S.karyawan.findIndex(k => k.id === S.editKaryId);
       if (idx >= 0) S.karyawan[idx] = { ...S.karyawan[idx], nama, is_aktif: aktif, gaji_per_bulan: gaji };
+      if (role === 'SUPIR' && idx >= 0) S.karyawan[idx].telepon = telepon;
     }
   } else {
     // INSERT
-    const payload = { nama_lengkap: nama, email, password: pass, role, gaji_per_bulan: gaji };
+    const payload = { nama_lengkap: nama, role, gaji_per_bulan: gaji, is_aktif: aktif };
+    if (role === 'SUPIR') {
+      payload.no_telepon = telepon;
+    } else {
+      payload.email = email;
+      payload.password = pass;
+    }
+
     const r = await api('/karyawan', { method: 'POST', body: JSON.stringify(payload) });
     ok = r && r.ok;
     if (ok) {
