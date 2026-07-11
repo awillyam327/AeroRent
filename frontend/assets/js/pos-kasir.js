@@ -482,9 +482,44 @@
     function closeFotoModal() { el('modal-foto').classList.add('hidden'); }
     function pickFile(id) { el(id).click(); }
     
-    function onFile(k, inp) {
+    function compressImageFile(file, maxSizeMB = 0.8) {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type.startsWith('image/')) return resolve(file);
+        if (file.size <= maxSizeMB * 1024 * 1024) return resolve(file);
+    
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            const max = 1600;
+            if (w > h && w > max) { h = Math.round((h * max) / w); w = max; }
+            else if (h > w && h > max) { w = Math.round((w * max) / h); h = max; }
+    
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+    
+            canvas.toBlob(b => {
+              if (!b) return resolve(file);
+              resolve(new File([b], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+            }, 'image/jpeg', 0.7);
+          };
+          img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+      });
+    }
+    
+    async function onFile(k, inp) {
       if (!inp.files.length) return;
-      S.files[k] = inp.files[0];
+      const file = inp.files[0];
+      const compressed = await compressImageFile(file, 0.8);
+      S.files[k] = compressed;
+      
       const reader = new FileReader();
       reader.onload = e => {
         el(`img-${k}`).src = e.target.result;
@@ -493,13 +528,14 @@
         el(`zone-${k}`).classList.add('done');
         el('btn-submit-foto').disabled = !(S.files.d && S.files.sk && S.files.ski && S.files.b && S.files.dlm);
       };
-      reader.readAsDataURL(inp.files[0]);
+      reader.readAsDataURL(compressed);
     }
 
-    function onFileTambahan(inp) {
+    async function onFileTambahan(inp) {
       if (!inp.files.length) return;
       for (let f of inp.files) {
-        S.files.tambahan.push(f);
+        const compressed = await compressImageFile(f, 0.8);
+        S.files.tambahan.push(compressed);
         const reader = new FileReader();
         reader.onload = e => {
           const div = document.createElement('div');
@@ -509,7 +545,7 @@
           el('tambahan-preview').appendChild(div);
           el('tambahan-preview').classList.remove('hidden');
         };
-        reader.readAsDataURL(f);
+        reader.readAsDataURL(compressed);
       }
     }
     window.removeTambahan = function(btn) {
