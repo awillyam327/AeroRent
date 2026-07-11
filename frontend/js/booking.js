@@ -691,6 +691,9 @@ function goToStep3(status = 'SUCCESS') {
   qs('panel-step2').classList.add('hidden');
   qs('panel-step3').classList.remove('hidden');
   qs('summary-panel').classList.add('hidden');
+  
+  const grid = document.querySelector('.checkout-grid');
+  if (grid) grid.style.gridTemplateColumns = '1fr';
 
   const user = getCurrentUser();
   const userName = user?.nama || S.nama;
