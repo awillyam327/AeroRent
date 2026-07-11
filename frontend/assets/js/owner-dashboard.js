@@ -758,9 +758,9 @@ function renderPesanan() {
   let list = S.transaksi;
   if (filt !== 'semua') list = list.filter(t => t.status === filt);
   if (q) list = list.filter(t =>
-    (t.booking || t.id || '').toLowerCase().includes(q) ||
-    (t.pelanggan || '').toLowerCase().includes(q) ||
-    (t.kendaraan || '').toLowerCase().includes(q)
+    String(t.booking || t.id || '').toLowerCase().includes(q) ||
+    String(t.pelanggan || '').toLowerCase().includes(q) ||
+    String(t.kendaraan || '').toLowerCase().includes(q)
   );
 
   if (!list.length) {
