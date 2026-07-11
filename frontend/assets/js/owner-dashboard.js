@@ -1007,6 +1007,8 @@ const el = id => document.getElementById(id);
 const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
 const fmtD = d => d ? new Date(d).toLocaleDateString('id-ID',
   { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const fmtDT = d => d ? new Date(d).toLocaleString('id-ID') : '—';
+
 
 // Inisialisasi filter tab pesanan
 document.querySelectorAll('.sf-btn').forEach(b => {
