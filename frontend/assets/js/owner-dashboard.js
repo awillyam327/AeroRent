@@ -567,21 +567,25 @@ function closeKendaraanModal() {
 }
 
 async function saveKendaraan() {
+  const strTahun = el('mkend-tahun').value.trim();
+  const strSewa = el('mkend-sewa').value.trim();
+  const strSupir = el('mkend-supir').value.trim();
+
   const payload = {
     nama_kendaraan: el('mkend-nama').value.trim(),
-    merk: el('mkend-merk').value.trim() || undefined,
-    model: el('mkend-model').value.trim() || undefined,
-    tahun: parseInt(el('mkend-tahun').value) || new Date().getFullYear(),
+    merk: el('mkend-merk').value.trim(),
+    model: el('mkend-model').value.trim(),
+    tahun: parseInt(strTahun) || 0,
     nomor_plat: el('mkend-plat').value.trim(),
     tipe_kendaraan: el('mkend-tipe').value,
     status: el('mkend-status').value,
-    harga_sewa_harian: parseFloat(el('mkend-sewa').value || '0'),
-    harga_supir_harian: parseFloat(el('mkend-supir').value || '0'),
-    traccar_device_id: el('mkend-traccar').value.trim() || null
+    harga_sewa_harian: parseFloat(strSewa) || 0,
+    harga_supir_harian: parseFloat(strSupir) || 0,
+    traccar_device_id: el('mkend-traccar').value.trim()
   };
 
-  if (!payload.nama_kendaraan || !payload.nomor_plat) {
-    toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nama dan plat nomor wajib diisi.');
+  if (!payload.nama_kendaraan || !payload.merk || !payload.model || !strTahun || payload.tahun <= 0 || !payload.nomor_plat || !payload.tipe_kendaraan || !payload.status || !strSewa || payload.harga_sewa_harian <= 0 || !strSupir || payload.harga_supir_harian < 0 || !payload.traccar_device_id) {
+    toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Mohon isi seluruh form input dengan benar.');
     return;
   }
 
