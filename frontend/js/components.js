@@ -44,6 +44,9 @@ function renderNavbar(containerId, opts = {}) {
     } else {
       authAreaHtml = `<a href="${rootPath}login.html" class="btn btn-primary" style="padding:10px 20px;">Masuk / Daftar</a>`;
     }
+  } else {
+    // Render hidden button to maintain exact same flex layout spacing as index.html
+    authAreaHtml = `<div style="visibility:hidden; pointer-events:none;"><a href="#" class="btn btn-primary" style="padding:10px 20px;">Masuk / Daftar</a></div>`;
   }
 
   let customerLinksHtml = '';
