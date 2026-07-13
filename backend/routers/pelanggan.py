@@ -218,6 +218,8 @@ async def tambah_pelanggan(
     try:
         if not nama_lengkap or not nama_lengkap.strip():
             raise HTTPException(400, "Nama wajib diisi.")
+        if not no_ktp or not no_ktp.strip():
+            raise HTTPException(400, "NIK / Nomor KTP wajib diisi.")
         if not no_telepon or not no_telepon.strip():
             raise HTTPException(400, "Nomor telepon wajib diisi.")
 
