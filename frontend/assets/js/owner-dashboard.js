@@ -624,7 +624,10 @@ async function saveKendaraan() {
   } else {
     const r = await api('/kendaraan', { method: 'POST', body: JSON.stringify(payload) });
     ok = r && r.ok;
-    if (ok) savedId = r.id_kendaraan;
+    if (ok) {
+      const data = await r.json();
+      savedId = data.id_kendaraan;
+    }
   }
 
   if (ok && savedId && S.pendingFotoKendaraan) {
