@@ -743,7 +743,7 @@
       BT.step = 1; BT.pelanggan = null; BT.kendaraan = null; BT.filterTipe = 'semua';
 
       // 2. Reset form
-      ['bt-plg-q', 'bt-np-nama', 'bt-np-telp', 'bt-np-email', 'bt-np-alamat', 'bt-catatan'].forEach(id => {
+      ['bt-plg-q', 'bt-np-nama', 'bt-np-nik', 'bt-np-telp', 'bt-np-email', 'bt-np-alamat', 'bt-catatan'].forEach(id => {
         const e = el(id); if (e) e.value = '';
       });
       el('bt-durasi').value = '1';
@@ -950,11 +950,12 @@
         
         if (r.ok) {
           const res = await r.json();
-          if (res.nama) {
-            el('bt-np-nama').value = res.nama;
-            toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'OCR Berhasil', `Nama ditemukan: ${res.nama}`);
+          if (res.nama || res.nik) {
+            if (res.nama) el('bt-np-nama').value = res.nama;
+            if (res.nik) el('bt-np-nik').value = res.nik;
+            toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'OCR Berhasil', `Data KTP ditemukan.`);
           } else {
-            toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'OCR Selesai', 'Tidak menemukan nama yang jelas.');
+            toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'OCR Selesai', 'Tidak menemukan nama/NIK yang jelas.');
           }
           statusEl.innerHTML = '<i class="ph-fill ph-check-circle" style="color: #10B981;"></i> KTP diproses.';
           statusEl.classList.add('text-green-400');
@@ -970,11 +971,12 @@
 
     async function btSimpanPlgBaru() {
       const nama = el('bt-np-nama').value.trim();
+      const nik = el('bt-np-nik').value.trim();
       const telp = el('bt-np-telp').value.trim();
       const email = el('bt-np-email').value.trim();
       const alamat = el('bt-np-alamat').value.trim();
 
-      if (!nama || !telp) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Data Tidak Lengkap', 'Nama lengkap dan nomor telepon wajib diisi.'); return; }
+      if (!nama || !telp || !nik) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Data Tidak Lengkap', 'Nama lengkap, NIK, dan nomor telepon wajib diisi.'); return; }
 
       const btn = el('bt-np-btn');
       btn.disabled = true;
@@ -983,9 +985,16 @@
       try {
         const fd = new FormData();
         fd.append('nama_lengkap', nama);
+        fd.append('no_ktp', nik);
         fd.append('no_telepon', telp);
         if (email) fd.append('email', email);
         if (alamat) fd.append('alamat', alamat);
+
+        // Sertakan foto KTP jika ada
+        const ktpFile = el('bt-np-ktp').files[0];
+        if (ktpFile) {
+          fd.append('foto_ktp', ktpFile);
+        }
 
         const r = await fetch(`${API}/pelanggan`, {
           method: 'POST',
