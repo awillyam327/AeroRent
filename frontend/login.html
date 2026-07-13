@@ -148,6 +148,7 @@
 <script src="js/api.js?v=3"></script>
 <script src="js/components.js?v=3"></script>
 <script>
+  window.AUTH_MODE = 'CUSTOMER';
   // Tampilkan navbar tanpa tombol "Masuk/Daftar" (karena kita sudah di halaman ini)
   document.addEventListener('DOMContentLoaded', () => renderNavbar('navbar', { rootPath: '', showAuthArea: false }));
 

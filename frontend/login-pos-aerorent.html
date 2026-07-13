@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0A14">
+<title>Masuk / Daftar — AeroRent</title>
+<meta name="description" content="Masuk atau daftar akun AeroRent untuk mulai menyewa kendaraan di Salatiga.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/global.css?v=3">
+<link rel="stylesheet" href="css/auth.css?v=3">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+<!-- Navbar (komponen bersama, di-render oleh js/components.js) -->
+<header id="navbar"></header>
+
+<main class="auth-page">
+  <div class="auth-card glass-card">
+
+    <div class="auth-logo-row">
+      <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="lg-auth" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#F59E0B"/>
+          </linearGradient>
+        </defs>
+        <polygon points="20,3 37,34 3,34" fill="url(#lg-auth)"/>
+        <line x1="20" y1="3" x2="9" y2="24" stroke="white" stroke-width="1.5" opacity=".7"/>
+        <line x1="20" y1="3" x2="14" y2="30" stroke="white" stroke-width="1" opacity=".4"/>
+      </svg>
+      <div class="auth-logo-text">AERO<span style="color:#7C3AED;">RENT</span></div>
+    </div>
+
+    <div class="auth-header">
+      <h2 id="auth-title">PORTAL KARYAWAN</h2>
+      <p id="auth-subtitle">Masuk untuk mengelola sistem POS AeroRent.</p>
+    </div>
+
+    <!-- Mode Kasir: Tidak ada tab Daftar -->
+    <div class="tab-switcher" style="display:none;">
+      <button type="button" id="tab-login" class="tab-btn tab-active">Login</button>
+    </div>
+
+    <div id="auth-error" class="auth-error hidden" role="alert"></div>
+
+    <!-- ===== FORM LOGIN ===== -->
+    <form id="form-login" autocomplete="on">
+      <div class="form-group">
+        <label class="form-label" for="login-email">Alamat Email</label>
+        <input type="email" id="login-email" class="form-input" required
+              placeholder="customer@contoh.id">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <div style="position:relative;">
+          <input type="password" id="login-password" class="form-input" required
+                placeholder="Minimal 8 karakter" style="padding-right:40px;">
+          <button type="button" class="btn-toggle-password" onclick="togglePassword('login-password', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim);"><i class="ph ph-eye"></i></button>
+        </div>
+      </div>
+      <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block" style="padding:14px;font-size:15px;margin-top:6px;">
+        Masuk Dashboard
+      </button>
+    </form>
+
+    <!-- FORM DAFTAR DIHAPUS UNTUK KASIR/OWNER -->
+
+  </div>
+</main>
+
+<div id="toast-root"></div>
+
+<script src="js/utils.js?v=3"></script>
+<script src="js/api.js?v=3"></script>
+<script src="js/components.js?v=3"></script>
+<script>
+  window.AUTH_MODE = 'KARYAWAN'; // Beritahu auth.js mode ini
+  // Tampilkan navbar tanpa tombol "Masuk/Daftar" (karena kita sudah di halaman ini)
+  document.addEventListener('DOMContentLoaded', () => renderNavbar('navbar', { rootPath: '', showAuthArea: false }));
+
+  // Fungsi toggle show/hide password
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.remove('ph-eye');
+      icon.classList.add('ph-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.remove('ph-eye-slash');
+      icon.classList.add('ph-eye');
+    }
+  }
+</script>
+<script src="js/auth.js?v=3"></script>
+</body>
+</html>

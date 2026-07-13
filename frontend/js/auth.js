@@ -49,9 +49,10 @@ let activeTab = 'login';
 
 function initAuthPage() {
   renderToastMarkup('toast-root');
-  wireTabSwitcher();
+  if (qs('tab-register')) wireTabSwitcher();
   qs('form-login').addEventListener('submit', handleLoginSubmit);
-  qs('form-register').addEventListener('submit', handleRegisterSubmit);
+  const formReg = qs('form-register');
+  if (formReg) formReg.addEventListener('submit', handleRegisterSubmit);
 
   // Kalau sudah login, langsung lempar ke dashboard masing-masing.
   const auth = getAuth();
@@ -128,63 +129,83 @@ async function handleLoginSubmit(e) {
   btn.innerHTML = '<span class="spinner"></span> Memproses...';
 
   try {
-    // 1) Coba login staf asli (Owner/Kasir) ke backend nyata.
-    const result = await apiLoginStaff(email, password);
-    setAuth(result);
-    showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil Masuk', `Selamat datang, ${result.user.nama}.`);
-    setTimeout(() => { location.href = getPostLoginRedirect(result.user.role); }, 600);
-    return;
-  } catch (staffErr) {
-    // Jika koneksi putus (ditandai dengan lemparan Error jaringan spesifik dari api.js), hentikan proses
-    if (staffErr.message && staffErr.message.toLowerCase().includes('koneksi')) {
-        btn.disabled = false;
-        btn.textContent = 'Masuk Sekarang';
-        showError(staffErr.message);
-        return;
-    }
-  }
-
-  try {
-    // 2) Coba endpoint login customer asli
-    const result = await apiLoginCustomer(email, password);
-    setAuth(result);
-    location.href = getPostLoginRedirect('CUSTOMER');
-    return;
-  } catch (custErr) {
-    // Jika koneksi putus
-    if (custErr.message && custErr.message.toLowerCase().includes('koneksi')) {
-        btn.disabled = false;
-        btn.textContent = 'Masuk Sekarang';
-        showError(custErr.message);
-        return;
-    }
-    // Jika backend mengirim error spesifik (misal belum verifikasi), tampilkan error tersebut dan hentikan fallback.
-    if (custErr.message && custErr.message.toLowerCase().includes('diverifikasi')) {
-      btn.disabled = false;
-      btn.textContent = 'Masuk Sekarang';
-      showError(custErr.message);
+    // === MODE KARYAWAN ===
+    if (window.AUTH_MODE === 'KARYAWAN') {
+      const result = await apiLoginStaff(email, password);
+      setAuth(result);
+      showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil Masuk', `Selamat datang, ${result.user.nama}.`);
+      setTimeout(() => { location.href = getPostLoginRedirect(result.user.role); }, 600);
       return;
     }
-    // Jika bukan error jaringan/verifikasi (misal salah password), lanjut ke mode demo.
-  }
 
-  // 3) Mode demo lokal (backend belum mendukung / sedang tidak tersedia).
-  const demo = DEMO_ACCOUNTS[email.toLowerCase()];
-  if (demo && password.includes('123')) {
-    const fakeAuth = {
-      access_token: 'demo-token-' + demo.id,
-      token_type: 'bearer',
-      user: { id: demo.id, nama: demo.nama, email, role: demo.role },
-    };
-    setAuth(fakeAuth);
-    showToast('<i class="ph-fill ph-flask" style="color: #8B5CF6;"></i>', 'Mode Demo', 'Backend tidak tersedia — masuk memakai data demo lokal.');
-    setTimeout(() => { location.href = getPostLoginRedirect(demo.role); }, 700);
-    return;
-  }
+    // === MODE CUSTOMER ===
+    if (window.AUTH_MODE === 'CUSTOMER') {
+      try {
+        const result = await apiLoginCustomer(email, password);
+        setAuth(result);
+        location.href = getPostLoginRedirect('CUSTOMER');
+        return;
+      } catch (custErr) {
+        if (custErr.message && custErr.message.toLowerCase().includes('koneksi')) {
+            throw custErr;
+        }
+        if (custErr.message && custErr.message.toLowerCase().includes('diverifikasi')) {
+          throw custErr;
+        }
+        // Lanjut ke mode demo jika error lain
+      }
+    }
 
-  btn.disabled = false;
-  btn.textContent = 'Masuk Sekarang';
-  showError('Email atau password salah. Untuk versi demo, gunakan salah satu akun di bawah dengan password mengandung "123".');
+    // === FALLBACK MODE (Jika belum diset atau error bukan jaringan/verifikasi) ===
+    if (!window.AUTH_MODE) {
+      try {
+        const result = await apiLoginStaff(email, password);
+        setAuth(result);
+        showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil Masuk', `Selamat datang, ${result.user.nama}.`);
+        setTimeout(() => { location.href = getPostLoginRedirect(result.user.role); }, 600);
+        return;
+      } catch (staffErr) {
+        if (staffErr.message && staffErr.message.toLowerCase().includes('koneksi')) throw staffErr;
+      }
+      try {
+        const result = await apiLoginCustomer(email, password);
+        setAuth(result);
+        location.href = getPostLoginRedirect('CUSTOMER');
+        return;
+      } catch (custErr) {
+        if (custErr.message && custErr.message.toLowerCase().includes('koneksi')) throw custErr;
+        if (custErr.message && custErr.message.toLowerCase().includes('diverifikasi')) throw custErr;
+      }
+    }
+
+    // 3) Mode demo lokal (backend belum mendukung / sedang tidak tersedia).
+    const demo = DEMO_ACCOUNTS[email.toLowerCase()];
+    // Cek apakah mode Karyawan tapi akun demonya bukan karyawan
+    if (window.AUTH_MODE === 'KARYAWAN' && demo && demo.role === 'CUSTOMER') {
+      throw new Error("Akun tidak ditemukan atau bukan karyawan.");
+    }
+    if (window.AUTH_MODE === 'CUSTOMER' && demo && demo.role !== 'CUSTOMER') {
+      throw new Error("Silakan masuk melalui portal karyawan.");
+    }
+
+    if (demo && password.includes('123')) {
+      const fakeAuth = {
+        access_token: 'demo-token-' + demo.id,
+        token_type: 'bearer',
+        user: { id: demo.id, nama: demo.nama, email, role: demo.role },
+      };
+      setAuth(fakeAuth);
+      showToast('<i class="ph-fill ph-flask" style="color: #8B5CF6;"></i>', 'Mode Demo', 'Backend tidak tersedia — masuk memakai data demo lokal.');
+      setTimeout(() => { location.href = getPostLoginRedirect(demo.role); }, 1000);
+      return;
+    }
+
+    throw new Error('Email atau password salah.');
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Masuk Sekarang';
+    showError(err.message || 'Gagal login.');
+  }
 }
 
 /* ---------- DAFTAR (Customer self-registration) ---------- */
