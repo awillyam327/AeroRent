@@ -474,11 +474,11 @@
       </div>
       <div>
         <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Harga Sewa Harian (Rp)</label>
-        <input type="number" id="mkend-sewa" placeholder="300000" class="g-input w-full px-3 py-2.5 text-sm">
+        <input type="number" id="mkend-sewa" placeholder="300000" class="g-input w-full px-3 py-2.5 text-sm" min="0" onkeydown="if(event.key==='-')event.preventDefault()">
       </div>
       <div>
         <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Harga Supir Harian (Rp)</label>
-        <input type="number" id="mkend-supir" placeholder="150000" class="g-input w-full px-3 py-2.5 text-sm">
+        <input type="number" id="mkend-supir" placeholder="150000" class="g-input w-full px-3 py-2.5 text-sm" min="0" onkeydown="if(event.key==='-')event.preventDefault()">
       </div>
       <div class="col-span-2">
         <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Traccar Device ID</label>
