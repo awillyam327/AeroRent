@@ -82,7 +82,7 @@
 <script>
   window.AUTH_MODE = 'KARYAWAN'; // Beritahu auth.js mode ini
   // Tampilkan navbar tanpa tombol "Masuk/Daftar" (karena kita sudah di halaman ini)
-  document.addEventListener('DOMContentLoaded', () => renderNavbar('navbar', { rootPath: '', showAuthArea: false }));
+  document.addEventListener('DOMContentLoaded', () => renderNavbar('navbar', { rootPath: '', showAuthArea: false, showNavLinks: false }));
 
   // Fungsi toggle show/hide password
   function togglePassword(inputId, btn) {

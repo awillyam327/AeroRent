@@ -19,9 +19,10 @@ style="width: 125px; height: 85px; object-fit:contain;">
  *   - active: 'beranda' | 'armada' | null
  *   - rootPath: prefix relatif ke root frontend/, cth. '' di root, '../../' di pages/customer/
  *   - showAuthArea: tampilkan tombol Masuk/Daftar atau info user (default true)
+ *   - showNavLinks: tampilkan link Beranda, Armada dll (default true)
  */
 function renderNavbar(containerId, opts = {}) {
-  const { active = null, rootPath = '', showAuthArea = true } = opts;
+  const { active = null, rootPath = '', showAuthArea = true, showNavLinks = true } = opts;
   const el = qs(containerId);
   if (!el) return;
 
@@ -59,15 +60,19 @@ function renderNavbar(containerId, opts = {}) {
       <a href="${rootPath}index.html" class="navbar-brand">
         ${getBrandLogo(rootPath)}
       </a>
+      ${showNavLinks ? `
       <nav class="navbar-links">
         <a href="${rootPath}index.html" class="nav-link ${isActive('beranda')}">Beranda</a>
         <a href="${rootPath}armada.html" class="nav-link ${isActive('armada')}">Armada</a>
         ${customerLinksHtml}
       </nav>
+      ` : ''}
       <div class="navbar-auth">${authAreaHtml}</div>
+      ${showNavLinks ? `
       <button class="navbar-burger" id="navbar-burger-btn" aria-label="Buka menu">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
+      ` : ''}
     </div>`;
 
   // Efek scroll: transparan -> solid
