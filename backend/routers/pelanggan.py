@@ -118,6 +118,39 @@ async def upload_sim_saya(
         log.error(f"[Pelanggan] Gagal upload SIM pelanggan {user.get('id')}: {e}")
         raise HTTPException(500, "Gagal mengunggah foto SIM.")
 
+@router.post("/{pid}/sim", tags=["👥 Pelanggan"])
+async def upload_sim_pelanggan(
+    pid: str,
+    foto_sim: UploadFile = File(...),
+    user=Depends(req_kasir_or_owner),
+    cur=Depends(get_db)
+):
+    """Upload foto SIM A untuk pelanggan tertentu (oleh Kasir/Owner)."""
+    try:
+        await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE id_pelanggan = %(pid)s", {"pid": pid})
+        if not await cur.fetchone():
+            raise HTTPException(404, "Pelanggan tidak ditemukan.")
+            
+        img_bytes = await foto_sim.read()
+        if not img_bytes:
+            raise HTTPException(400, "File foto SIM kosong.")
+        if len(img_bytes) > 5 * 1024 * 1024:
+            raise HTTPException(400, "Ukuran file maksimal 5MB.")
+            
+        foto_url = await imgbb_upload(img_bytes, f"sim_{pid}")
+        
+        await cur.execute(
+            "UPDATE PELANGGAN SET foto_sim_url = %(f)s WHERE id_pelanggan = %(id)s",
+            {"f": foto_url, "id": pid}
+        )
+        log.info(f"[Pelanggan] SIM uploaded for {pid} by kasir {user.get('id')}")
+        return {"message": "Foto SIM A berhasil diunggah.", "foto_sim_url": foto_url}
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error(f"[Pelanggan] Gagal upload SIM pelanggan {pid}: {e}")
+        raise HTTPException(500, "Gagal mengunggah foto SIM.")
+
 
 @router.get("/{pid}", tags=["👥 Pelanggan"])
 async def detail_pelanggan(pid: str, user=Depends(get_current_account), cur=Depends(get_db)):

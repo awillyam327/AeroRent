@@ -521,6 +521,26 @@
           </select>
         </div>
 
+        <!-- Upload SIM (hanya untuk lepas kunci / tanpa supir) -->
+        <div id="bt-sim-wrap" class="glass rounded-xl px-4 py-3.5">
+          <div class="flex items-center gap-2 mb-2">
+            <i class="ph-bold ph-identification-card text-lg" style="color:#60A5FA;"></i>
+            <div>
+              <div class="text-sm font-semibold text-white">Upload Foto SIM A</div>
+              <div class="text-xs text-gray-500">Wajib untuk sewa lepas kunci (tanpa supir)</div>
+            </div>
+          </div>
+          <input type="file" id="bt-sim-file" accept="image/*" capture="environment" class="hidden" onchange="btPreviewSim(this)">
+          <div id="bt-sim-preview" class="hidden mb-2 rounded-lg overflow-hidden border border-white/10" style="max-height:120px;">
+            <img id="bt-sim-img" src="" alt="Preview SIM" class="w-full object-cover" style="max-height:120px;">
+          </div>
+          <button onclick="document.getElementById('bt-sim-file').click()" id="bt-sim-btn"
+            class="w-full btn-o py-2 rounded-lg text-xs flex items-center justify-center gap-2">
+            <i class="ph ph-camera"></i> Ambil / Pilih Foto SIM A
+          </button>
+          <div id="bt-sim-status" class="text-xs text-gray-500 hidden text-center mt-2"></div>
+        </div>
+
         <!-- Metode pembayaran -->
         <div>
           <label class="text-xs text-gray-500 uppercase tracking-widest block mb-1.5">Metode Pembayaran</label>

@@ -752,6 +752,13 @@
       el('bt-metode').value = 'TUNAI';
       el('bt-new-plg-form').classList.add('hidden');
 
+      // 3a. Reset SIM upload
+      const simFile = el('bt-sim-file'); if (simFile) simFile.value = '';
+      const simPrev = el('bt-sim-preview'); if (simPrev) simPrev.classList.add('hidden');
+      const simBtn = el('bt-sim-btn'); if (simBtn) simBtn.innerHTML = '<i class="ph ph-camera"></i> Ambil / Pilih Foto SIM A';
+      const simStat = el('bt-sim-status'); if (simStat) { simStat.classList.add('hidden'); simStat.innerHTML = ''; }
+      const simWrap = el('bt-sim-wrap'); if (simWrap) simWrap.classList.remove('hidden');
+
       // 3. Reset UI pelanggan
       el('bt-plg-selected').classList.add('hidden');
       el('bt-plg-results').innerHTML = '<div class="text-xs text-gray-600 text-center py-4">Ketik minimal 2 karakter untuk mencari.</div>';
@@ -1135,6 +1142,26 @@
       if (wrap) {
          wrap.classList.toggle('hidden', !isChecked);
       }
+      // SIM upload: tampilkan saat TANPA supir, sembunyikan saat DENGAN supir
+      const simWrap = el('bt-sim-wrap');
+      if (simWrap) {
+         simWrap.classList.toggle('hidden', isChecked);
+      }
+    }
+
+    function btPreviewSim(inp) {
+      if (!inp.files.length) return;
+      const file = inp.files[0];
+      const reader = new FileReader();
+      reader.onload = e => {
+        el('bt-sim-img').src = e.target.result;
+        el('bt-sim-preview').classList.remove('hidden');
+        el('bt-sim-btn').innerHTML = '<i class="ph ph-swap"></i> Ganti Foto SIM A';
+        el('bt-sim-status').classList.remove('hidden');
+        el('bt-sim-status').innerHTML = '<i class="ph-fill ph-check-circle" style="color:#10B981;"></i> Foto SIM siap diunggah.';
+        el('bt-sim-status').classList.add('text-green-400');
+      };
+      reader.readAsDataURL(file);
     }
 
 
@@ -1181,6 +1208,21 @@
 
         if (r?.ok) {
           const res = await r.json();
+
+          // Upload SIM jika lepas kunci dan ada file
+          const simFileEl = el('bt-sim-file');
+          if (!supir && simFileEl && simFileEl.files.length > 0) {
+            try {
+              const simFd = new FormData();
+              simFd.append('foto_sim', simFileEl.files[0]);
+              await fetch(`${API}/pelanggan/${BT.pelanggan.id}/sim`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + S.token },
+                body: simFd
+              }).catch(() => {});
+            } catch (e) { /* SIM upload gagal, tidak blocking */ }
+          }
+
           tutupBuatTrx();
           toast('<i class="ph ph-party-popper"></i>', 'Transaksi Berhasil Dibuat!', `${res.nomor_booking} — ${rp(res.total_biaya)}`);
           await loadList();
