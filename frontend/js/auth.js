@@ -182,10 +182,10 @@ async function handleLoginSubmit(e) {
     const demo = DEMO_ACCOUNTS[email.toLowerCase()];
     // Cek apakah mode Karyawan tapi akun demonya bukan karyawan
     if (window.AUTH_MODE === 'KARYAWAN' && demo && demo.role === 'CUSTOMER') {
-      throw new Error("Akun tidak ditemukan atau bukan karyawan.");
+      throw new Error('Email atau password salah.');
     }
     if (window.AUTH_MODE === 'CUSTOMER' && demo && demo.role !== 'CUSTOMER') {
-      throw new Error("Silakan masuk melalui portal karyawan.");
+      throw new Error('Email atau password salah.');
     }
 
     if (demo && password.includes('123')) {
