@@ -661,23 +661,73 @@ function handleDropFotoKendaraan(e) {
   }
 }
 
-function processFotoKendaraan(file) {
+async function processFotoKendaraan(file) {
   if(!file.type.startsWith('image/')) {
     toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Format Salah', 'Harap pilih file gambar.');
     return;
   }
-  if(file.size > 5 * 1024 * 1024) {
-    toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'File Besar', 'Ukuran foto maksimal 5MB.');
-    return;
-  }
-  S.pendingFotoKendaraan = file;
+  
   const ph = el('mkend-foto-placeholder');
   const prev = el('mkend-foto-preview');
-  if(ph) ph.classList.add('hidden');
-  if(prev) {
-    prev.src = URL.createObjectURL(file);
-    prev.classList.remove('hidden');
+  
+  try {
+    toast('<i class="ph-fill ph-spinner ph-spin text-amber-500"></i>', 'Kompresi', 'Mengkompresi gambar...');
+    const compressedFile = await compressImageFile(file, 0.95);
+    S.pendingFotoKendaraan = compressedFile;
+    if(ph) ph.classList.add('hidden');
+    if(prev) {
+      prev.src = URL.createObjectURL(compressedFile);
+      prev.classList.remove('hidden');
+    }
+    toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Sukses', 'Gambar berhasil disiapkan.');
+  } catch (e) {
+    toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal memproses gambar.');
   }
+}
+
+function compressImageFile(file, maxSizeMB = 0.95) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) return resolve(file);
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    if (file.size <= maxSizeBytes) return resolve(file);
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1600;
+
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > width && height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (!blob) return resolve(file);
+          const compressedFile = new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+        }, 'image/jpeg', 0.8);
+      };
+      img.onerror = (e) => reject(e);
+    };
+    reader.onerror = (e) => reject(e);
+  });
 }
 
 async function deleteKendaraan(id) {
