@@ -31,14 +31,14 @@ const DEMO = {
 // STATE
 // ============================================================
 let S = {
-  token: null, user: null,
-  currentSection: 'dashboard',
-  laporan: null, armada: null,
-  transaksi: [], karyawan: [],
-  pengeluaran: [],
-  pesananFilter: 'semua',
-  chartRevenue: null,
-  editKaryId: null,
+    token: null, user: null,
+    currentSection: 'dashboard',
+    semuaTransaksi: [],
+    kendaraan: [], karyawan: [], pelanggan: [], lapor: [],
+    pendapatanBulanan: [], riwayatSimulasi: [],
+    editKendId: null, editKaryId: null,
+    laporTglMulai: null, laporTglSelesai: null,
+    pendingFotoKendaraan: null
 };
 
 // ============================================================
@@ -75,11 +75,14 @@ async function init() {
 // API HELPER
 // ============================================================
 function apiHeaders(opts = {}) {
-  return {
-    'Content-Type': 'application/json',
+  const headers = {
     ...(S.token ? { 'Authorization': 'Bearer ' + S.token } : {}),
     ...(opts.headers || {})
   };
+  if (!opts.isMultipart) {
+    headers['Content-Type'] = 'application/json';
+  }
+  return headers;
 }
 
 async function api(path, opts = {}) {
@@ -537,7 +540,14 @@ function renderKendaraanTable() {
 
 function openKendaraanModal(id = null) {
   S.editKendId = id || null;
+  S.pendingFotoKendaraan = null;
   el('mkend-title').textContent = id ? 'Edit Data Kendaraan' : 'Tambah Kendaraan';
+  
+  const ph = el('mkend-foto-placeholder');
+  const prev = el('mkend-foto-preview');
+  if(ph) ph.classList.remove('hidden');
+  if(prev) { prev.classList.add('hidden'); prev.src = ''; }
+  
   if (id) {
     const k = S.kendaraan.find(x => x.id_kendaraan === id);
     if (k) {
@@ -551,6 +561,12 @@ function openKendaraanModal(id = null) {
       el('mkend-sewa').value = k.harga_sewa_harian || 0;
       el('mkend-supir').value = k.harga_supir_harian || 0;
       el('mkend-traccar').value = k.traccar_device_id || '';
+      
+      if(k.foto_url && prev && ph) {
+        ph.classList.add('hidden');
+        prev.classList.remove('hidden');
+        prev.src = k.foto_url;
+      }
     }
   } else {
     el('mkend-nama').value = ''; el('mkend-merk').value = ''; el('mkend-model').value = '';
@@ -588,15 +604,41 @@ async function saveKendaraan() {
     toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Mohon isi seluruh form input dengan benar.');
     return;
   }
+  
+  if (!S.editKendId && !S.pendingFotoKendaraan) {
+    toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Foto kendaraan wajib diunggah.');
+    return;
+  }
 
   let ok = false;
+  let savedId = S.editKendId;
+  
+  const btnSave = el('btn-save-kendaraan');
+  const oriText = btnSave.textContent;
+  btnSave.textContent = 'Menyimpan...';
+  btnSave.disabled = true;
+
   if (S.editKendId) {
     const r = await api(`/kendaraan/${S.editKendId}`, { method: 'PUT', body: JSON.stringify(payload) });
     ok = r && r.ok;
   } else {
     const r = await api('/kendaraan', { method: 'POST', body: JSON.stringify(payload) });
     ok = r && r.ok;
+    if (ok) savedId = r.id_kendaraan;
   }
+
+  if (ok && savedId && S.pendingFotoKendaraan) {
+    btnSave.textContent = 'Mengupload foto...';
+    const fd = new FormData();
+    fd.append('file', S.pendingFotoKendaraan);
+    const ru = await api(`/kendaraan/${savedId}/foto`, { method: 'POST', body: fd, isMultipart: true });
+    if (!ru || !ru.ok) {
+      toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Peringatan', 'Kendaraan tersimpan, namun gagal upload foto.');
+    }
+  }
+
+  btnSave.textContent = oriText;
+  btnSave.disabled = false;
 
   if (ok) {
     await loadKendaraan();
@@ -604,6 +646,37 @@ async function saveKendaraan() {
     toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', `Kendaraan berhasil ${S.editKendId ? 'diperbarui' : 'ditambahkan'}.`);
   } else {
     toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Terjadi kesalahan saat menyimpan kendaraan.');
+  }
+}
+
+function handleSelectFotoKendaraan(e) {
+  if(e.target.files && e.target.files[0]) {
+    processFotoKendaraan(e.target.files[0]);
+  }
+}
+
+function handleDropFotoKendaraan(e) {
+  if(e.dataTransfer.files && e.dataTransfer.files[0]) {
+    processFotoKendaraan(e.dataTransfer.files[0]);
+  }
+}
+
+function processFotoKendaraan(file) {
+  if(!file.type.startsWith('image/')) {
+    toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Format Salah', 'Harap pilih file gambar.');
+    return;
+  }
+  if(file.size > 5 * 1024 * 1024) {
+    toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'File Besar', 'Ukuran foto maksimal 5MB.');
+    return;
+  }
+  S.pendingFotoKendaraan = file;
+  const ph = el('mkend-foto-placeholder');
+  const prev = el('mkend-foto-preview');
+  if(ph) ph.classList.add('hidden');
+  if(prev) {
+    prev.src = URL.createObjectURL(file);
+    prev.classList.remove('hidden');
   }
 }
 
