@@ -1085,7 +1085,7 @@ function closeMobileSidebar() {
 function doLogout() {
   if (confirm('Yakin ingin keluar dari sesi Owner?')) {
     localStorage.removeItem(AUTH_KEY);
-    location.href = 'login.html';
+    location.href = 'login-pos-aerorent.html';
   }
 }
 
