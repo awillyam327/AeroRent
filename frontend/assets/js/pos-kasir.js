@@ -743,7 +743,7 @@
       BT.step = 1; BT.pelanggan = null; BT.kendaraan = null; BT.filterTipe = 'semua';
 
       // 2. Reset form
-      ['bt-plg-q', 'bt-np-nama', 'bt-np-telp', 'bt-np-alamat', 'bt-catatan'].forEach(id => {
+      ['bt-plg-q', 'bt-np-nama', 'bt-np-telp', 'bt-np-email', 'bt-np-alamat', 'bt-catatan'].forEach(id => {
         const e = el(id); if (e) e.value = '';
       });
       el('bt-durasi').value = '1';
@@ -964,6 +964,7 @@
     async function btSimpanPlgBaru() {
       const nama = el('bt-np-nama').value.trim();
       const telp = el('bt-np-telp').value.trim();
+      const email = el('bt-np-email').value.trim();
       const alamat = el('bt-np-alamat').value.trim();
 
       if (!nama || !telp) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Data Tidak Lengkap', 'Nama lengkap dan nomor telepon wajib diisi.'); return; }
@@ -976,6 +977,7 @@
         const fd = new FormData();
         fd.append('nama_lengkap', nama);
         fd.append('no_telepon', telp);
+        if (email) fd.append('email', email);
         if (alamat) fd.append('alamat', alamat);
 
         const r = await fetch(`${API}/pelanggan`, {

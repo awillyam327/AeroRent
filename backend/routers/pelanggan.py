@@ -183,13 +183,8 @@ async def tambah_pelanggan(
     cur=Depends(get_db),
 ):
     try:
-        if not nama_lengkap or not email:
-            raise HTTPException(400, "Nama dan Email wajib diisi.")
-
-        if no_ktp and no_ktp.strip():
-            await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE no_ktp = %(ktp)s", {"ktp": no_ktp})
-            if await cur.fetchone():
-                raise HTTPException(400, "Nomor KTP ini sudah terdaftar pada akun pelanggan lain.")
+        if not nama_lengkap or not nama_lengkap.strip():
+            raise HTTPException(400, "Nama wajib diisi.")
         if not no_telepon or not no_telepon.strip():
             raise HTTPException(400, "Nomor telepon wajib diisi.")
 
