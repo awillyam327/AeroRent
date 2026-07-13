@@ -145,7 +145,8 @@ async def register_customer(
                     if nama_match:
                         ktp_name = nama_match.group(1).strip()
                         if not _names_match(nama_lengkap, ktp_name):
-                            raise HTTPException(400, "Nama di KTP tidak sama dengan Nama Lengkap yang diinput.")
+                            log.warning(f"[OCR Auth] KTP match warning: '{nama_lengkap}' != '{ktp_name}'")
+                            # Tidak di-block lagi karena KTP kadang buram/manual input
                 except HTTPException as e:
                     raise e
                 except Exception as e:
@@ -160,7 +161,8 @@ async def register_customer(
                     sim_raw = await perform_ocr(sim_bytes)
                     # Always check SIM text against nama_lengkap
                     if not _names_match(nama_lengkap, sim_raw):
-                        raise HTTPException(400, "Nama pada SIM A tidak cocok dengan pendaftaran. Harap unggah dokumen asli milik sendiri.")
+                        log.warning(f"[OCR Auth] SIM match warning: '{nama_lengkap}' != '{sim_raw}'")
+                        # Tidak di-block lagi
                 except HTTPException as e:
                     raise e
                 except Exception as e:
