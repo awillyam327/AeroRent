@@ -43,33 +43,33 @@ async def compress_image(image_bytes: bytes, quality: int = 80, max_size: tuple 
 
 async def imgbb_upload(file_bytes: bytes, filename: str) -> str:
     """
-    Upload foto ke ImgBB → kembalikan URL permanen.
-    Digunakan untuk: foto KTP/SIM pelanggan, foto kondisi kendaraan (FR-07).
+    Upload foto ke Cloudinary → kembalikan URL permanen.
+    Tetap menggunakan nama fungsi 'imgbb_upload' agar tidak perlu refactor massal H-1.
     """
-    if not cfg.IMGBB_API_KEY:
+    if not cfg.CLOUDINARY_CLOUD_NAME or not cfg.CLOUDINARY_UPLOAD_PRESET:
         import os
         os.makedirs("uploads", exist_ok=True)
         local_path = os.path.join("uploads", filename)
         with open(local_path, "wb") as f:
             f.write(file_bytes)
-        log.warning(f"[ImgBB] API Key kosong, foto disimpan lokal: {local_path}")
+        log.warning(f"[Cloudinary] API Key kosong, foto disimpan lokal: {local_path}")
         return f"http://localhost:8000/uploads/{filename}"
 
-    b64 = base64.b64encode(file_bytes).decode()
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(
-            "https://api.imgbb.com/1/upload",
-            params={"key": cfg.IMGBB_API_KEY},
-            data={"image": b64, "name": filename},
+            f"https://api.cloudinary.com/v1_1/{cfg.CLOUDINARY_CLOUD_NAME}/image/upload",
+            data={"upload_preset": cfg.CLOUDINARY_UPLOAD_PRESET},
+            files={"file": (filename, file_bytes, "image/jpeg")},
         )
 
     if resp.status_code != 200:
         err = resp.json().get("error", {}).get("message", "unknown")
-        log.error(f"[ImgBB] Upload gagal ({filename}): {err}")
-        raise HTTPException(502, f"Upload foto ke ImgBB gagal: {err}")
+        log.error(f"[Cloudinary] Upload gagal ({filename}): {err}")
+        raise HTTPException(502, f"Upload foto ke Cloudinary gagal: {err}")
 
-    url = resp.json()["data"]["url"]
-    log.info(f"[ImgBB] Upload OK: {url}")
+    # Kembalikan URL https dari Cloudinary
+    url = resp.json().get("secure_url", "")
+    log.info(f"[Cloudinary] Upload OK: {url}")
     return url
 
 

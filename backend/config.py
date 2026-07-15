@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     ACCESS_EXPIRE_MIN:  int   = 60
     REFRESH_EXPIRE_DAYS:int   = 7
 
-    IMGBB_API_KEY:      str   = ""
+    CLOUDINARY_CLOUD_NAME: str = "dh2afth8n"
+    CLOUDINARY_UPLOAD_PRESET: str = "aerorent_preset"
     OCR_SPACE_API_KEY:  str   = "helloworld"
     MIDTRANS_SERVER_KEY:str   = ""
     MIDTRANS_CLIENT_KEY:str   = ""
