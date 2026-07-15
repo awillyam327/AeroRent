@@ -53,9 +53,19 @@ function renderVehicleCard(v, rootPath = '') {
   const tersedia = v.status === 'TERSEDIA';
   const badgeClass = tersedia ? 'badge-tersedia' : 'badge-disewa';
   const badgeLabel = tersedia ? 'Tersedia' : 'Disewa';
-  const fotoHtml = v.foto_url
-    ? `<img src="${v.foto_url}" alt="${v.nama_kendaraan}" loading="lazy">`
+  
+  // Handle edge cases where foto_url is the string "null" or missing
+  let imgSrc = '';
+  if (v.foto_url && v.foto_url !== "null" && v.foto_url !== "undefined") {
+    imgSrc = v.foto_url.startsWith('http') || v.foto_url.startsWith('data:') 
+             ? v.foto_url 
+             : rootPath + v.foto_url;
+  }
+
+  const fotoHtml = imgSrc
+    ? `<img src="${imgSrc}" alt="${v.nama_kendaraan}" loading="lazy" onerror="this.outerHTML='<div class=\\'vehicle-photo-placeholder\\'><i class=\\'ph ph-car\\'></i></div>'">`
     : `<div class="vehicle-photo-placeholder"><i class="ph ph-car"></i></div>`;
+    
   return `
     <div class="vehicle-card glass-card">
       <div class="vehicle-photo">
