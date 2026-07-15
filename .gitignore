@@ -21,3 +21,7 @@ backend/.pytest_cache/
 UI-NEW.zip
 temp_ui/
 frontend_old/
+
+# Laporan dan Pitch Deck lokal
+Laporan_AeroRent.md
+Pitch_Deck_AeroRent.md
