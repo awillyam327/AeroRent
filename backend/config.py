@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 class Settings(BaseSettings):
-    # ✅ DIPERBAIKI: DB_NAME sebelumnya diisi password secara tidak sengaja
     DB_HOST:     str = "gateway01.ap-southeast-1.prod.aws.tidbcloud.com"
     DB_PORT:     int = 4000
     DB_USER:     str = "2QN6TiyQC2GrnuN.root"
@@ -37,7 +36,6 @@ class Settings(BaseSettings):
     FACEPP_API_SECRET:  str   = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-
 
 cfg = Settings()
 logging.basicConfig(

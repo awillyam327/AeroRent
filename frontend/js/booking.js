@@ -1,18 +1,4 @@
-/**
- * ==============================================================================
- * AeroRent — Logika Checkout (sewa.html)
- * Alur: Step 1 Jadwal -> Step 2 Data Diri -> Step 3 Selesai
- *
- * KETERBATASAN YANG DISADARI (lihat README_STRUKTUR.md & laporan Phase 1-2):
- * - Validasi bentrok tanggal sewa TIDAK diimplementasikan di sini. Backend
- *   tidak punya endpoint untuk mengecek jadwal kendaraan lain (endpoint yang
- *   ada untuk itu, GET /transaksi, dikunci untuk role KASIR/OWNER saja), jadi
- *   frontend tidak punya cara jujur untuk memvalidasi ini. Pesan error
- *   "tanggal bentrok" yang muncul di mockup TIDAK direplikasi secara palsu.
- * - Upload foto KTP hanya disimpan di memori untuk preview UI, tidak benar-benar
- *   diunggah ke server (tidak ada endpoint registrasi customer yang menerimanya).
- * ==============================================================================
- */
+
 
 let S = {
   step: 1,
@@ -69,7 +55,6 @@ async function initCheckout() {
     }
 
     try {
-      // Default tanggal mulai = besok
       const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
       S.startDate = tomorrow.toISOString().split('T')[0];
       qs('jadwal-tanggal').value = S.startDate;
@@ -84,16 +69,12 @@ async function initCheckout() {
       showCheckoutError('Terjadi kesalahan saat menampilkan halaman. Silakan refresh.');
       return;
     }
-
-    // Auto-isi Data Diri dari profil Customer yang sudah login
     try {
       const profile = getDemoProfile();
       qs('dd-nama').value = profile?.nama || auth.user.nama || '';
       qs('dd-telp').value = profile?.telp || '';
       qs('dd-alamat').value = profile?.alamat || '';
     } catch (_) {}
-
-    // Ambil data pelanggan asli dari backend
     try {
       const pId = auth.user.id || auth.user.sub;
       if (pId && !pId.startsWith('plg-demo')) {
@@ -137,8 +118,6 @@ async function initCheckout() {
     }
 
     try { onDataDiriChange(); } catch (_) {}
-
-    // Load Midtrans Snap JS dynamically
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -168,7 +147,6 @@ function showCheckoutError(msg) {
   qs('co-error-msg').textContent = msg;
 }
 
-/* ---------- Kalkulasi biaya ---------- */
 function calcBiayaSewa() { 
   let basePrice = S.vehicle?.harga_sewa_harian || 0;
   let totalSewa = 0;
@@ -178,7 +156,7 @@ function calcBiayaSewa() {
   } else {
     totalSewa = basePrice * S.duration;
   }
-  
+
   if (S.nextIsPromo) {
     totalSewa = totalSewa * 0.8; // Diskon 20%
   }
@@ -187,7 +165,6 @@ function calcBiayaSewa() {
 function calcBiayaSupir() { return S.useDriver ? (S.vehicle?.harga_supir_harian || 150000) * S.duration : 0; }
 function calcTotal() { return calcBiayaSewa() + calcBiayaSupir(); }
 
-/* ---------- Render ringkasan kanan (dipakai step 1 & 2) ---------- */
 function renderSummary() {
   const v = S.vehicle;
   qs('sum-foto').innerHTML = v.foto_url
@@ -201,25 +178,22 @@ function renderSummary() {
   qs('sum-supir-row').classList.toggle('hidden', !S.useDriver);
   qs('sum-supir-val').textContent = rp(calcBiayaSupir());
   qs('sum-total').textContent = rp(calcTotal());
-
-  // Elemen khusus step 2 (mungkin belum ada saat step 1)
   const tglEl = qs('sum-tanggal');
   if (tglEl) tglEl.textContent = fmtDT(S.startDate);
   const metodeEl = qs('sum-metode');
   if (metodeEl) metodeEl.textContent = S.metodeBayar === 'TUNAI' ? 'Bayar di Tempat (Cash)' : 'Pelunasan Web (Cashless)';
 }
 
-/* ---------- STEP 1: Jadwal & Layanan ---------- */
 function setPaketSewa(paket) {
   S.paketSewa = paket;
   qs('btn-paket-harian').classList.toggle('btn-primary', paket === 'HARIAN');
   qs('btn-paket-harian').classList.toggle('btn-ghost', paket !== 'HARIAN');
   qs('btn-paket-bulanan').classList.toggle('btn-primary', paket === 'BULANAN');
   qs('btn-paket-bulanan').classList.toggle('btn-ghost', paket !== 'BULANAN');
-  
+
   qs('group-durasi-harian').classList.toggle('hidden', paket === 'BULANAN');
   qs('group-durasi-bulanan').classList.toggle('hidden', paket === 'HARIAN');
-  
+
   if (paket === 'BULANAN') {
     qs('jadwal-supir').checked = false;
     qs('jadwal-supir').disabled = true;
@@ -229,7 +203,7 @@ function setPaketSewa(paket) {
     qs('jadwal-supir').disabled = false;
     qs('jadwal-supir').closest('.driver-toggle-row').style.display = 'flex';
   }
-  
+
   onJadwalChange();
 }
 
@@ -240,7 +214,7 @@ async function onJadwalChange() {
   } else {
     S.duration = Math.max(1, parseInt(qs('jadwal-durasi').value || '1', 10));
   }
-  
+
   if (S.paketSewa === 'HARIAN' && S.useDriver && S.duration > 7) {
     S.duration = 7;
     qs('jadwal-durasi').value = 7;
@@ -249,7 +223,7 @@ async function onJadwalChange() {
 
   renderSummary();
   validateStep1();
-  
+
   if (S.startDate && S.paketSewa === 'HARIAN') {
       await checkSupirAvailability();
   }
@@ -260,11 +234,11 @@ async function checkSupirAvailability() {
     const dtMulai = new Date(S.startDate);
     const dtSelesai = new Date(dtMulai);
     dtSelesai.setDate(dtSelesai.getDate() + S.duration);
-    
+
     const pad = n => n.toString().padStart(2, '0');
     const tglMulaiFmt = `${dtMulai.getFullYear()}-${pad(dtMulai.getMonth()+1)}-${pad(dtMulai.getDate())}T${pad(dtMulai.getHours())}:${pad(dtMulai.getMinutes())}`;
     const tglSelesaiFmt = `${dtSelesai.getFullYear()}-${pad(dtSelesai.getMonth()+1)}-${pad(dtSelesai.getDate())}T${pad(dtSelesai.getHours())}:${pad(dtSelesai.getMinutes())}`;
-    
+
     const r = await fetch(`${API_BASE}/karyawan/supir-tersedia?tanggal_mulai=${tglMulaiFmt}&tanggal_selesai=${tglSelesaiFmt}`);
     if (r.ok) {
         const data = await r.json();
@@ -312,7 +286,6 @@ function goToStep2() {
   validateStep2();
 }
 
-/* ---------- STEP 2: Data Diri ---------- */
 function onDataDiriChange() {
   S.nik = qs('dd-nik') ? qs('dd-nik').value.replace(/\D/g, '') : '';
   if (qs('dd-nik')) qs('dd-nik').value = S.nik; // auto format only numbers
@@ -340,8 +313,6 @@ function setMetodeBayar(metode) {
 async function onSimUpload(input) {
   const rawFile = input.files[0] || null;
   if (!rawFile) return;
-
-  // Kompresi gambar ke bawah 1MB
   try {
     S.simFile = await compressImageFile(rawFile, 0.95);
   } catch (e) {
@@ -358,8 +329,6 @@ async function onSimUpload(input) {
 }
 async function uploadSewaSim() {
   if (!S.simFile) return showToast('<i class="ph-fill ph-warning-circle" style="color:#F59E0B;"></i>', 'Perhatian', 'Pilih file SIM A terlebih dahulu.');
-  
-  // Validasi ukuran
   if (S.simFile.size > 1 * 1024 * 1024) {
     showToast('<i class="ph-fill ph-warning-circle" style="color:#F59E0B;"></i>', 'Terlalu Besar', `Foto SIM masih ${(S.simFile.size / 1024 / 1024).toFixed(1)} MB. Coba ambil foto dengan resolusi lebih rendah.`);
     return;
@@ -416,8 +385,6 @@ function validateStep2() {
   qs('btn-step2-submit').disabled = !valid;
   return valid;
 }
-
-// LIVENESS FUNCTIONS
 async function startCamera() {
   try {
     S.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
@@ -447,15 +414,13 @@ async function captureLiveness() {
   canvas.height = video.videoHeight;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  
+
   canvas.toBlob(async (blob) => {
     S.livenessFile = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
     qs('liveness-preview').src = URL.createObjectURL(S.livenessFile);
     stopCamera();
     qs('camera-container').style.display = 'none';
     qs('liveness-result').style.display = 'block';
-    
-    // Auto-upload SIM if needed before matching
     if (!S.hasSim && S.simFile) {
       qs('liveness-status-text').innerHTML = '<span class="spinner" style="width:12px;height:12px;"></span> Memvalidasi SIM A via OCR...';
       const fd = new FormData();
@@ -485,15 +450,13 @@ async function captureLiveness() {
         return;
       }
     }
-    
-    // Call Face Match API
     qs('liveness-status-text').innerHTML = '<span class="spinner" style="width:12px;height:12px;"></span> Menganalisa Wajah...';
     qs('btn-retake-camera').disabled = true;
-    
+
     const fd = new FormData();
     fd.append('selfie', S.livenessFile);
     const auth = getAuth();
-    
+
     try {
       const res = await fetch(`${API_BASE}/ocr/face-match`, {
         method: 'POST',
@@ -501,7 +464,7 @@ async function captureLiveness() {
         body: fd
       });
       const data = await res.json();
-      
+
       if (res.ok && data.match_score >= 80) {
         S.livenessPassed = true;
         qs('liveness-status-text').innerHTML = `<span style="color:#10B981;"><i class="ph-fill ph-check-circle"></i> Cocok (${data.match_score}%)</span>`;
@@ -518,7 +481,7 @@ async function captureLiveness() {
       qs('btn-retake-camera').disabled = false;
       if (typeof showToast === 'function') showToast('<i class="ph-fill ph-wifi-slash"></i>', 'Koneksi Error', 'Kesalahan jaringan saat verifikasi wajah.');
     }
-    
+
   }, 'image/jpeg', 0.8);
 }
 
@@ -544,11 +507,10 @@ function updateStepIndicator() {
   });
 }
 
-/* ---------- SUBMIT BOOKING ---------- */
 async function submitBooking() {
   if (!validateStep2()) return;
   const btn = qs('btn-step2-submit');
-  
+
   if (!S.useDriver && !S.hasSim && S.simFile) {
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Memvalidasi SIM A...';
@@ -580,13 +542,11 @@ async function submitBooking() {
           return;
       }
   }
-  
+
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Memproses...';
 
   const auth = getAuth();
-  
-  // Sync Data Diri (termasuk NIK) ke Backend
   try {
     await fetch(`${API_BASE}/pelanggan/saya`, {
       method: 'PUT',
@@ -630,22 +590,19 @@ async function submitBooking() {
     if (!res.ok) throw new Error('Backend menolak permintaan (kemungkinan id_pelanggan demo tidak terdaftar di database asli).');
     const result = await res.json();
     S.bookingResult = { nomorBooking: result.nomor_booking, total: result.total_biaya, demo: false, id_transaksi: result.id_transaksi };
-    
+
     if (S.metodeBayar === 'MIDTRANS') {
         btn.innerHTML = '<span class="spinner"></span> Membuka Pembayaran...';
         await processMidtransPayment(result.id_transaksi, auth.access_token);
         return; // processMidtransPayment will call goToStep3()
     }
   } catch (err) {
-    // Bedakan antara network error dan error lainnya
     if (err.name === 'TypeError' || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('fetch')) {
       showToast('<i class="ph-fill ph-wifi-slash"></i>', 'Koneksi Error', 'Terjadi kesalahan jaringan. Gagal memproses transaksi.');
       btn.disabled = false;
       btn.innerHTML = 'Konfirmasi & Sewa →';
       return;
     }
-
-    // Jika bukan network error (misal: backend tolak karena id demo), lanjut fallback Demo.
     const fakeSeq = Math.floor(1000 + Math.random() * 8999);
     S.bookingResult = {
       nomorBooking: `AR-${new Date().getFullYear()}${fakeSeq}`,
@@ -666,7 +623,7 @@ async function submitBooking() {
       status_bayar: 'BELUM_LUNAS',
       created_at: new Date().toISOString(),
     });
-    
+
     if (S.metodeBayar === 'MIDTRANS') {
         showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Mode Demo', 'Pembayaran Midtrans tidak dapat disimulasikan dalam mode offline/demo.');
     }
@@ -683,7 +640,7 @@ async function processMidtransPayment(tid, token) {
     });
     if (!res.ok) throw new Error('Gagal mendapatkan token pembayaran.');
     const data = await res.json();
-    
+
     window.snap.pay(data.snap_token, {
       onSuccess: function(result) {
         showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Pembayaran Berhasil', 'Terima kasih, pembayaran Anda telah diterima.');
@@ -726,19 +683,19 @@ function goToStep3(status = 'SUCCESS') {
   qs('panel-step2').classList.add('hidden');
   qs('panel-step3').classList.remove('hidden');
   qs('summary-panel').classList.add('hidden');
-  
+
   const grid = document.querySelector('.checkout-grid');
   if (grid) grid.style.gridTemplateColumns = '1fr';
 
   const user = getCurrentUser();
   const userName = user?.nama || S.nama;
   const bookingNum = S.bookingResult.nomorBooking;
-  
+
   const p3 = qs('panel-step3');
   const icon = p3.querySelector('.success-icon');
   const title = p3.querySelector('h2');
   const desc = p3.querySelector('p');
-  
+
   if (status === 'PENDING') {
     icon.innerHTML = '<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>';
     icon.style.color = 'var(--color-amber)';
@@ -746,20 +703,18 @@ function goToStep3(status = 'SUCCESS') {
     icon.style.backgroundColor = 'rgba(245,158,11,0.05)';
     title.textContent = 'PEMESANAN DITUNDA';
     desc.innerHTML = `Terima kasih <strong style="color:#fff;">${userName}</strong>, pemesanan Anda (<span style="color:var(--color-amber);font-weight:700;">${bookingNum}</span>) telah dibuat, namun <strong>pembayaran belum diselesaikan</strong>. Silakan bayar melalui Dashboard, atau lanjutkan pembayaran sekarang.`;
-    
-    // Add floating bubble popup for payment resume
     let bubble = document.getElementById('floating-pay-bubble');
     if (!bubble) {
         bubble = document.createElement('button');
         bubble.id = 'floating-pay-bubble';
         bubble.innerHTML = '<i class="ph ph-wallet" style="font-size:24px;"></i> Lanjutkan Pembayaran';
-        
+
         bubble.onclick = () => {
             bubble.innerHTML = '<span class="spinner" style="margin-right:8px;"></span> Membuka...';
             processMidtransPayment(S.bookingResult.id_transaksi, getAuth().access_token);
         };
         document.body.appendChild(bubble);
-        
+
         if (!document.getElementById('bubble-anim')) {
             const style = document.createElement('style');
             style.id = 'bubble-anim';
@@ -775,7 +730,6 @@ function goToStep3(status = 'SUCCESS') {
             document.head.appendChild(style);
         }
     } else {
-        // Reset button text if it already exists (e.g. after closing midtrans popup)
         bubble.innerHTML = '<i class="ph ph-wallet" style="font-size:24px;"></i> Lanjutkan Pembayaran';
     }
   } else {
@@ -785,11 +739,11 @@ function goToStep3(status = 'SUCCESS') {
     icon.style.backgroundColor = '';
     title.textContent = 'PEMESANAN BERHASIL!';
     desc.innerHTML = `Terima kasih <strong style="color:#fff;">${userName}</strong>, pemesanan Anda (<span style="color:var(--color-amber);font-weight:700;">${bookingNum}</span>) telah diterima sistem AeroRent Salatiga. Tim admin kami akan mengirimkan rincian invoice dan info supir via WhatsApp dalam waktu maksimal 10 menit.`;
-    
+
     const bubble = document.getElementById('floating-pay-bubble');
     if (bubble) bubble.remove();
   }
-  
+
   if (S.bookingResult.demo) {
     showToast('<i class="ph-fill ph-flask" style="color: #8B5CF6;"></i>', 'Mode Demo', 'Booking ini tidak benar-benar tersimpan ke server (lihat catatan di kode).');
   }
@@ -801,11 +755,11 @@ async function scanSewaKtp() {
     showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Peringatan', 'Silakan pilih atau ambil foto KTP terlebih dahulu.');
     return;
   }
-  
+
   let file = inp.files[0];
   const statusEl = document.getElementById('sewa-ktp-status');
   const btn = document.getElementById('btn-scan-sewa-ktp');
-  
+
   statusEl.classList.remove('hidden', 'text-green-400', 'text-red-400');
   statusEl.classList.add('text-gray-500');
   statusEl.innerHTML = '<div class="spin inline-block mx-auto" style="width:12px;height:12px;border-width:2px;vertical-align:-2px;margin-right:6px;"></div>Mengompresi & Memproses OCR...';
@@ -816,23 +770,23 @@ async function scanSewaKtp() {
   } catch (e) {
     console.error('Gagal kompresi:', e);
   }
-  
+
   const fd = new FormData();
   fd.append('file', file);
-  
+
   try {
     const r = await fetch(`${API_BASE}/ocr/ktp`, {
       method: 'POST',
       body: fd
     });
-    
+
     if (r.ok) {
       const res = await r.json();
       let msg = [];
       if (res.nik) { document.getElementById('dd-nik').value = res.nik; msg.push('NIK'); }
       if (res.nama) { document.getElementById('dd-nama').value = res.nama; msg.push('Nama'); }
       if (res.alamat) { document.getElementById('dd-alamat').value = res.alamat; msg.push('Alamat'); }
-      
+
       if (msg.length > 0) {
         showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'OCR Berhasil', `Berhasil mengisi: ${msg.join(', ')}`);
         statusEl.innerHTML = '<i class="ph-fill ph-check-circle" style="color: #10B981;"></i> ' + msg.join(', ') + ' berhasil diisi.';

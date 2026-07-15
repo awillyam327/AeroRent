@@ -1,23 +1,8 @@
-    -- ==============================================================================
-    -- AERORENT — TiDB / MySQL DATABASE SCHEMA
-    -- Sistem Manajemen Armada & POS — Salatiga
-    -- Versi   : 2.0.0  |  Engine: TiDB Serverless (MySQL Compatible)
-    -- Catatan : Skema ini adalah konversi dari arsitektur Oracle 19c.
-    --           Fitur Trigger & Sequence Oracle digantikan dengan default MySQL
-    --           dan penanganan logika di level Backend (FastAPI).
-    -- ==============================================================================
-
-    -- Hapus objek lama jika ada (urutan reverse FK agar tidak error)
     DROP TABLE IF EXISTS PENGELUARAN_OPERASIONAL CASCADE;
     DROP TABLE IF EXISTS TRANSAKSI_SEWA CASCADE;
     DROP TABLE IF EXISTS KENDARAAN CASCADE;
     DROP TABLE IF EXISTS PELANGGAN CASCADE;
     DROP TABLE IF EXISTS KARYAWAN CASCADE;
-
-    -- ==============================================================================
-    -- TABEL 1: KARYAWAN
-    -- Menyimpan semua pengguna sistem (OWNER & KASIR) dengan RBAC.
-    -- ==============================================================================
     CREATE TABLE KARYAWAN (
         id_karyawan       VARCHAR(50)     NOT NULL PRIMARY KEY,
         nama_lengkap      VARCHAR(100)    NOT NULL,
@@ -32,11 +17,6 @@
         created_at        TIMESTAMP       DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at        TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL
     ) COMMENT='Master data karyawan — dasar RBAC sistem. UUID v4.';
-
-    -- ==============================================================================
-    -- TABEL 2: KENDARAAN
-    -- Inventaris lengkap armada kendaraan rental.
-    -- ==============================================================================
     CREATE TABLE KENDARAAN (
         id_kendaraan          VARCHAR(50)     NOT NULL PRIMARY KEY,
         nama_kendaraan        VARCHAR(100)    NOT NULL,
@@ -59,11 +39,6 @@
         created_at            TIMESTAMP       DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at            TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL
     ) COMMENT='Master inventaris armada kendaraan';
-
-    -- ==============================================================================
-    -- TABEL 3: PELANGGAN
-    -- Data penyewa kendaraan beserta dokumen identitas.
-    -- ==============================================================================
     CREATE TABLE PELANGGAN (
         id_pelanggan      VARCHAR(50)     NOT NULL PRIMARY KEY,
         nama_lengkap      VARCHAR(100)    NOT NULL,
@@ -78,61 +53,51 @@
         created_at        TIMESTAMP       DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at        TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL
     ) COMMENT='Data penyewa kendaraan AeroRent';
-
-    -- ==============================================================================
-    -- TABEL 4: TRANSAKSI_SEWA
-    -- Inti sistem — siklus hidup lengkap setiap transaksi sewa.
-    -- ==============================================================================
     CREATE TABLE TRANSAKSI_SEWA (
         id_transaksi              VARCHAR(50)     NOT NULL PRIMARY KEY,
-        nomor_booking             VARCHAR(20)     NOT NULL UNIQUE, -- Contoh: AR-20261001 (di-generate via Backend)
+        nomor_booking             VARCHAR(20)     NOT NULL UNIQUE, 
         id_pelanggan              VARCHAR(50)     NOT NULL,
         id_kendaraan              VARCHAR(50)     NOT NULL,
-        id_karyawan_kasir         VARCHAR(50),                     -- Kasir yang memproses
-        id_supir                  VARCHAR(50),                     -- Supir yang ditugaskan
-        
+        id_karyawan_kasir         VARCHAR(50),                     
+        id_supir                  VARCHAR(50),                     
+
         tanggal_mulai             DATE            NOT NULL,
         tanggal_selesai_rencana   DATE            NOT NULL,
-        tanggal_selesai_aktual    DATETIME,                        -- Dicatat saat pengembalian fisik
+        tanggal_selesai_aktual    DATETIME,                        
         durasi_hari_rencana       INT             NOT NULL,
-        
+
         gunakan_supir             TINYINT(1)      DEFAULT 0 NOT NULL,
-        
+
         biaya_sewa                DECIMAL(12,2)   NOT NULL,
         biaya_supir               DECIMAL(12,2)   DEFAULT 0 NOT NULL,
         biaya_denda_terlambat     DECIMAL(12,2)   DEFAULT 0 NOT NULL,
         biaya_denda_kerusakan     DECIMAL(12,2)   DEFAULT 0 NOT NULL,
         biaya_tambahan_lain       DECIMAL(12,2)   DEFAULT 0 NOT NULL,
         total_biaya               DECIMAL(12,2)   NOT NULL,
-        
+
         metode_pembayaran         VARCHAR(30),
         midtrans_order_id         VARCHAR(100),
         midtrans_transaction_id   VARCHAR(100),
         midtrans_status           VARCHAR(50),
         status_pembayaran         VARCHAR(20)     DEFAULT 'BELUM_LUNAS' NOT NULL CHECK (status_pembayaran IN ('BELUM_LUNAS','DP','LUNAS')),
-        
+
         status                    VARCHAR(25)     DEFAULT 'MENUNGGU' NOT NULL CHECK (status IN ('MENUNGGU','DIKONFIRMASI','AKTIF','SELESAI','DIBATALKAN')),
-        foto_kondisi_sebelum      TEXT,                            -- JSON array [{posisi, url}]
-        foto_kondisi_sesudah      TEXT,                            -- JSON array [{posisi, url}]
+        foto_kondisi_sebelum      TEXT,                            
+        foto_kondisi_sesudah      TEXT,                            
         catatan_kerusakan         TEXT,
         catatan_kasir             TEXT,
-        
+
         created_at                TIMESTAMP       DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at                TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
-        
+
         FOREIGN KEY (id_pelanggan)      REFERENCES PELANGGAN(id_pelanggan) ON DELETE RESTRICT,
         FOREIGN KEY (id_kendaraan)      REFERENCES KENDARAAN(id_kendaraan) ON DELETE RESTRICT,
         FOREIGN KEY (id_karyawan_kasir) REFERENCES KARYAWAN(id_karyawan) ON DELETE SET NULL,
         FOREIGN KEY (id_supir)          REFERENCES KARYAWAN(id_karyawan) ON DELETE SET NULL
     ) COMMENT='Inti sistem: siklus hidup lengkap transaksi sewa';
-
-    -- ==============================================================================
-    -- TABEL 5: PENGELUARAN_OPERASIONAL
-    -- Semua pengeluaran bisnis untuk perhitungan laba-rugi Owner.
-    -- ==============================================================================
     CREATE TABLE PENGELUARAN_OPERASIONAL (
         id_pengeluaran        VARCHAR(50)     NOT NULL PRIMARY KEY,
-        nomor_pengeluaran     VARCHAR(20),                             -- Contoh: PO-20261001
+        nomor_pengeluaran     VARCHAR(20),                             
         id_karyawan           VARCHAR(50)     NOT NULL,
         id_kendaraan          VARCHAR(50),
         kategori              VARCHAR(50)     NOT NULL CHECK (kategori IN ('PERAWATAN','SERVIS','BBM','ASURANSI','PAJAK','GAJI','OPERASIONAL','LAINNYA')),
@@ -143,14 +108,10 @@
         catatan               TEXT,
         created_at            TIMESTAMP       DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at            TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
-        
+
         FOREIGN KEY (id_karyawan)  REFERENCES KARYAWAN(id_karyawan) ON DELETE RESTRICT,
         FOREIGN KEY (id_kendaraan) REFERENCES KENDARAAN(id_kendaraan) ON DELETE SET NULL
     ) COMMENT='Pengeluaran operasional bisnis';
-
-    -- ==============================================================================
-    -- INDEX: Optimasi query yang paling sering dieksekusi
-    -- ==============================================================================
     CREATE INDEX idx_kend_status       ON KENDARAAN(status);
     CREATE INDEX idx_kend_tipe         ON KENDARAAN(tipe_kendaraan);
     CREATE INDEX idx_kend_featured     ON KENDARAAN(is_featured);
@@ -162,11 +123,6 @@
     CREATE INDEX idx_ts_midtrans       ON TRANSAKSI_SEWA(midtrans_order_id);
     CREATE INDEX idx_po_tanggal        ON PENGELUARAN_OPERASIONAL(tanggal_pengeluaran);
     CREATE INDEX idx_po_kategori       ON PENGELUARAN_OPERASIONAL(kategori);
-
-    -- ==============================================================================
-    -- DATA SEED: Data awal wajib ada sebelum sistem dijalankan
-    -- Sandi untuk kedua akun di bawah ini sudah di-hash dan siap untuk login Backend.
-    -- ==============================================================================
     INSERT INTO KARYAWAN (id_karyawan, nama_lengkap, email, no_telepon, password_hash, role, gaji_per_bulan) VALUES 
     ('k-owner-001','Bapak Owner','owner@aerorent.id','+628123456789','$2b$12$K1rZgD9sI/8W4P9d6C.K8uS/9Z5H1c9z9/D9/8Z9/8Z9/8Z9/8Z9.','OWNER',5000000),
     ('k-kasir-001','Admin Kasir','kasir@aerorent.id','+628987654321','$2b$12$K1rZgD9sI/8W4P9d6C.K8uS/9Z5H1c9z9/D9/8Z9/8Z9/8Z9/8Z9.','KASIR',3000000);

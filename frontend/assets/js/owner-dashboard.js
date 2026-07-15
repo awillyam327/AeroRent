@@ -1,17 +1,6 @@
 'use strict';
-// ============================================================
-// KONFIGURASI NGROK
-// ============================================================
-// Ganti URL ini dengan URL Ngrok milik Anda
-// Gunakan localhost untuk pengujian di laptop sendiri
-// <i class="ph-fill ph-check-circle" style="color: #10B981;"></i> BENAR — baca dari localStorage agar sinkron dengan index.html
-// Tidak perlu update manual setiap kali URL Ngrok berubah
 const API = localStorage.getItem('aerorent_api_base') || 'https://aero-rent-twvb.vercel.app';
 const AUTH_KEY = 'aerorent_auth';
-
-// ============================================================
-// DEMO DATA (fallback jika API tidak tersedia)
-// ============================================================
 const DEMO = {
   karyawan: [],
   transaksi: [],
@@ -26,10 +15,6 @@ const DEMO = {
   },
   pengeluaran: [],
 };
-
-// ============================================================
-// STATE
-// ============================================================
 let S = {
     token: null, user: null,
     currentSection: 'dashboard',
@@ -40,10 +25,6 @@ let S = {
     laporTglMulai: null, laporTglSelesai: null,
     pendingFotoKendaraan: null
 };
-
-// ============================================================
-// INIT
-// ============================================================
 async function init() {
   const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
   if (auth) { S.token = auth.access_token; S.user = auth.user; }
@@ -52,28 +33,20 @@ async function init() {
   const nama = S.user?.nama || 'Bapak Owner';
   el('sb-nama').textContent = nama;
   el('sb-avatar').textContent = nama[0].toUpperCase();
-
-  // Set default dates to 1st and last day of current local month
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
-  
+
   const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
-  
+
   el('lk-dari').value = `${y}-${m}-01`;
   el('lk-sampai').value = `${y}-${m}-${lastDay}`;
-  
-  // For other inputs, we can just use the current day
   const todayStr = `${y}-${m}-${String(now.getDate()).padStart(2, '0')}`;
   el('po-tanggal').value = todayStr;
   el('mk-tgl').value = todayStr;
 
   await loadDashboard();
 }
-
-// ============================================================
-// API HELPER
-// ============================================================
 function apiHeaders(opts = {}) {
   const headers = {
     ...(S.token ? { 'Authorization': 'Bearer ' + S.token } : {}),
@@ -91,13 +64,11 @@ async function api(path, opts = {}) {
 
     if (r.status === 401) {
       localStorage.removeItem(AUTH_KEY);
-      // Hanya lakukan reload jika sebelumnya token ada (berarti token kedaluwarsa)
       if (S.token) {
         S.token = null;
         S.user = null;
         location.reload();
       } else {
-        // Jika memang dari awal tidak ada token, hentikan loop dan beri peringatan
         toast('<i class="ph ph-lock"></i>', 'Mode Demo Aktif', 'Belum login. Data yang tampil adalah simulasi.');
       }
       return null;
@@ -117,10 +88,6 @@ async function apiJson(path, opts = {}) {
   if (r && r.ok) return r.json();
   return null;
 }
-
-// ============================================================
-// NAVIGASI SECTIONS
-// ============================================================
 function goSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   el(`sec-${name}`).classList.add('active');
@@ -137,12 +104,7 @@ function goSection(name) {
   if (name === 'statistik') loadStatistik();
   if (name === 'pesanan') loadPesanan();
 }
-
-// ============================================================
-// DASHBOARD
-// ============================================================
 async function loadDashboard() {
-  // Stat cards
   const armData = await apiJson('/laporan/armada') || DEMO.armada;
   const lapData = await apiJson('/laporan/keuangan?dari=' + el('lk-dari').value + '&sampai=' + el('lk-sampai').value) || DEMO.laporan;
   S.laporan = lapData;
@@ -156,8 +118,6 @@ async function loadDashboard() {
   el('dk-omset').textContent = rp(ring.total_pendapatan_kotor);
   el('dk-okupansi').textContent = ((disewa / total) * 100).toFixed(1) + '%';
   el('dk-sukses').textContent = ring.jumlah_transaksi_selesai + ' Sewa';
-
-  // Tabel penyewaan selesai terbaru dari demo/API
   const trxData = await apiJson('/transaksi?status=SELESAI&limit=5') || [];
   const rows = trxData.length ? trxData : DEMO.transaksi.filter(t => t.status === 'SELESAI').slice(0, 5);
   S.transaksi = trxData.length ? trxData : DEMO.transaksi;
@@ -177,10 +137,6 @@ async function loadDashboard() {
       </tr>`).join('');
   }
 }
-
-// ============================================================
-// LAPORAN KEUANGAN
-// ============================================================
 async function loadLaporan() {
   const dari = el('lk-dari').value;
   const sampai = el('lk-sampai').value;
@@ -198,8 +154,6 @@ async function loadLaporan() {
   el('lk-profit').textContent = rp(ring.profit_bersih);
   el('lk-margin').textContent = `↑ Margin bersih: ${ring.margin_persen}%`;
   el('lk-profit').style.color = ring.profit_bersih >= 0 ? '#C084FC' : '#FCA5A5';
-
-  // ---- Chart Revenue (Chart.js) ----
   const tren = data.tren_bulanan || DEMO.laporan.tren_bulanan;
   const labels = tren.map(t => {
     const [y, m] = t.bulan.split('-');
@@ -252,8 +206,6 @@ async function loadLaporan() {
       }
     }
   });
-
-  // ---- Tabel Tren Bulanan ----
   const TARGET = ring.total_pendapatan_kotor / (tren.length || 1);
   const tb = el('lk-table');
   if (!tren.length) {
@@ -283,8 +235,6 @@ async function loadLaporan() {
         </tr>`;
     }).join('');
   }
-
-  // ---- Top 5 Kendaraan ----
   const topKend = data.top_5_kendaraan || DEMO.laporan.top_5_kendaraan;
   el('lk-top-kend').innerHTML = !topKend.length
     ? `<tr><td colspan="4" class="text-center text-gray-600 py-6">Belum ada data.</td></tr>`
@@ -305,7 +255,7 @@ async function downloadLaporanPDF() {
     toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Perhatian', 'Pilih rentang tanggal terlebih dahulu.');
     return;
   }
-  
+
   const token = getToken();
   if (!token) return;
 
@@ -315,7 +265,7 @@ async function downloadLaporanPDF() {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${token}` }
     });
-    
+
     if (res.ok) {
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -334,10 +284,6 @@ async function downloadLaporanPDF() {
     toast('<i class="ph-fill ph-wifi-slash" style="color: #EF4444;"></i>', 'Error', 'Gagal terhubung ke server.');
   }
 }
-
-// ============================================================
-// PENCATATAN OPERASIONAL
-// ============================================================
 async function loadPengeluaran() {
   const data = await apiJson('/pengeluaran') || DEMO.pengeluaran;
   S.pengeluaran = Array.isArray(data) ? data : DEMO.pengeluaran;
@@ -379,7 +325,6 @@ async function savePengeluaran() {
   if (nom <= 0) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nominal harus lebih dari 0.'); return; }
 
   let saved = false;
-  // Backend menggunakan Form(...), jadi kita harus kirim FormData — bukan JSON
   if (S.token) {
     try {
       const fd = new FormData();
@@ -403,8 +348,6 @@ async function savePengeluaran() {
       }
     }
   }
-
-  // Simpan ke state lokal untuk tampilan
   const newEntry = {
     id: 'po-local-' + Date.now(),
     kategori: kat, deskripsi: ket, jumlah: nom,
@@ -428,10 +371,6 @@ async function deletePengeluaran(id) {
   renderPengeluaranTable();
   toast('🗑️', 'Dihapus', 'Catatan pengeluaran berhasil dihapus.');
 }
-
-// ============================================================
-// STATISTIK KENDARAAN
-// ============================================================
 async function loadStatistik() {
   const data = await apiJson('/laporan/armada') || DEMO.armada;
   S.armada = data;
@@ -442,8 +381,6 @@ async function loadStatistik() {
     grid.innerHTML = `<div class="col-span-full text-center text-gray-600 py-12">Tidak ada data armada.</div>`;
     return;
   }
-
-  // Urutkan berdasarkan sewa_bulan_ini DESC
   const sorted = [...list].sort((a, b) => b.sewa_bulan_ini - a.sewa_bulan_ini);
 
   grid.innerHTML = sorted.map((k, i) => {
@@ -486,10 +423,6 @@ async function loadStatistik() {
       </div>`;
   }).join('');
 }
-
-// ============================================================
-// MANAJEMEN KENDARAAN
-// ============================================================
 async function loadKendaraan() {
   const sort = document.getElementById('sk-sort') ? document.getElementById('sk-sort').value : '';
   const order = document.getElementById('sk-order') ? document.getElementById('sk-order').value : 'asc';
@@ -542,12 +475,12 @@ function openKendaraanModal(id = null) {
   S.editKendId = id || null;
   S.pendingFotoKendaraan = null;
   el('mkend-title').textContent = id ? 'Edit Data Kendaraan' : 'Tambah Kendaraan';
-  
+
   const ph = el('mkend-foto-placeholder');
   const prev = el('mkend-foto-preview');
   if(ph) ph.classList.remove('hidden');
   if(prev) { prev.classList.add('hidden'); prev.src = ''; }
-  
+
   if (id) {
     const k = S.kendaraan.find(x => x.id_kendaraan === id);
     if (k) {
@@ -561,7 +494,7 @@ function openKendaraanModal(id = null) {
       el('mkend-sewa').value = k.harga_sewa_harian || 0;
       el('mkend-supir').value = k.harga_supir_harian || 0;
       el('mkend-traccar').value = k.traccar_device_id || '';
-      
+
       if(k.foto_url && prev && ph) {
         ph.classList.add('hidden');
         prev.classList.remove('hidden');
@@ -604,7 +537,7 @@ async function saveKendaraan() {
     toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Mohon isi seluruh form input dengan benar.');
     return;
   }
-  
+
   if (!S.editKendId && !S.pendingFotoKendaraan) {
     toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Foto kendaraan wajib diunggah.');
     return;
@@ -612,7 +545,7 @@ async function saveKendaraan() {
 
   let ok = false;
   let savedId = S.editKendId;
-  
+
   const btnSave = el('btn-save-kendaraan');
   const oriText = btnSave.textContent;
   btnSave.textContent = 'Menyimpan...';
@@ -669,10 +602,10 @@ async function processFotoKendaraan(file) {
     toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Format Salah', 'Harap pilih file gambar.');
     return;
   }
-  
+
   const ph = el('mkend-foto-placeholder');
   const prev = el('mkend-foto-preview');
-  
+
   try {
     toast('<i class="ph-fill ph-spinner ph-spin text-amber-500"></i>', 'Kompresi', 'Mengkompresi gambar...');
     const compressedFile = await compressImageFile(file, 0.95);
@@ -743,10 +676,6 @@ async function deleteKendaraan(id) {
     toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal menghapus. Mungkin ada transaksi aktif.');
   }
 }
-
-// ============================================================
-// MANAJEMEN KARYAWAN
-// ============================================================
 async function loadKaryawan() {
   const data = await apiJson('/karyawan') || DEMO.karyawan;
   S.karyawan = Array.isArray(data) ? data : DEMO.karyawan;
@@ -818,12 +747,12 @@ function toggleRoleFields() {
   const roleEl = el('mk-role');
   if (!roleEl) return;
   const role = roleEl.value;
-  
+
   const divEmail = el('div-mk-email');
   const divPass = el('div-mk-pass');
   const divBuatAkun = el('div-mk-buatakun');
   const divTelepon = el('div-mk-telepon');
-  
+
   if (role === 'SUPIR') {
     if (divEmail) divEmail.style.display = 'none';
     if (divPass) divPass.style.display = 'none';
@@ -884,7 +813,7 @@ async function saveKaryawan() {
   const aktif = parseInt(el('mk-status').value);
 
   if (!nama) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nama wajib diisi.'); return; }
-  
+
   if (role === 'SUPIR') {
     if (!telepon) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Validasi', 'Nomor WA wajib diisi untuk Supir.'); return; }
   } else {
@@ -895,7 +824,6 @@ async function saveKaryawan() {
   let ok = false;
   try {
     if (S.editKaryId) {
-      // UPDATE
       const payload = { nama_lengkap: nama, is_aktif: aktif, gaji_per_bulan: gaji };
       if (role === 'SUPIR') payload.no_telepon = telepon;
 
@@ -905,12 +833,10 @@ async function saveKaryawan() {
         throw new Error(err.detail || "Gagal memperbarui data karyawan");
       }
       ok = true;
-      // Update lokal state
       const idx = S.karyawan.findIndex(k => k.id === S.editKaryId);
       if (idx >= 0) S.karyawan[idx] = { ...S.karyawan[idx], nama, is_aktif: aktif, gaji_per_bulan: gaji };
       if (role === 'SUPIR' && idx >= 0) S.karyawan[idx].telepon = telepon;
     } else {
-      // INSERT
       const payload = { nama_lengkap: nama, role, gaji_per_bulan: gaji, is_aktif: aktif };
       if (role === 'SUPIR') {
         payload.no_telepon = telepon;
@@ -929,7 +855,6 @@ async function saveKaryawan() {
         const res = await r.json().catch(() => ({}));
         S.karyawan.unshift({ id: res.id_karyawan || 'k-new-' + Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
       } else if (!S.token) {
-        // Demo mode: simpan lokal
         S.karyawan.unshift({ id: 'k-local-' + Date.now(), nama, email, role, gaji_per_bulan: gaji, is_aktif: aktif, tanggal_masuk: tgl });
         ok = true;
       }
@@ -958,10 +883,6 @@ async function toggleKaryawan(id, aktif) {
     toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Tidak dapat mengubah status karyawan.');
   }
 }
-
-// ============================================================
-// SEMUA PESANAN
-// ============================================================
 async function loadPesanan() {
   const data = await apiJson('/transaksi?limit=200') || [];
   S.transaksi = Array.isArray(data) && data.length ? data : DEMO.transaksi;
@@ -1094,7 +1015,6 @@ async function ownerUpdateStatus(id, status) {
     toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Status Diperbarui', `Transaksi berhasil ${label[status] || status}.`);
     await loadPesanan();
   } else {
-    // Fallback demo: update lokal
     const idx = S.transaksi.findIndex(t => (t.id || t.id_transaksi) === id);
     if (idx >= 0) S.transaksi[idx].status = status;
     renderPesanan();
@@ -1112,10 +1032,6 @@ async function ownerSendWaReminder(id) {
     toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Gagal', 'Gagal mengirim WA. Pastikan token Fonnte diset.');
   }
 }
-
-// ============================================================
-// EXPORT EXCEL (FR-10 — menggunakan Blob CSV sederhana)
-// ============================================================
 function exportExcel() {
   const ring = S.laporan?.ringkasan || DEMO.laporan.ringkasan;
   const tren = S.laporan?.tren_bulanan || DEMO.laporan.tren_bulanan;
@@ -1132,8 +1048,6 @@ function exportExcel() {
   csv += 'TREN BULANAN\n';
   csv += 'Bulan,Pendapatan\n';
   tren.forEach(t => { csv += `${t.bulan},${t.pendapatan}\n`; });
-
-  // Top kendaraan
   const top = S.laporan?.top_5_kendaraan || DEMO.laporan.top_5_kendaraan;
   csv += '\nTOP KENDARAAN\n';
   csv += 'Nama,Jumlah Sewa,Pendapatan\n';
@@ -1196,10 +1110,6 @@ function exportPDF() {
   doc.save(`Laporan_AeroRent_${el('lk-dari').value}_${el('lk-sampai').value}.pdf`);
   toast('<i class="ph ph-file-pdf"></i>', 'Export Berhasil', 'File PDF laporan keuangan berhasil diunduh.');
 }
-
-// ============================================================
-// MOBILE SIDEBAR
-// ============================================================
 function openMobileSidebar() {
   el('sidebar').classList.add('open');
   el('mobile-overlay').style.display = 'block';
@@ -1208,20 +1118,12 @@ function closeMobileSidebar() {
   el('sidebar').classList.remove('open');
   el('mobile-overlay').style.display = 'none';
 }
-
-// ============================================================
-// LOGOUT
-// ============================================================
 function doLogout() {
   if (confirm('Yakin ingin keluar dari sesi Owner?')) {
     localStorage.removeItem(AUTH_KEY);
     location.href = 'login-pos-aerorent.html';
   }
 }
-
-// ============================================================
-// TOAST NOTIFICATION
-// ============================================================
 let toastTimer;
 function toast(icon, title, msg) {
   el('t-ic').innerHTML = icon;
@@ -1232,24 +1134,15 @@ function toast(icon, title, msg) {
   toastTimer = setTimeout(hideToast, 4500);
 }
 function hideToast() { el('toast').classList.add('hidden'); }
-
-// ============================================================
-// UTILITAS
-// ============================================================
 const el = id => document.getElementById(id);
 const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
 const fmtD = d => d ? new Date(d).toLocaleDateString('id-ID',
   { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 const fmtDT = d => d ? new Date(d).toLocaleString('id-ID') : '—';
-
-
-// Inisialisasi filter tab pesanan
 document.querySelectorAll('.sf-btn').forEach(b => {
   b.style.background = b.dataset.sf === 'semua' ? '#7C3AED' : 'rgba(255,255,255,0.05)';
   b.style.color = b.dataset.sf === 'semua' ? 'white' : '';
   b.style.borderRadius = '12px';
   b.style.transition = 'all .15s';
 });
-
-// Jalankan saat halaman selesai dimuat
 window.addEventListener('load', init);

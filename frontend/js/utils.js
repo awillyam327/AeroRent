@@ -1,42 +1,27 @@
-/**
- * ==============================================================================
- * AeroRent — Utilitas Bersama
- * Dipakai oleh semua halaman: formatter angka/tanggal, shortcut DOM, toast.
- * ==============================================================================
- */
 
-/** Shortcut document.getElementById */
+
 function qs(id) { return document.getElementById(id); }
 
-/** Format angka jadi Rupiah, contoh: rp(300000) -> "Rp 300.000" */
 function rp(n) {
   return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
 }
 
-/** Format tanggal singkat, contoh: "19 Jun 2026" */
 function fmtD(d) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-/** Format tanggal + jam, contoh: "19/06/2026 14.30" */
 function fmtDT(d) {
   if (!d) return '—';
   return new Date(d).toLocaleString('id-ID');
 }
 
-/** Hitung selisih hari antara dua tanggal (string YYYY-MM-DD) */
 function diffDays(dariStr, sampaiStr) {
   const a = new Date(dariStr);
   const b = new Date(sampaiStr);
   return Math.max(Math.ceil((b - a) / 86400000), 1);
 }
 
-/**
- * Tampilkan toast notifikasi.
- * Membutuhkan markup #toast / #toast-ic / #toast-ttl / #toast-msg di halaman
- * (lihat components.js -> renderToastMarkup()).
- */
 let _toastTimer;
 function showToast(icon, title, msg, durationMs = 4000) {
   const box = qs('toast');
@@ -53,19 +38,15 @@ function hideToast() {
   if (box) box.classList.add('hidden');
 }
 
-/** Debounce sederhana — dipakai untuk search-as-you-type */
 function debounce(fn, delay = 300) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
 }
 
-/** Set batasan minimal tanggal ke hari ini untuk input tanggal pemesanan/transaksi */
 document.addEventListener('DOMContentLoaded', () => {
   const d = new Date();
   const todayDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const todayDateTime = `${todayDate}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  
-  // Daftar ID input tanggal yang tidak boleh memilih tanggal di masa lalu
   const restrictedIds = [
     'hero-tanggal',      // index.html
     'armada-tanggal',    // armada.html
@@ -74,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'po-tanggal',        // owner-dashboard.html (Purchase Order)
     'mk-tgl'             // owner-dashboard.html (Maintanance)
   ];
-  
+
   restrictedIds.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -84,11 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-/* ---------- Penyimpanan booking mode-demo (sesi browser lokal) ----------
- * Saat checkout.html gagal memanggil backend asli (lihat js/booking.js),
- * booking "demo" yang dihasilkan disimpan di sini, supaya tetap muncul di
- * Dashboard Customer pada sesi browser yang sama — membuat alur demo terasa
- * utuh dari ujung ke ujung tanpa backend nyata. BUKAN pengganti database. */
 const DEMO_BOOKINGS_KEY = 'aerorent_demo_bookings';
 
 function getDemoBookings() {
@@ -101,9 +77,6 @@ function addDemoBooking(booking) {
   localStorage.setItem(DEMO_BOOKINGS_KEY, JSON.stringify(list));
 }
 
-/* ---------- Profil Customer mode-demo (sesi browser lokal) ----------
- * Dipakai oleh profil.html (simpan) dan sewa.html (auto-isi Data Diri) —
- * lihat README_STRUKTUR.md bagian kontrak API PUT /pelanggan/saya. */
 const DEMO_PROFILE_KEY = 'aerorent_demo_profile';
 
 function getDemoProfile() {
@@ -111,18 +84,12 @@ function getDemoProfile() {
   catch (_) { return null; }
 }
 
-/**
- * Kompresi gambar client-side menggunakan HTML5 Canvas
- * @param {File} file - File asli (gambar)
- * @param {number} maxSizeMB - Batas maksimal dalam MB (default: 0.95MB untuk amannya API OCR)
- * @returns {Promise<File>} - Resolves with compressed File, or original file if already small
- */
 function compressImageFile(file, maxSizeMB = 0.95) {
   return new Promise((resolve, reject) => {
     if (!file || !file.type.startsWith('image/')) {
       return resolve(file);
     }
-    
+
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
     if (file.size <= maxSizeBytes) {
       return resolve(file);

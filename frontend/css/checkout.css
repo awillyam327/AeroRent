@@ -1,12 +1,8 @@
-/* ==============================================================================
-   AeroRent — Checkout Page (sewa.html)
-   Bergantung pada css/global.css untuk token & komponen dasar.
-   ============================================================================== */
+
 
 .checkout-wrap { max-width: 960px; margin: 0 auto; padding: 120px 20px 60px; }
 .checkout-title { margin-bottom: 24px; }
 
-/* Step indicator */
 .step-indicator { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; overflow-x: auto; }
 .step-pill { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--color-text-faint); flex-shrink: 0; }
 .step-pill .dot {
@@ -20,7 +16,6 @@
 .step-pill.step-done .dot { background: var(--color-green); color: #fff; }
 .step-connector { width: 30px; height: 1px; background: rgba(255,255,255,.15); flex-shrink: 0; }
 
-/* Two-column checkout layout */
 .checkout-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
 @media (max-width: 760px) { .checkout-grid { grid-template-columns: 1fr; } }
 .checkout-panel { padding: 24px; }
@@ -30,7 +25,6 @@
 .driver-toggle-row .label { font-size: 14px; font-weight: 600; }
 .driver-toggle-row .sub { font-size: 12px; color: var(--color-text-dim); margin-top: 2px; }
 
-/* Summary card */
 .summary-panel { position: sticky; top: 100px; padding: 22px; }
 .summary-vehicle { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
 .summary-vehicle .photo { width: 64px; height: 64px; border-radius: var(--radius-sm); overflow: hidden; background: rgba(255,255,255,.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -42,7 +36,6 @@
 .summary-total-row .label { font-size: 13px; color: var(--color-text-dim); }
 .summary-total-row .value { font-size: 22px; font-weight: 700; color: var(--color-amber); }
 
-/* KTP upload zone */
 .upload-zone {
   border: 2px dashed rgba(255,255,255,.15); border-radius: var(--radius-md);
   height: 110px; display: flex; align-items: center; justify-content: center; flex-direction: column;
@@ -53,12 +46,10 @@
 .upload-zone.has-file { border-style: solid; border-color: var(--color-green); background: rgba(16,185,129,.06); }
 .upload-zone .hint { font-size: 11px; color: var(--color-text-faint); margin-top: 4px; }
 
-/* Payment method toggle */
 .payment-toggle { display: flex; gap: 10px; margin-top: 6px; }
 .payment-toggle .btn { flex: 1; flex-direction: column; padding: 12px; gap: 2px; }
 .payment-toggle .btn .pm-sub { font-size: 10px; font-weight: 400; opacity: .8; }
 
-/* Step 3: success */
 .success-wrap { max-width: 480px; margin: 0 auto; text-align: center; padding: 50px 36px; }
 .success-icon {
   width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 22px;
@@ -67,5 +58,4 @@
   box-shadow: 0 0 36px rgba(16,185,129,.3);
 }
 
-/* Error state */
 .checkout-error { max-width: 480px; margin: 0 auto; text-align: center; padding: 50px 36px; }

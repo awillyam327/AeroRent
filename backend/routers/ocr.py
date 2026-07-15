@@ -10,22 +10,15 @@ import aiomysql
 
 router = APIRouter(prefix="/ocr", tags=["OCR"])
 
-
 def _normalize_name(name: str) -> str:
-    """Normalize nama untuk perbandingan: lowercase, hilangkan tanda baca & spasi ganda."""
+
     if not name:
         return ""
     name = re.sub(r"[^a-zA-Z\s]", "", name)   # hanya huruf & spasi
     return " ".join(name.lower().split())       # lowercase, trim spasi ganda
 
-
 def _names_match(name_a: str, name_b: str) -> bool:
-    """
-    Cocokkan dua nama secara fleksibel:
-    1. Exact match setelah normalisasi.
-    2. Semua kata di nama A ada di nama B (atau sebaliknya).
-       Contoh: KTP "ARTHUR WILLIAM LIANG" vs SIM "ARTHUR W. LIANG" → cocok
-    """
+
     a = _normalize_name(name_a)
     b = _normalize_name(name_b)
     if not a or not b:
@@ -34,7 +27,6 @@ def _names_match(name_a: str, name_b: str) -> bool:
         return True
     words_a = set(a.split())
     words_b = set(b.split())
-    # Minimal 2 kata sama DAN setidaknya 60% overlap
     common = words_a & words_b
     if len(common) < 2:
         return False
@@ -42,10 +34,10 @@ def _names_match(name_a: str, name_b: str) -> bool:
     return len(common) / max_words >= 0.6
 
 async def perform_ocr(content: bytes) -> str:
-    """Helper function to call OCR.space API and return raw text."""
+
     if not cfg.OCR_SPACE_API_KEY:
         raise HTTPException(500, "Kunci API OCR.space belum dikonfigurasi di backend.")
-        
+
     data = {
         "apikey": cfg.OCR_SPACE_API_KEY,
         "language": "eng",
@@ -53,7 +45,7 @@ async def perform_ocr(content: bytes) -> str:
         "OCREngine": 2
     }
     files = {"file": ("image.jpg", content, "image/jpeg")}
-    
+
     async with httpx.AsyncClient() as client:
         try:
             r = await client.post("https://api.ocr.space/parse/image", data=data, files=files, timeout=30.0)
@@ -75,29 +67,21 @@ async def perform_ocr(content: bytes) -> str:
 async def ocr_ktp(file: UploadFile = File(...)):
     content = await file.read()
     raw_text = await perform_ocr(content)
-    
-    # Simple Regex for Indonesian KTP
     import re
-    
+
     nik = ""
     nama = ""
     alamat = ""
-    
-    # Find NIK (16 digits)
     nik_match = re.search(r'\b\d{16}\b', raw_text)
     if nik_match:
         nik = nik_match.group(0)
-    
-    # Find Nama
     nama_match = re.search(r'(?i)Nama\s*[:;]?\s*(.+)', raw_text)
     if nama_match:
         nama = nama_match.group(1).strip()
-    
-    # Find Alamat
     alamat_match = re.search(r'(?i)Alamat\s*[:;]?\s*(.+)', raw_text)
     if alamat_match:
         alamat = alamat_match.group(1).strip()
-        
+
     return {
         "text": raw_text,
         "nik": nik,
@@ -112,31 +96,26 @@ async def face_match_liveness(
 ):
     if user["role"] != "CUSTOMER":
         raise HTTPException(403, "Akses ditolak.")
-        
+
     await cur.execute("SELECT foto_ktp_url, foto_sim_url FROM PELANGGAN WHERE id_pelanggan = %(id)s", {"id": user["id"]})
     plg = await cur.fetchone()
-    
+
     if not plg or not plg["foto_ktp_url"]:
         raise HTTPException(400, "Foto KTP belum diunggah. Lengkapi profil terlebih dahulu.")
     if not plg.get("foto_sim_url"):
         raise HTTPException(400, "Foto SIM A belum diunggah. Lengkapi profil terlebih dahulu.")
-        
+
     selfie_bytes = await selfie.read()
     if not selfie_bytes:
         raise HTTPException(400, "Selfie kosong.")
-
-    # ── Jalur B: Face++ Compare API (Real AI) ──
     if cfg.FACEPP_API_KEY and cfg.FACEPP_API_SECRET:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # Download foto KTP dari URL yang tersimpan
             try:
                 ktp_resp = await client.get(plg["foto_ktp_url"])
                 ktp_resp.raise_for_status()
                 ktp_bytes = ktp_resp.content
             except Exception:
                 raise HTTPException(502, "Gagal mengunduh foto KTP dari server.")
-
-            # Kirim ke Face++ Compare API
             try:
                 facepp_resp = await client.post(
                     "https://api-us.faceplusplus.com/facepp/v3/compare",
@@ -152,8 +131,6 @@ async def face_match_liveness(
                 result = facepp_resp.json()
             except Exception as e:
                 raise HTTPException(502, f"Gagal menghubungi Face++ API: {str(e)}")
-
-            # Handle Face++ error responses
             if "error_message" in result:
                 err = result["error_message"]
                 if "NO_FACE_DETECTED" in err or "no face" in err.lower():
@@ -180,8 +157,6 @@ async def face_match_liveness(
                     f"Wajah tidak cocok dengan KTP (skor: {match_score}%, minimal: 80%). "
                     "Pastikan selfie Anda sesuai dengan foto di KTP."
                 )
-
-    # ── Fallback: Mock AI (jika Face++ belum dikonfigurasi) ──
     await asyncio.sleep(2)
     match_score = round(random.uniform(85.0, 98.0), 2)
     return {
@@ -190,25 +165,15 @@ async def face_match_liveness(
         "message": f"Wajah cocok dengan KTP & SIM ({match_score}%). [Mode Simulasi]",
     }
 
-
 @router.post("/sim-validate", tags=["📷 OCR"])
 async def validate_and_upload_sim(
     foto_sim: UploadFile = File(...),
     user=Depends(get_current_account),
     cur: aiomysql.DictCursor = Depends(get_db),
 ):
-    """
-    Upload SIM A dengan validasi OCR:
-    1. Baca teks dari foto SIM menggunakan OCR.space.
-    2. Ekstrak nama dari SIM.
-    3. Bandingkan dengan nama_lengkap pelanggan di database (dari KTP saat daftar).
-    4. Jika cocok → upload ke ImgBB & simpan URL ke database.
-    5. Jika tidak cocok → tolak dengan pesan error.
-    """
+
     if user["role"] != "CUSTOMER":
         raise HTTPException(403, "Akses ditolak. Khusus pelanggan.")
-
-    # Ambil nama pelanggan dari database
     await cur.execute(
         "SELECT nama_lengkap FROM PELANGGAN WHERE id_pelanggan = %(id)s",
         {"id": user["id"]},
@@ -218,21 +183,15 @@ async def validate_and_upload_sim(
         raise HTTPException(404, "Data pelanggan tidak ditemukan.")
 
     nama_ktp = plg["nama_lengkap"]
-
-    # Baca file SIM
     sim_bytes = await foto_sim.read()
     if not sim_bytes:
         raise HTTPException(400, "File foto SIM kosong.")
-
-    # Validasi ukuran file (max 1MB)
     if len(sim_bytes) > 1 * 1024 * 1024:
         raise HTTPException(
             400,
             f"Ukuran foto SIM terlalu besar ({round(len(sim_bytes) / 1024 / 1024, 1)} MB). "
             "Maksimal 1 MB. Kompres terlebih dahulu."
         )
-
-    # ── OCR: Baca teks dari SIM ──
     nama_sim = ""
     ocr_raw = ""
 
@@ -256,30 +215,19 @@ async def validate_and_upload_sim(
             parsed = ocr_result.get("ParsedResults", [])
             if parsed:
                 ocr_raw = parsed[0].get("ParsedText", "")
-
-                # Ekstrak nama dari SIM
-                # Pattern: "Nama" or "Name" diikuti teks
                 nama_match = re.search(r"(?i)Nam[ae]\s*[:;]?\s*(.+)", ocr_raw)
                 if nama_match:
                     nama_sim = nama_match.group(1).strip()
-                    # Bersihkan: ambil hanya baris pertama (hapus newline)
                     nama_sim = nama_sim.split("\n")[0].split("\r")[0].strip()
 
         except Exception as e:
-            # OCR gagal → log tapi lanjutkan (tidak block upload)
             import logging
             logging.warning(f"[OCR SIM] Gagal membaca SIM: {e}")
-
-    # ── Validasi: Cocokkan nama SIM dengan nama KTP ──
     if not nama_sim:
         logging.warning("Gagal membaca nama dari foto SIM.")
-        # Tidak diblokir lagi
-        
+
     if not _names_match(nama_ktp, nama_sim):
         logging.warning(f"[OCR SIM] Nama SIM '{nama_sim}' tidak cocok dengan KTP '{nama_ktp}'")
-        # Tidak diblokir lagi
-
-    # ── Upload ke ImgBB & simpan ke database ──
     foto_url = await imgbb_upload(sim_bytes, f"sim_{user['id']}")
 
     await cur.execute(

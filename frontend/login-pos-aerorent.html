@@ -16,8 +16,6 @@
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
-
-<!-- Navbar (komponen bersama, di-render oleh js/components.js) -->
 <header id="navbar"></header>
 
 <main class="auth-page">
@@ -31,15 +29,11 @@
       <h2 id="auth-title">PORTAL KARYAWAN</h2>
       <p id="auth-subtitle">Masuk untuk mengelola sistem POS AeroRent.</p>
     </div>
-
-    <!-- Mode Kasir: Tidak ada tab Daftar -->
     <div class="tab-switcher" style="display:none;">
       <button type="button" id="tab-login" class="tab-btn tab-active">Login</button>
     </div>
 
     <div id="auth-error" class="auth-error hidden" role="alert"></div>
-
-    <!-- ===== FORM LOGIN ===== -->
     <form id="form-login" autocomplete="on">
       <div class="form-group">
         <label class="form-label" for="login-email">Alamat Email</label>
@@ -58,8 +52,6 @@
         Masuk Dashboard
       </button>
     </form>
-
-    <!-- FORM DAFTAR DIHAPUS UNTUK KASIR/OWNER -->
 
   </div>
 </main>

@@ -6,20 +6,16 @@ from database import init_pool, close_pool
 from utils import job_reminder_pengembalian
 from config import cfg, log
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-# Import Routers
 from routers import auth, karyawan, kendaraan, pelanggan, transaksi, midtrans, pengeluaran, laporan, ocr
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     await init_pool()
     scheduler = AsyncIOScheduler()
     scheduler.add_job(job_reminder_pengembalian, "cron", hour=9, minute=0, id="reminder_wa")
     scheduler.start()
     log.info("🚀 Scheduler & DB Started")
     yield
-    # Shutdown
     scheduler.shutdown()
     await close_pool()
 

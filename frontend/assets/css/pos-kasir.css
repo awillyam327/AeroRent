@@ -70,7 +70,6 @@
       background: #0A0A14;
     }
 
-    /* Badges */
     .badge {
       display: inline-flex;
       align-items: center;
@@ -112,7 +111,6 @@
       border: 1px solid rgba(239, 68, 68, .3);
     }
 
-    /* Buttons */
     .btn-p {
       background: var(--purple);
       color: white;
@@ -186,7 +184,6 @@
       border-color: rgba(255, 255, 255, .45);
     }
 
-    /* Transaction list card */
     .trx-card {
       border-left: 3px solid transparent;
       cursor: pointer;
@@ -203,7 +200,6 @@
       border-left-color: var(--purple);
     }
 
-    /* Upload zone */
     .up-zone {
       border: 2px dashed rgba(255, 255, 255, .12);
       border-radius: 12px;
@@ -223,7 +219,6 @@
       background: rgba(16, 185, 129, .05);
     }
 
-    /* Overlay & Modal */
     .overlay {
       position: fixed;
       inset: 0;
@@ -246,7 +241,6 @@
       overflow-y: auto;
     }
 
-    /* Modal Buat Transaksi — lebih besar */
     #bt-modal .bt-inner {
       background: #0A0A14;
       border: 1px solid rgba(255, 255, 255, .1);
@@ -271,7 +265,6 @@
       overflow-y: auto;
     }
 
-    /* Step indicator dots */
     .bt-dot {
       width: 28px;
       height: 28px;
@@ -314,7 +307,6 @@
       background: rgba(255, 255, 255, .1);
     }
 
-    /* Filter tabs di step 2 */
     .bt-tab {
       padding: 6px 14px;
       border-radius: 10px;
@@ -334,7 +326,6 @@
       border-color: transparent;
     }
 
-    /* Kendaraan card di step 2 */
     .bt-kend-card {
       border-radius: 16px;
       overflow: hidden;
@@ -357,7 +348,6 @@
       box-shadow: 0 0 20px rgba(124, 58, 237, .2);
     }
 
-    /* Toggle switch */
     .sw-wrap {
       position: relative;
       width: 44px;

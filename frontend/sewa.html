@@ -19,22 +19,16 @@
 <header id="navbar"></header>
 
 <main class="checkout-wrap">
-
-  <!-- Loading -->
   <div id="co-loading" class="text-center" style="padding:60px 0;">
     <div class="spinner" style="margin:0 auto 12px;"></div>
     <p class="text-dim">Memuat data kendaraan...</p>
   </div>
-
-  <!-- Error -->
   <div id="co-error" class="checkout-error glass-card hidden">
     <div style="font-size:36px;margin-bottom:14px;"><i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i></div>
     <h2 class="mb-3">TIDAK DAPAT MELANJUTKAN</h2>
     <p id="co-error-msg" class="text-dim" style="font-size:14px;"></p>
     <a href="armada.html" class="btn btn-outline mt-6" style="display:inline-flex;">Kembali ke Armada</a>
   </div>
-
-  <!-- Content -->
   <div id="co-content" class="hidden">
     <h1 class="checkout-title">PROSES <span class="text-purple">TRANSAKSI</span></h1>
 
@@ -47,14 +41,11 @@
     </div>
 
     <div class="checkout-grid">
-      <!-- ===== KOLOM KIRI: FORM ===== -->
       <div>
-
-        <!-- STEP 1: Jadwal & Layanan -->
         <div id="panel-step1" class="checkout-panel glass-card">
           <div class="checkout-panel-title"><i class="ph ph-calendar"></i> Detail Waktu &amp; Layanan</div>
           <div id="err-step1" class="text-red-500 text-sm mb-4" style="display:none; color: #EF4444;"></div>
-          
+
           <div class="form-group">
             <label class="form-label">Paket Sewa</label>
             <div class="payment-toggle" style="margin-top: 4px;">
@@ -97,13 +88,9 @@
             </label>
           </div>
         </div>
-
-        <!-- STEP 2: Data Diri -->
         <div id="panel-step2" class="checkout-panel glass-card hidden">
           <div class="checkout-panel-title"><i class="ph ph-user"></i> Lengkapi Data Diri</div>
           <p class="text-dim mb-4" style="font-size:12px;margin-top:-12px;">Pastikan data sesuai dengan kartu identitas.</p>
-
-          <!-- 1. KTP UPLOAD (PALING ATAS) -->
           <div class="form-group" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
             <label class="form-label">Upload KTP</label>
             <p class="text-dim" style="font-size: 12px; margin-top: -6px; margin-bottom: 8px;">Upload KTP untuk mengisi Nama, NIK, dan Alamat otomatis.</p>
@@ -124,8 +111,6 @@
             </button>
             <div id="sewa-ktp-status" class="hidden mt-2 text-sm text-center"></div>
           </div>
-
-          <!-- 1.5 SIM A UPLOAD (LEPAS KUNCI) -->
           <div id="sim-upload-zone" class="form-group hidden" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
             <label class="form-label" style="color:var(--color-amber);">Upload SIM A (Wajib untuk Lepas Kunci)</label>
             <p class="text-dim" style="font-size: 12px; margin-top: -6px; margin-bottom: 8px;">Karena Anda memilih tanpa supir, sistem mewajibkan verifikasi SIM A.</p>
@@ -174,19 +159,17 @@
               </button>
             </div>
           </div>
-
-          <!-- 2.5 FACE MATCH LIVENESS (LEPAS KUNCI) -->
           <div id="liveness-zone" class="form-group hidden" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
             <label class="form-label" style="color:var(--color-amber);">Verifikasi Wajah (Liveness Check)</label>
             <p class="text-dim" style="font-size: 12px; margin-top: -6px; margin-bottom: 12px;">Wajib mengambil foto selfie untuk pencocokan AI dengan KTP & SIM A.</p>
-            
+
             <div id="camera-container" style="display:none; width:100%; border-radius:12px; overflow:hidden; background:#000; position:relative; aspect-ratio:3/4; max-width: 240px; margin: 0 auto;">
               <video id="liveness-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover; transform: scaleX(-1);"></video>
               <button type="button" class="btn btn-primary" style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); border-radius:50px; padding:10px 20px;" onclick="captureLiveness()">
                 <i class="ph-fill ph-camera"></i> Ambil
               </button>
             </div>
-            
+
             <div id="liveness-result" style="display:none; text-align:center;">
               <img id="liveness-preview" style="width:120px; height:160px; object-fit:cover; border-radius:8px; margin:0 auto 12px; transform: scaleX(-1);" />
               <div id="liveness-status-text" class="text-sm font-semibold mb-2" style="color:var(--color-amber);">Belum diverifikasi</div>
@@ -203,8 +186,6 @@
             Saya menyetujui Syarat &amp; Ketentuan yang berlaku, termasuk denda keterlambatan dan kebijakan pembatalan sewa.
           </label>
         </div>
-
-        <!-- STEP 3: Berhasil -->
         <div id="panel-step3" class="success-wrap glass-card hidden">
           <div class="success-icon">✓</div>
           <h2 class="mb-3">PEMESANAN BERHASIL!</h2>
@@ -220,8 +201,6 @@
         </div>
 
       </div>
-
-      <!-- ===== KOLOM KANAN: RINGKASAN ===== -->
       <div id="summary-panel" class="summary-panel glass-card">
         <div id="loyalty-badge" class="hidden" style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10B981; color: #10B981; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 8px;">
           <i class="ph-fill ph-ticket text-xl"></i> <span>Hore! Ini sewa ke-3 Anda. Diskon Loyalitas 20% khusus sewa aktif!</span>

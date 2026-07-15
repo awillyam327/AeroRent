@@ -45,7 +45,6 @@ async def list_pengeluaran(
         log.error(f"[Pengeluaran] Gagal memuat daftar pengeluaran: {e}")
         raise HTTPException(500, "Gagal memuat daftar pengeluaran.")
 
-
 @router.post("", status_code=201, tags=["💸 Pengeluaran"])
 async def tambah_pengeluaran(
     deskripsi:            str             = Form(...),
@@ -59,7 +58,6 @@ async def tambah_pengeluaran(
     cur=Depends(get_db),
 ):
     try:
-        # Validasi input dasar
         if not deskripsi or not deskripsi.strip():
             raise HTTPException(400, "Deskripsi pengeluaran wajib diisi.")
         if jumlah <= 0:
@@ -68,7 +66,7 @@ async def tambah_pengeluaran(
         bukti_url = None
         if bukti and bukti.filename:
             bukti_url = await imgbb_upload(await bukti.read(), f"pengeluaran_{tanggal_pengeluaran}_{deskripsi[:15]}")
-            
+
         pid = f"po-{uuid.uuid4()}"
         await cur.execute(
             "INSERT INTO PENGELUARAN_OPERASIONAL (id_pengeluaran, id_karyawan, id_kendaraan, "
@@ -86,13 +84,12 @@ async def tambah_pengeluaran(
         log.error(f"[Pengeluaran] Gagal mencatat pengeluaran: {e}")
         raise HTTPException(500, "Gagal mencatat pengeluaran.")
 
-
 @router.delete("/{pid}", tags=["💸 Pengeluaran"])
 async def hapus_pengeluaran(pid: str, user=Depends(req_owner), cur=Depends(get_db)):
     try:
         await cur.execute("SELECT id_pengeluaran FROM PENGELUARAN_OPERASIONAL WHERE id_pengeluaran = %(id)s", {"id": pid})
         if not await cur.fetchone(): raise HTTPException(404, "Data pengeluaran tidak ditemukan.")
-        
+
         await cur.execute("DELETE FROM PENGELUARAN_OPERASIONAL WHERE id_pengeluaran = %(id)s", {"id": pid})
         log.info(f"[Pengeluaran] Dihapus: {pid}")
         return {"message": "Pengeluaran berhasil dihapus."}

@@ -1,7 +1,4 @@
 'use strict';
-    // ============================================================
-    // KONFIGURASI & GLOBAL STATE
-    // ============================================================
     const API = API_BASE;
     const AUTH_KEY = 'aerorent_auth';
     const IDB_NAME = 'aerorent-pos-idb';
@@ -12,10 +9,6 @@
       filter: 'semua', files: { d: null, s: null, b: null },
       fotoJenis: null, idb: null, dendaTLbt: 0,
     };
-
-    // ============================================================
-    // INISIALISASI
-    // ============================================================
     async function init() {
       const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
       if (!auth?.access_token) { window.location.href = 'login.html'; return; }
@@ -46,11 +39,6 @@
       await loadList();
     }
     window.addEventListener('load', init);
-
-
-    // ============================================================
-    // IndexedDB
-    // ============================================================
     function openIDB() {
       return new Promise((res, rej) => {
         const r = indexedDB.open(IDB_NAME, 1);
@@ -74,11 +62,6 @@
     const idbAll = (st) => new Promise((res, rej) => { const tx = S.idb.transaction(st, 'readonly'); const r = tx.objectStore(st).getAll(); r.onsuccess = () => res(r.result || []); r.onerror = () => rej(r.error); });
     const idbAdd = (st, d) => new Promise((res, rej) => { const tx = S.idb.transaction(st, 'readwrite'); const r = tx.objectStore(st).add(d); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
     const idbDel = (st, k) => new Promise((res, rej) => { const tx = S.idb.transaction(st, 'readwrite'); const r = tx.objectStore(st).delete(k); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
-
-
-    // ============================================================
-    // KONEKSI & SYNC
-    // ============================================================
     function onConn() {
       S.online = navigator.onLine;
       el('conn-dot').style.background = S.online ? '#10B981' : '#EF4444';
@@ -114,11 +97,6 @@
     }
     function manualSync() { syncQueue(); }
     function onSwMsg(ev) { if (ev.data?.type === 'SYNC_SUCCESS') { toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Sync OK', `${ev.data.nomor_booking} berhasil.`); loadList(); } }
-
-
-    // ============================================================
-    // API HELPER (ANTI-CACHE VERSION)
-    // ============================================================
     async function api(path, opts = {}) {
       const headers = {
         'Content-Type': 'application/json',
@@ -126,7 +104,6 @@
         ...(opts.headers || {})
       };
       try {
-        // Tambahan cache: 'no-store' agar browser selalu meminta data segar ke server
         const r = await fetch(API + path, { ...opts, headers, cache: 'no-store' });
         if (r.status === 401) {
           localStorage.removeItem(AUTH_KEY);
@@ -141,10 +118,6 @@
         return null;
       }
     }
-
-    // ============================================================
-    // LOAD & RENDER LIST TRANSAKSI (Panel Kiri)
-    // ============================================================
     async function loadList() {
       el('list-loading').classList.remove('hidden');
       el('list-empty').classList.add('hidden');
@@ -236,11 +209,6 @@
         l.appendChild(d);
       });
     }
-
-
-    // ============================================================
-    // SEARCH & FILTER (Panel Kiri)
-    // ============================================================
     function onSearchInput(v) {
       if (!v.trim()) { applyFilter(); renderList(S.filtered); return; }
       const q = v.toLowerCase();
@@ -263,11 +231,6 @@
       });
       loadList();
     }
-
-
-    // ============================================================
-    // SELECT & RENDER DETAIL TRANSAKSI (Panel Kanan)
-    // ============================================================
     async function selectTrx(id) {
       document.querySelectorAll('.trx-card').forEach(c => c.classList.remove('selected'));
       const card = document.querySelector(`.trx-card[data-id="${id}"]`);
@@ -320,8 +283,6 @@
       el('det-durasi').textContent = (t.durasi_hari || t.durasi_hari_rencana || '?') + ' hari';
       el('det-supir').textContent = t.gunakan_supir ? (t.id_supir ? `Supir = ${t.nama_supir || t.id_supir}` : 'Dengan Supir (Belum Ditentukan)') : 'Mandiri';
       el('det-supir').style.color = t.gunakan_supir ? '#34D399' : '#9CA3AF';
-
-      // Alert keterlambatan
       const alertEl = el('alert-late');
       if (t.status === 'AKTIF' && t.tanggal_selesai_rencana) {
         const r = new Date(t.tanggal_selesai_rencana); r.setHours(0, 0, 0, 0);
@@ -334,8 +295,6 @@
           el('alert-late-txt').textContent = `${hari} hari terlambat — estimasi denda: ${rp(dend)}`;
         } else { alertEl.classList.add('hidden'); S.dendaTLbt = 0; }
       } else { alertEl.classList.add('hidden'); S.dendaTLbt = 0; }
-
-      // Biaya
       el('lbl-sewa').textContent = `Biaya Sewa (${t.durasi_hari || t.durasi_hari_rencana || '?'} hari)`;
       el('det-sewa').textContent = rp(t.biaya_sewa);
       el('det-total').textContent = rp(t.total_biaya);
@@ -363,11 +322,6 @@
     </div>`
       ).join('');
     }
-
-
-    // ============================================================
-    // RENDER ACTION BUTTONS
-    // ============================================================
     function renderActions(t) {
       const bar = el('action-bar');
       const id = t.id_transaksi || t.id;
@@ -426,11 +380,6 @@
         bar.appendChild(btn);
       }
     }
-
-
-    // ============================================================
-    // UPDATE STATUS TRANSAKSI
-    // ============================================================
     async function updateStatus(id, statusBaru, extra = {}) {
       const payload = { status: statusBaru, ...extra };
       if (S.online) {
@@ -469,11 +418,6 @@
         toast('<i class="ph-fill ph-wifi-slash"></i>', 'Offline', 'Fitur ini membutuhkan koneksi internet.');
       }
     }
-
-
-    // ============================================================
-    // MODAL: FOTO KONDISI KENDARAAN
-    // ============================================================
     function openFotoModal(jenis) {
       S.fotoJenis = jenis; S.files = { d: null, sk: null, ski: null, b: null, dlm: null, tambahan: [] };
       ['d', 'sk', 'ski', 'b', 'dlm'].forEach(k => {
@@ -488,7 +432,7 @@
       el('tambahan-preview').innerHTML = '';
       el('tambahan-preview').classList.add('hidden');
       el('inp-tambahan').value = '';
-      
+
       el('mfoto-title').textContent = jenis === 'sebelum' ? 'Upload Kondisi: Sebelum Diserahkan' : 'Upload Kondisi: Saat Dikembalikan';
       el('sect-catatan').classList.toggle('hidden', jenis === 'sebelum');
       el('btn-submit-foto').disabled = true;
@@ -496,12 +440,12 @@
     }
     function closeFotoModal() { el('modal-foto').classList.add('hidden'); }
     function pickFile(id) { el(id).click(); }
-    
+
     function compressImageFile(file, maxSizeMB = 0.8) {
       return new Promise((resolve, reject) => {
         if (!file || !file.type.startsWith('image/')) return resolve(file);
         if (file.size <= maxSizeMB * 1024 * 1024) return resolve(file);
-    
+
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (e) => {
@@ -512,12 +456,12 @@
             const max = 1600;
             if (w > h && w > max) { h = Math.round((h * max) / w); w = max; }
             else if (h > w && h > max) { w = Math.round((w * max) / h); h = max; }
-    
+
             const canvas = document.createElement('canvas');
             canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
-    
+
             canvas.toBlob(b => {
               if (!b) return resolve(file);
               resolve(new File([b], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
@@ -528,13 +472,13 @@
         reader.onerror = (err) => reject(err);
       });
     }
-    
+
     async function onFile(k, inp) {
       if (!inp.files.length) return;
       const file = inp.files[0];
       const compressed = await compressImageFile(file, 0.8);
       S.files[k] = compressed;
-      
+
       const reader = new FileReader();
       reader.onload = e => {
         el(`img-${k}`).src = e.target.result;
@@ -588,7 +532,7 @@
       fd.append('file_samping_kiri', S.files.ski);
       fd.append('file_belakang', S.files.b);
       fd.append('file_dalam', S.files.dlm);
-      
+
       S.files.tambahan.forEach(f => {
         fd.append('file_tambahan', f);
       });
@@ -620,11 +564,6 @@
       } catch (_) { toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Upload Gagal', 'Periksa koneksi internet Anda.'); btn.disabled = false; }
       el('up-status').classList.add('hidden');
     }
-
-
-    // ============================================================
-    // MODAL: SELESAIKAN TRANSAKSI (dengan denda)
-    // ============================================================
     function openSelesaiModal() {
       const t = S.selected, k = t?.kendaraan || {};
       const rencana = new Date(t?.tanggal_selesai_rencana || 0);
@@ -658,10 +597,6 @@
       closeSelesai();
       await updateStatus(id, 'SELESAI', { biaya_denda_kerusakan: dk, biaya_tambahan_lain: tb, catatan_kasir: cat || null });
     }
-
-    // ============================================================
-    // MODAL: PILIH SUPIR
-    // ============================================================
     let activeSupirTxId = null;
 
     async function openSupirModal(id) {
@@ -708,11 +643,6 @@
         closeSupirModal();
       }
     }
-
-
-    // ============================================================
-    // MODAL: KONFIRMASI UMUM
-    // ============================================================
     function doKonfirm(title, body, cb) {
       el('mk-title').textContent = title;
       el('mk-body').textContent = body;
@@ -720,13 +650,6 @@
       el('modal-konfirm').classList.remove('hidden');
     }
     function closeKonfirm() { el('modal-konfirm').classList.add('hidden'); }
-
-
-    // ============================================================
-    // ══════════════════════════════════════════════════════════
-    // MODAL: BUAT TRANSAKSI BARU — MULTI-STEP WIZARD
-    // ══════════════════════════════════════════════════════════
-    // ============================================================
     const BT = {
       step: 1,
       pelanggan: null,   // {id, nama, telepon}
@@ -736,13 +659,8 @@
       _plgTimer: null,
       _allPlg: [],       // cache daftar pelanggan
     };
-
-    // ── Buka Modal ──────────────────────────────────────────────
     async function bukaModalTransaksi() {
-      // 1. Reset state
       BT.step = 1; BT.pelanggan = null; BT.kendaraan = null; BT.filterTipe = 'semua';
-
-      // 2. Reset form
       ['bt-plg-q', 'bt-np-nama', 'bt-np-nik', 'bt-np-telp', 'bt-np-email', 'bt-np-alamat', 'bt-catatan'].forEach(id => {
         const e = el(id); if (e) e.value = '';
       });
@@ -751,23 +669,17 @@
       el('bt-supir-chk').checked = false;
       el('bt-metode').value = 'TUNAI';
       el('bt-new-plg-form').classList.add('hidden');
-
-      // 3a. Reset SIM upload
       const simFile = el('bt-sim-file'); if (simFile) simFile.value = '';
       const simPrev = el('bt-sim-preview'); if (simPrev) simPrev.classList.add('hidden');
       const simBtn = el('bt-sim-btn'); if (simBtn) simBtn.innerHTML = '<i class="ph ph-camera"></i> Ambil / Pilih Foto SIM A';
       const simStat = el('bt-sim-status'); if (simStat) { simStat.classList.add('hidden'); simStat.innerHTML = ''; }
       const simWrap = el('bt-sim-wrap'); if (simWrap) simWrap.classList.remove('hidden');
-
-      // 3. Reset UI pelanggan
       el('bt-plg-selected').classList.add('hidden');
       el('bt-plg-results').innerHTML = '<div class="text-xs text-gray-600 text-center py-4">Ketik minimal 2 karakter untuk mencari.</div>';
 
       el('bt-modal').classList.remove('hidden');
   el('bt-modal').classList.add('flex');
       btGotoStep(1);
-
-      // 4. Ambil data dari server
       const [rKend, rPlg, rSupir] = await Promise.all([
         api('/kendaraan?status=TERSEDIA'),
         api('/pelanggan'),
@@ -790,13 +702,9 @@
     }
 
     function tutupBuatTrx() { el('bt-modal').classList.add('hidden'); el('bt-modal').classList.remove('flex'); }
-
-    // ── Navigasi Step ───────────────────────────────────────────
     function btGotoStep(n) {
       BT.step = n;
       [1, 2, 3].forEach(i => el(`bt-s${i}`).classList.toggle('hidden', i !== n));
-
-      // Update step dots
       [1, 2, 3].forEach(i => {
         const d = el(`bt-sd${i}`);
         if (!d) return;
@@ -807,7 +715,6 @@
         } else {
           d.className = 'bt-dot upcoming'; d.innerHTML = i;
         }
-        // Line colors
         const l = el(`bt-sl${i}`);
         if (l) l.className = `bt-line ${i < n ? 'done' : 'upcoming'}`;
       });
@@ -815,11 +722,7 @@
       const labels = ['', 'Pilih Pelanggan', 'Pilih Kendaraan', 'Jadwal & Konfirmasi'];
       el('bt-step-lbl').textContent = labels[n];
       el('bt-subtitle').textContent = `Langkah ${n} dari 3 — ${labels[n]}`;
-
-      // Tombol kembali
       el('bt-btn-back').style.display = n > 1 ? '' : 'none';
-
-      // Tombol lanjut / submit
       const btnNext = el('bt-btn-next');
       if (n === 3) {
         btnNext.className = 'flex-1 btn-p py-2.5 rounded-xl text-sm font-bold';
@@ -846,9 +749,6 @@
       }
     }
     function btPrev() { if (BT.step > 1) btGotoStep(BT.step - 1); }
-
-
-    // ── STEP 1: PELANGGAN ───────────────────────────────────────
     function btCariPlg(q) {
       clearTimeout(BT._plgTimer);
       const res = el('bt-plg-results');
@@ -862,8 +762,6 @@
 
       BT._plgTimer = setTimeout(() => {
         const ql = q.toLowerCase();
-
-        // PERBAIKAN DI SINI: Sistem sekarang membaca 'p.nama_lengkap' dari pangkalan data!
         const found = BT._allPlg.filter(p =>
           (p.nama || p.nama_lengkap || '').toLowerCase().includes(ql) ||
           (p.telepon || p.no_telepon || '').includes(q)
@@ -902,7 +800,6 @@
     }
 
     function btPilihPlg(dataStr) {
-      // dataStr bisa berupa string JSON dari onclick inline
       let p;
       try { p = typeof dataStr === 'object' ? dataStr : JSON.parse(dataStr.replace(/&quot;/g, '"')); }
       catch (e) { toast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Error', 'Gagal memproses data pelanggan.'); return; }
@@ -933,21 +830,21 @@
       if (!inp.files.length) return;
       const file = inp.files[0];
       const statusEl = el('bt-np-ktp-status');
-      
+
       statusEl.classList.remove('hidden', 'text-green-400', 'text-red-400');
       statusEl.classList.add('text-gray-500');
       statusEl.innerHTML = '<div class="spin inline-block mx-auto" style="width:12px;height:12px;border-width:2px;vertical-align:-2px;margin-right:6px;"></div>Memproses OCR KTP...';
-      
+
       const fd = new FormData();
       fd.append('file', file);
-      
+
       try {
         const r = await fetch(`${API}/ocr/ktp`, {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + S.token },
           body: fd
         });
-        
+
         if (r.ok) {
           const res = await r.json();
           if (res.nama || res.nik) {
@@ -989,8 +886,6 @@
         fd.append('no_telepon', telp);
         if (email) fd.append('email', email);
         if (alamat) fd.append('alamat', alamat);
-
-        // Sertakan foto KTP jika ada
         const ktpFile = el('bt-np-ktp').files[0];
         if (ktpFile) {
           fd.append('foto_ktp', ktpFile);
@@ -1005,7 +900,6 @@
         if (r.ok) {
           const res = await r.json();
           BT.pelanggan = { id: res.id_pelanggan, nama, telepon: telp, email: '' };
-          // Tambahkan ke cache lokal
           BT._allPlg.unshift({ id_pelanggan: res.id_pelanggan, nama_lengkap: nama, no_telepon: telp });
           btUpdatePlgUI();
           el('bt-new-plg-form').classList.add('hidden');
@@ -1019,9 +913,6 @@
       btn.disabled = false;
       btn.innerHTML = 'Simpan &amp; Pilih Pelanggan Ini';
     }
-
-
-    // ── STEP 2: KENDARAAN ───────────────────────────────────────
     function btSetTipe(tipe) {
       BT.filterTipe = tipe;
       document.querySelectorAll('.bt-tab').forEach(b => {
@@ -1062,8 +953,6 @@
         const transmisi = k.transmisi || 'AT';
         const bbm = k.bbm || k.bahan_bakar || 'Bensin';
         const sel = BT.kendaraan?.id === id;
-
-        // Buat payload untuk onclick (safe JSON encoding)
         const payload = JSON.stringify({ id, nama, harga_harian: harga, harga_supir: supir, foto, tipe, plat, transmisi, bbm });
 
         return `
@@ -1085,14 +974,10 @@
     }
 
     function btPilihKend(payload) {
-      // payload bisa berupa object (dari onclick) atau string JSON
       BT.kendaraan = typeof payload === 'object' ? payload : JSON.parse(payload);
       btRenderKendaraan();
       toast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Kendaraan Dipilih', BT.kendaraan.nama);
     }
-
-
-    // ── STEP 3: JADWAL & HITUNG BIAYA ───────────────────────────
     function btRenderSummary() {
       const k = BT.kendaraan, p = BT.pelanggan;
       if (!k || !p) return;
@@ -1113,23 +998,19 @@
       const tglStr = el('bt-tgl-mulai').value;
       let durasi = Math.max(1, parseInt(el('bt-durasi').value) || 1);
       const supir = el('bt-supir-chk').checked;
-      
+
       if (supir && durasi > 7) {
         durasi = 7;
         el('bt-durasi').value = 7;
         toast('<i class="ph ph-info"></i>', 'Info Sewa Supir', 'Sewa harian dengan supir dibatasi maksimal 7 hari.');
       }
-      
+
       const k = BT.kendaraan;
       if (!k || !tglStr) return;
-
-      // Kalkulasi tanggal selesai
       const dtMulai = new Date(tglStr);
       const dtSelesai = new Date(dtMulai);
       dtSelesai.setDate(dtSelesai.getDate() + durasi);
       el('bt-tgl-selesai').textContent = fmtDT(dtSelesai.toISOString());
-
-      // Kalkulasi biaya
       const harga = k.harga_harian || 0;
       const bSewa = harga * durasi;
       const bSupir = supir ? (k.harga_supir || 150000) * durasi : 0;
@@ -1144,14 +1025,13 @@
 
       el('bt-total').textContent = rp(total);
     }
-    
+
     function btToggleSupirSelect() {
       const isChecked = el('bt-supir-chk').checked;
       const wrap = el('bt-supir-select-wrap');
       if (wrap) {
          wrap.classList.toggle('hidden', !isChecked);
       }
-      // SIM upload: tampilkan saat TANPA supir, sembunyikan saat DENGAN supir
       const simWrap = el('bt-sim-wrap');
       if (simWrap) {
          simWrap.classList.toggle('hidden', isChecked);
@@ -1172,9 +1052,6 @@
       };
       reader.readAsDataURL(file);
     }
-
-
-    // ── Submit (Buat Transaksi ke API) ──────────────────────────
     async function btSubmit() {
       const tglMulai = el('bt-tgl-mulai').value;
       const durasi = Math.max(1, parseInt(el('bt-durasi').value) || 1);
@@ -1187,13 +1064,9 @@
       if (!BT.pelanggan || !BT.kendaraan) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Data Tidak Lengkap', 'Pelanggan dan kendaraan wajib dipilih.'); return; }
       if (supir && !supirId) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Supir Belum Dipilih', 'Silakan pilih supir yang tersedia.'); return; }
       if (supir && durasi > 7) { toast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Durasi Supir Maksimal', 'Sewa dengan supir dibatasi maksimal 7 hari.'); return; }
-
-      // Hitung tanggal selesai
       const dtMulai = new Date(tglMulai);
       const dtSelesai = new Date(dtMulai);
       dtSelesai.setDate(dtSelesai.getDate() + durasi);
-      
-      // Format manual YYYY-MM-DDTHH:mm agar sesuai zona waktu lokal (tidak bergeser karena toISOString)
       const pad = n => n.toString().padStart(2, '0');
       const tglSelesai = `${dtSelesai.getFullYear()}-${pad(dtSelesai.getMonth()+1)}-${pad(dtSelesai.getDate())}T${pad(dtSelesai.getHours())}:${pad(dtSelesai.getMinutes())}`;
 
@@ -1217,8 +1090,6 @@
 
         if (r?.ok) {
           const res = await r.json();
-
-          // Upload SIM jika lepas kunci dan ada file
           const simFileEl = el('bt-sim-file');
           if (!supir && simFileEl && simFileEl.files.length > 0) {
             try {
@@ -1229,13 +1100,12 @@
                 headers: { 'Authorization': 'Bearer ' + S.token },
                 body: simFd
               }).catch(() => {});
-            } catch (e) { /* SIM upload gagal, tidak blocking */ }
+            } catch (e) {  }
           }
 
           tutupBuatTrx();
           toast('<i class="ph ph-party-popper"></i>', 'Transaksi Berhasil Dibuat!', `${res.nomor_booking} — ${rp(res.total_biaya)}`);
           await loadList();
-          // Auto-pilih transaksi yang baru dibuat
           if (res.id_transaksi) setTimeout(() => selectTrx(res.id_transaksi), 600);
         } else {
           const err = r ? await r.json().catch(() => ({})) : {};
@@ -1249,12 +1119,6 @@
         btn.textContent = '✓ Buat Transaksi';
       }
     }
-    // ══════════════════════════════════════════════════════════
-
-
-    // ============================================================
-    // PRINT KWITANSI
-    // ============================================================
     function printReceipt() {
       const t = S.selected;
       if (!t) return;
@@ -1284,43 +1148,28 @@
   </body></html>`);
       w.print();
     }
-
-
-    // ============================================================
-    // LOGOUT
-    // ============================================================
     function doLogout() {
       if (confirm('Yakin ingin keluar dari sesi POS?')) {
         localStorage.removeItem(AUTH_KEY);
         window.location.href = 'login.html';
       }
     }
-
-
-    // ============================================================
-    // TOAST
-    // ============================================================
     let toastTimer;
     function toast(icon, title, msg) {
       el('toast-ic').innerHTML = icon;
       el('toast-ttl').textContent = title;
-      
+
       let finalMsg = msg;
       if (typeof msg === 'object' && msg !== null) {
         finalMsg = Array.isArray(msg) ? msg.map(m => m.msg || JSON.stringify(m)).join(', ') : JSON.stringify(msg);
       }
       el('toast-msg').textContent = finalMsg;
-      
+
       el('toast').classList.remove('hidden');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(hideToast, 4500);
     }
     function hideToast() { el('toast').classList.add('hidden'); }
-
-
-    // ============================================================
-    // UTILITAS
-    // ============================================================
     const el = id => document.getElementById(id);
     const show = (id, v) => { const e = el(id); if (e) e.style.display = v ? '' : 'none'; };
     const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
@@ -1345,8 +1194,6 @@
       };
       return `<span class="badge ${cls[st] || ''}">${lbl[st] || st}</span>`;
     }
-
-    // Inisialisasi style filter tab pada load
     document.querySelectorAll('.ftab').forEach(b => {
       b.style.transition = 'all .15s';
       if (b.dataset.f === 'semua') { b.style.background = '#7C3AED'; b.style.color = 'white'; }

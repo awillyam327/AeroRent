@@ -1,18 +1,5 @@
-/* ==============================================================================
-   AeroRent — Global Design System
-   Dipakai oleh SEMUA halaman frontend (Customer, Kasir, Owner).
-   Murni CSS — tanpa Tailwind/Bootstrap, sesuai aturan proyek.
 
-   Struktur file ini:
-   1. CSS Reset & Base
-   2. Design Tokens (custom properties)
-   3. Typography
-   4. Layout helpers (utility class SEMINIMAL mungkin — bukan framework utility)
-   5. Komponen bersama: navbar, glass-card, input, button, badge, modal, toast, toggle
-   6. Scrollbar & aksesibilitas (focus-visible, reduced-motion)
-   ============================================================================== */
 
-/* ---------- 1. RESET & BASE ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; color-scheme: dark; }
 body {
@@ -29,48 +16,40 @@ a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
 input, select, textarea { font-family: inherit; font-size: inherit; }
 
-/* ---------- 2. DESIGN TOKENS ---------- */
 :root {
-  /* Warna dasar */
-  --color-bg:     #0A0A14;   /* background utama (navy sangat gelap) */
-  --color-darker: #05050A;   /* header/footer/panel lebih gelap */
-  --color-panel:  #0D0D1C;   /* sidebar / panel sekunder */
 
-  /* Aksen */
+  --color-bg:     #0A0A14;   
+  --color-darker: #05050A;   
+  --color-panel:  #0D0D1C;   
+
   --color-purple:       #7C3AED;
   --color-purple-dark:  #6D28D9;
   --color-purple-light: #C084FC;
   --color-amber:        #F59E0B;
   --color-amber-dark:   #D97706;
 
-  /* Status */
   --color-green: #10B981;
   --color-red:   #EF4444;
   --color-blue:  #3B82F6;
   --color-yellow:#EAB308;
 
-  /* Teks */
   --color-text:        #FFFFFF;
-  --color-text-dim:    #9CA3AF; /* gray-400 */
-  --color-text-dimmer: #6B7280; /* gray-500 */
-  --color-text-faint:  #4B5563; /* gray-600 */
+  --color-text-dim:    #9CA3AF; 
+  --color-text-dimmer: #6B7280; 
+  --color-text-faint:  #4B5563; 
 
-  /* Glassmorphism */
   --glass-bg:     rgba(255,255,255,.03);
   --glass-border: rgba(255,255,255,.08);
   --glass-blur:   12px;
 
-  /* Tipografi */
   --font-display: "Bebas Neue", cursive;
   --font-body:    "DM Sans", sans-serif;
 
-  /* Radius & spacing dasar */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-pill: 999px;
 
-  /* Transisi standar */
   --ease: cubic-bezier(.4,0,.2,1);
 }
 
@@ -78,7 +57,6 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
 
-/* ---------- 3. TYPOGRAPHY ---------- */
 h1, h2, h3, .font-display {
   font-family: var(--font-display);
   text-transform: none;
@@ -105,7 +83,6 @@ h3 { font-size: 1.5rem; }
   color: transparent;
 }
 
-/* ---------- 4. LAYOUT HELPERS (set kecil & sengaja terbatas) ---------- */
 .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 .container-narrow { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 20px; }
 .flex        { display: flex; }
@@ -125,9 +102,6 @@ h3 { font-size: 1.5rem; }
 .mt-2{margin-top:8px;} .mt-3{margin-top:12px;} .mt-4{margin-top:16px;} .mt-6{margin-top:24px;} .mt-8{margin-top:32px;}
 .mb-2{margin-bottom:8px;} .mb-3{margin-bottom:12px;} .mb-4{margin-bottom:16px;} .mb-6{margin-bottom:24px;} .mb-8{margin-bottom:32px;}
 
-/* ---------- 5. KOMPONEN BERSAMA ---------- */
-
-/* -- Glass card -- */
 .glass-card {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -136,7 +110,6 @@ h3 { font-size: 1.5rem; }
   border-radius: var(--radius-lg);
 }
 
-/* -- Form input -- */
 .form-group { margin-bottom: 14px; text-align: left; }
 .form-label {
   display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .8px;
@@ -159,7 +132,6 @@ h3 { font-size: 1.5rem; }
 .form-select { appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%239CA3AF' stroke-width='2' viewBox='0 0 24 24'><path d='m6 9 6 6 6-6'/></svg>"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
 .form-select option, option { background-color: var(--color-darker); color: var(--color-text); }
 
-/* -- Buttons -- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   border: none; border-radius: var(--radius-md);
@@ -181,7 +153,6 @@ h3 { font-size: 1.5rem; }
 .btn-success { background: rgba(16,185,129,.15); color: #34D399; border: 1px solid rgba(16,185,129,.3); }
 .btn-success:hover:not(:disabled) { background: rgba(16,185,129,.25); }
 
-/* -- Badges status -- */
 .badge {
   display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-pill);
   font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
@@ -192,7 +163,6 @@ h3 { font-size: 1.5rem; }
 .badge-dikonfirmasi                { background: rgba(59,130,246,.15); color: #60A5FA; border: 1px solid rgba(59,130,246,.3); }
 .badge-selesai                     { background: rgba(107,114,128,.15); color: #9CA3AF; border: 1px solid rgba(107,114,128,.3); }
 
-/* -- Toggle switch -- */
 .toggle { position: relative; display: inline-flex; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
 .toggle input { opacity: 0; width: 0; height: 0; }
 .toggle-track { position: absolute; inset: 0; border-radius: var(--radius-pill); background: rgba(255,255,255,.1); transition: background .25s var(--ease); }
@@ -200,7 +170,6 @@ h3 { font-size: 1.5rem; }
 .toggle input:checked ~ .toggle-track { background: var(--color-purple); }
 .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
 
-/* -- Modal overlay -- */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.85); backdrop-filter: blur(4px);
   z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px;
@@ -210,7 +179,6 @@ h3 { font-size: 1.5rem; }
   border-radius: var(--radius-lg); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
 }
 
-/* -- Toast -- */
 .toast {
   position: fixed; bottom: 30px; left: 30px; right: auto; z-index: 9999; max-width: 320px;
   animation: toast-in .25s var(--ease);
@@ -226,7 +194,6 @@ h3 { font-size: 1.5rem; }
   .toast #toast-ttl { font-size: 13px !important; }
   .toast #toast-msg { font-size: 11px !important; }
 
-  /* Memaksa Midtrans Snap agar berbentuk pop-up kecil di tengah layar HP dengan scaling */
   body:has(iframe#snap-midtrans):not(:has(iframe#snap-midtrans[style*="display: none"])):not(:has(iframe#snap-midtrans[style*="display:none"]))::after {
     content: ''; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
     backdrop-filter: blur(4px); z-index: 99999; pointer-events: none;
@@ -246,7 +213,6 @@ h3 { font-size: 1.5rem; }
 }
 @keyframes toast-in-mobile { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
 
-/* -- Spinner -- */
 .spinner {
   display: inline-block; width: 18px; height: 18px;
   border: 2px solid rgba(255,255,255,.15); border-top-color: var(--color-purple);
@@ -254,7 +220,6 @@ h3 { font-size: 1.5rem; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* -- Navbar -- */
 #navbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   padding: 8px 0; transition: all .3s var(--ease); background: transparent;
@@ -282,7 +247,7 @@ h3 { font-size: 1.5rem; }
   .navbar-burger { display: flex; }
   .navbar-greeting { display: none; }
   .hide-on-mobile { display: none !important; }
-  
+
   .navbar-links {
     display: flex; flex-direction: column; 
     position: absolute; top: calc(100% + 10px); right: 16px;
@@ -293,8 +258,7 @@ h3 { font-size: 1.5rem; }
     border: 1px solid rgba(255,255,255,.08);
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    
-    /* Animation state */
+
     opacity: 0;
     visibility: hidden;
     transform: scale(0.8) translateY(-10px);
@@ -302,14 +266,14 @@ h3 { font-size: 1.5rem; }
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: none;
   }
-  
+
   #navbar.navbar-mobile-open .navbar-links {
     opacity: 1;
     visibility: visible;
     transform: scale(1) translateY(0);
     pointer-events: auto;
   }
-  
+
   .navbar-links .nav-link {
     padding: 12px 16px;
     border-radius: 10px;
@@ -326,13 +290,11 @@ h3 { font-size: 1.5rem; }
   }
 }
 
-/* -- Footer -- */
 #footer { background: var(--color-darker); border-top: 1px solid rgba(255,255,255,.1); margin-top: 60px; }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
 @media (max-width: 700px) { .footer-grid { grid-template-columns: 1fr; } }
 .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 24px; }
 
-/* ---------- 6. SCROLLBAR & FOCUS ---------- */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 3px; }
@@ -343,7 +305,6 @@ h3 { font-size: 1.5rem; }
   outline-offset: 2px;
 }
 
-/* ---------- 7. BOTTOM NAV (MOBILE) ---------- */
 .cs-bottom-nav {
   display: none;
   position: fixed;
@@ -407,7 +368,6 @@ h3 { font-size: 1.5rem; }
   .cs-bottom-nav { display: block; }
 }
 
-/* Hide arrows (spinners) on number inputs */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;

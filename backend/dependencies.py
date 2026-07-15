@@ -10,7 +10,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def hash_pwd(plain: str) -> str:
     import bcrypt
-    # Menggunakan bcrypt murni tanpa perantara passlib
     return bcrypt.hashpw(plain.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def verify_pwd(plain: str, hashed: str) -> bool:
@@ -25,7 +24,6 @@ def make_token(payload: dict, expire_delta: timedelta) -> str:
     }
     return jwt.encode(data, cfg.JWT_SECRET, algorithm=cfg.JWT_ALGORITHM)
 
-
 def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, cfg.JWT_SECRET, algorithms=[cfg.JWT_ALGORITHM])
@@ -35,11 +33,6 @@ def decode_token(token: str) -> dict:
     except jwt.InvalidTokenError:
         raise HTTPException(401, "Token tidak valid.",
                             headers={"WWW-Authenticate": "Bearer"})
-
-
-# ==============================================================================
-# DEPENDENCY: Autentikasi & RBAC
-# ==============================================================================
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     cur: aiomysql.DictCursor = Depends(get_db), # SEKARANG LANGSUNG TERIMA CURSOR
@@ -48,8 +41,6 @@ async def get_current_user(
     uid: str = payload.get("sub", "")
     if not uid:
         raise HTTPException(401, "Token tidak memiliki subject yang valid.")
-
-    # PERHATIKAN: :uid diganti menjadi %(uid)s
     await cur.execute(
         "SELECT id_karyawan, nama_lengkap, email, role, is_aktif "
         "FROM KARYAWAN WHERE id_karyawan = %(uid)s",
@@ -58,19 +49,15 @@ async def get_current_user(
     row = await cur.fetchone()
     if not row:
         raise HTTPException(401, "User tidak ditemukan.")
-    
-    # PERHATIKAN: row[4] diganti menjadi row["is_aktif"]
     if row["is_aktif"] == 0:
         raise HTTPException(403, "Akun telah dinonaktifkan oleh Owner.")
 
     return {"id": row["id_karyawan"], "nama": row["nama_lengkap"], "email": row["email"], "role": row["role"]}
 
-
 async def req_owner(user: dict = Depends(get_current_user)) -> dict:
     if user["role"] != "OWNER":
         raise HTTPException(403, "Endpoint ini hanya dapat diakses oleh OWNER.")
     return user
-
 
 async def req_kasir_or_owner(user: dict = Depends(get_current_user)) -> dict:
     if user["role"] not in ("KASIR", "OWNER"):
@@ -109,21 +96,16 @@ async def get_current_account(
     uid: str = payload.get("sub", "")
     if not uid:
         raise HTTPException(401, "Token tidak valid.")
-        
-    # Try KARYAWAN
     await cur.execute("SELECT id_karyawan, nama_lengkap, email, role, is_aktif FROM KARYAWAN WHERE id_karyawan = %(uid)s", {"uid": uid})
     row = await cur.fetchone()
     if row:
         if row["is_aktif"] == 0:
             raise HTTPException(403, "Akun Karyawan dinonaktifkan.")
         return {"id": row["id_karyawan"], "nama": row["nama_lengkap"], "email": row["email"], "role": row["role"]}
-    
-    # Try PELANGGAN
     await cur.execute("SELECT id_pelanggan, nama_lengkap, email FROM PELANGGAN WHERE id_pelanggan = %(uid)s", {"uid": uid})
     row2 = await cur.fetchone()
     if row2:
         return {"id": row2["id_pelanggan"], "nama": row2["nama_lengkap"], "email": row2["email"], "role": "CUSTOMER"}
-        
-    raise HTTPException(401, "User tidak ditemukan di sistem.")
 
+    raise HTTPException(401, "User tidak ditemukan di sistem.")
 

@@ -38,7 +38,7 @@ async def list_transaksi(
         if user["role"] == "CUSTOMER":
             q += " AND ts.id_pelanggan = %(uid)s"
             params["uid"] = user["id"]
-            
+
         if status: q += " AND ts.status = %(st)s";       params["st"] = status.upper()
         if dari:   q += " AND ts.tanggal_mulai >= %(d)s"; params["d"]  = dari
         if sampai: q += " AND ts.tanggal_mulai <= %(s)s"; params["s"]  = sampai
@@ -69,10 +69,8 @@ async def list_transaksi_saya(
 ):
     if user["role"] != "CUSTOMER":
         raise HTTPException(403, "Endpoint ini khusus untuk Customer.")
-        
+
     return await list_transaksi(status, dari, sampai, limit, user, cur)
-
-
 
 @router.get("/{tid}", tags=["📋 Transaksi"])
 async def detail_transaksi(tid: str, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
@@ -139,7 +137,6 @@ async def detail_transaksi(tid: str, user=Depends(req_kasir_or_owner), cur=Depen
         log.error(f"[Transaksi] Gagal memuat detail transaksi {tid}: {e}")
         raise HTTPException(500, "Gagal memuat detail transaksi.")
 
-
 @router.post("", status_code=201, tags=["🛒 Transaksi"])
 async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(get_current_account), cur=Depends(get_db)):
     try:
@@ -161,7 +158,7 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
         await cur.execute("SELECT nama_lengkap, no_telepon, email, no_ktp, foto_sim_url FROM PELANGGAN WHERE id_pelanggan = %(id)s", {"id": body.id_pelanggan})
         plg = await cur.fetchone()
         if not plg: raise HTTPException(404, "Pelanggan tidak ditemukan.")
-        
+
         if not plg["no_ktp"]:
             raise HTTPException(400, "Profil belum lengkap. NIK (KTP) wajib diisi.")
 
@@ -172,11 +169,9 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
             raise HTTPException(400, "Sewa bulanan tidak dapat menggunakan jasa supir.")
 
         durasi  = max(math.ceil((body.tanggal_selesai_rencana - body.tanggal_mulai).total_seconds() / 86400.0), 1)
-        
+
         if body.paket_sewa == "HARIAN" and body.gunakan_supir == 1 and durasi > 7:
             raise HTTPException(400, "Untuk sewa harian, jasa supir maksimal hanya dapat digunakan selama 7 hari.")
-        
-        # Penghitungan Sewa Bulanan
         catatan_final = body.catatan_kasir or ""
         if body.paket_sewa == "BULANAN":
             durasi_bulan = round(durasi / 30)
@@ -185,8 +180,6 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
             catatan_final = (f"Paket Sewa Bulanan ({durasi_bulan} Bulan)\n" + catatan_final).strip()
         else:
             b_sewa = float(kend["harga_sewa_harian"]) * durasi
-
-        # Pengecekan Loyalitas (Setiap 3 kali sewa dapat diskon 20%)
         await cur.execute(
             "SELECT COUNT(*) AS count_valid FROM TRANSAKSI_SEWA "
             "WHERE id_pelanggan = %(id)s AND status IN ('SELESAI', 'DIKONFIRMASI', 'AKTIF')",
@@ -201,7 +194,7 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
 
         b_supir = float(kend["harga_supir_harian"]) * durasi if body.gunakan_supir else 0.0
         total   = b_sewa + b_supir
-        
+
         tahun_ini     = datetime.now().strftime("%Y")
         unique_suffix = uuid.uuid4().hex[:8].upper()
         nomor_booking = f"AR-{tahun_ini}-{unique_suffix}" 
@@ -230,10 +223,10 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
                 f"📅 {body.tanggal_mulai} s/d {body.tanggal_selesai_rencana} ({durasi} hari)\n💰 Total: Rp {total:,.0f}\n"
             )
             bt.add_task(fonnte_send, plg["no_telepon"], pesan)
-            
+
             if plg.get("email"):
                 bt.add_task(smtp_booking_notification, plg["email"], plg["nama_lengkap"], nomor_booking, body.tanggal_mulai, body.tanggal_selesai_rencana, kend["nama_kendaraan"])
-            
+
             if body.gunakan_supir and body.id_supir:
                 await cur.execute("SELECT nama_lengkap, no_telepon FROM KARYAWAN WHERE id_karyawan = %(id)s", {"id": body.id_supir})
                 supir_info = await cur.fetchone()
@@ -247,14 +240,13 @@ async def buat_transaksi(body: TransaksiIn, bt: BackgroundTasks, user=Depends(ge
                         f"Mohon bersiap tepat waktu."
                     )
                     bt.add_task(fonnte_send, supir_info["no_telepon"], pesan_supir)
-            
+
         return {"message": "Pemesanan berhasil.", "id_transaksi": tid, "nomor_booking": nomor_booking, "total_biaya": total}
     except HTTPException:
         raise
     except Exception as e:
         log.error(f"[Transaksi] Gagal membuat transaksi: {e}")
         raise HTTPException(500, "Gagal membuat pemesanan. Silakan coba lagi.")
-
 
 @router.put("/{tid}/supir", tags=["📋 Transaksi"])
 async def assign_supir(tid: str, body: SupirUpd, bt: BackgroundTasks, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
@@ -298,7 +290,6 @@ async def assign_supir(tid: str, body: SupirUpd, bt: BackgroundTasks, user=Depen
         log.error(f"[Transaksi] Gagal update supir transaksi {tid}: {e}")
         raise HTTPException(500, "Gagal menugaskan supir.")
 
-
 @router.post("/{tid}/remind-wa", tags=["📋 Transaksi"])
 async def send_wa_reminder(tid: str, bt: BackgroundTasks, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
     try:
@@ -312,7 +303,7 @@ async def send_wa_reminder(tid: str, bt: BackgroundTasks, user=Depends(req_kasir
         )
         trx = await cur.fetchone()
         if not trx: raise HTTPException(404, "Transaksi tidak ditemukan.")
-        
+
         tgl_selesai = fmt_date(trx["tanggal_selesai_rencana"])
         pesan = (
             f"Halo {trx['nama_lengkap']},\n\n"
@@ -329,10 +320,9 @@ async def send_wa_reminder(tid: str, bt: BackgroundTasks, user=Depends(req_kasir
         log.error(f"[Transaksi] Gagal kirim reminder WA transaksi {tid}: {e}")
         raise HTTPException(500, "Gagal mengirim reminder.")
 
-
 @router.put("/{tid}/status", tags=["📋 Transaksi"])
 async def update_status(tid: str, body: StatusUpd, bt: BackgroundTasks, user=Depends(req_kasir_or_owner), db_txn=Depends(get_db_transaction)):
-    """Update status transaksi dengan rollback jika multi-UPDATE gagal."""
+
     conn, cur = db_txn
     try:
         await cur.execute(
@@ -373,17 +363,15 @@ async def update_status(tid: str, body: StatusUpd, bt: BackgroundTasks, user=Dep
 
         elif st_baru == "SELESAI":
             now = datetime.now()
-            # MySQL DATETIME expects YYYY-MM-DD HH:MM:SS
             now_str = now.strftime("%Y-%m-%d %H:%M:%S")
             upd_sets.append("tanggal_selesai_aktual = %(ta)s"); upd_params["ta"] = now_str
-            
+
             today = now.date()
-            # Safely handle tgl_rencana if it's returned as string or datetime
             if isinstance(tgl_rencana, str):
                 tgl_rencana = datetime.strptime(tgl_rencana, "%Y-%m-%d").date()
             elif type(tgl_rencana) is not type(today) and hasattr(tgl_rencana, 'date'):
                 tgl_rencana = tgl_rencana.date()
-                
+
             denda_tlbt = 0.0
             if today > tgl_rencana:
                 hari_tlbt   = (today - tgl_rencana).days
@@ -416,10 +404,8 @@ async def update_status(tid: str, body: StatusUpd, bt: BackgroundTasks, user=Dep
                 bt.add_task(smtp_booking_notification, trx["email"], nama_plg, nb, trx["tanggal_mulai"], tgl_rencana, trx["nama_kendaraan"])
 
         await cur.execute(f"UPDATE TRANSAKSI_SEWA SET {', '.join(upd_sets)} WHERE id_transaksi = %(actual_id)s", upd_params)
-        
-        # Commit transaksi atomik (UPDATE KENDARAAN + UPDATE TRANSAKSI_SEWA)
         await conn.commit()
-        
+
         return {"message": f"Status berhasil diubah ke '{st_baru}'.", "nomor_booking": nb, "status_baru": st_baru}
     except HTTPException:
         await conn.rollback()
@@ -430,7 +416,6 @@ async def update_status(tid: str, body: StatusUpd, bt: BackgroundTasks, user=Dep
         tb = traceback.format_exc()
         log.error(f"[Transaksi] Gagal update status transaksi {tid}: {e}\n{tb}")
         raise HTTPException(500, f"Gagal memperbarui status transaksi: {repr(e)}")
-
 
 @router.post("/{tid}/foto-kondisi", tags=["📋 Transaksi"])
 async def upload_foto_kondisi(
@@ -449,7 +434,7 @@ async def upload_foto_kondisi(
         if jenis not in ("sebelum", "sesudah"): raise HTTPException(400, "Parameter 'jenis' harus 'sebelum' atau 'sesudah'.")
 
         pfx = f"trx_{tid[:8]}_{jenis}"
-        
+
         tasks = [
             imgbb_upload(await file_depan.read(), f"{pfx}_depan"),
             imgbb_upload(await file_samping_kanan.read(), f"{pfx}_samping_kanan"),
@@ -457,7 +442,7 @@ async def upload_foto_kondisi(
             imgbb_upload(await file_belakang.read(), f"{pfx}_belakang"),
             imgbb_upload(await file_dalam.read(), f"{pfx}_dalam")
         ]
-        
+
         if files_tambahan:
             for i, f in enumerate(files_tambahan):
                 tasks.append(imgbb_upload(await f.read(), f"{pfx}_tambahan_{i+1}"))
@@ -471,7 +456,7 @@ async def upload_foto_kondisi(
             {"posisi": "belakang", "url": urls[3]},
             {"posisi": "dalam", "url": urls[4]}
         ]
-        
+
         if files_tambahan:
             for i in range(len(files_tambahan)):
                 foto_json_list.append({"posisi": f"tambahan {i+1}", "url": urls[5+i]})
@@ -489,7 +474,6 @@ async def upload_foto_kondisi(
     except Exception as e:
         log.error(f"[Transaksi] Gagal upload foto kondisi {tid}: {e}")
         raise HTTPException(500, "Gagal mengunggah foto kondisi kendaraan.")
-
 
 @router.post("/{tid}/midtrans-snap", tags=["📋 Transaksi"])
 async def buat_snap(tid: str, user=Depends(get_current_account), cur=Depends(get_db)):
@@ -519,25 +503,24 @@ async def buat_snap(tid: str, user=Depends(get_current_account), cur=Depends(get
         log.error(f"[Transaksi] Gagal membuat Midtrans Snap untuk {tid}: {e}")
         raise HTTPException(500, "Gagal memproses pembayaran online.")
 
-
 @router.put("/{tid}/cancel", tags=["📋 Transaksi"])
 async def cancel_transaksi_by_customer(tid: str, user=Depends(get_current_account), cur=Depends(get_db)):
     try:
         if user["role"] != "CUSTOMER":
             raise HTTPException(403, "Akses ditolak. Fitur ini khusus untuk pelanggan.")
-            
+
         await cur.execute("SELECT id_pelanggan, status, nomor_booking FROM TRANSAKSI_SEWA WHERE id_transaksi = %(id)s OR nomor_booking = %(nb)s", {"id": tid, "nb": tid.upper()})
         trx = await cur.fetchone()
         if not trx: raise HTTPException(404, "Transaksi tidak ditemukan.")
-        
+
         if trx["id_pelanggan"] != user["id"]:
             raise HTTPException(403, "Anda tidak memiliki akses untuk membatalkan pesanan ini.")
-            
+
         if trx["status"] != "MENUNGGU":
             raise HTTPException(400, "Hanya pesanan yang masih MENUNGGU pembayaran yang dapat dibatalkan melalui Dashboard.")
-            
+
         await cur.execute("UPDATE TRANSAKSI_SEWA SET status = 'DIBATALKAN' WHERE id_transaksi = %(id)s OR nomor_booking = %(nb)s", {"id": tid, "nb": tid.upper()})
-        
+
         log.info(f"[Transaksi] Dibatalkan oleh pelanggan: {trx['nomor_booking']}")
         return {"message": "Pemesanan berhasil dibatalkan."}
     except HTTPException:
@@ -578,8 +561,6 @@ async def perpanjang_transaksi(tid: str, body: PerpanjanganIn, user=Depends(get_
             durasi_tambahan = durasi_bulan * 30
         else:
             b_sewa_tambahan = float(trx["harga_sewa_harian"]) * durasi_tambahan
-
-        # Cek loyalitas
         await cur.execute(
             "SELECT COUNT(*) AS count_valid FROM TRANSAKSI_SEWA "
             "WHERE id_pelanggan = %(pid)s AND status IN ('SELESAI', 'DIKONFIRMASI', 'AKTIF')",
@@ -683,7 +664,6 @@ async def tambah_supir_transaksi(tid: str, body: TambahSupirIn, user=Depends(get
         log.error(f"[Transaksi] Gagal menambah supir {tid}: {e}")
         raise HTTPException(500, "Gagal menambahkan jasa supir.")
 
-
 @router.post("/{tid}/invoice-wa", tags=["📋 Transaksi"])
 async def kirim_invoice_wa(
     tid: str,
@@ -691,10 +671,7 @@ async def kirim_invoice_wa(
     user=Depends(get_current_account),
     cur=Depends(get_db),
 ):
-    """
-    Generate invoice PDF lalu kirim ke WhatsApp pelanggan via Fonnte.
-    Bisa dipanggil oleh Customer (untuk transaksi miliknya) atau Kasir/Owner.
-    """
+
     try:
         await cur.execute(
             "SELECT ts.nomor_booking, ts.tanggal_mulai, ts.tanggal_selesai_rencana, "
@@ -711,16 +688,12 @@ async def kirim_invoice_wa(
         r = await cur.fetchone()
         if not r:
             raise HTTPException(404, "Transaksi tidak ditemukan.")
-
-        # Cek akses: Customer hanya bisa akses transaksinya sendiri
         if user["role"] == "CUSTOMER" and r["id_pelanggan"] != user["id"]:
             raise HTTPException(403, "Anda tidak memiliki akses ke transaksi ini.")
 
         no_telepon = r["no_telepon"]
         if not no_telepon:
             raise HTTPException(400, "Nomor telepon pelanggan belum terdaftar. Lengkapi profil terlebih dahulu.")
-
-        # Generate PDF
         pdf_data = {
             "booking": r["nomor_booking"],
             "pelanggan": r["nama_lengkap"],
@@ -746,12 +719,8 @@ async def kirim_invoice_wa(
             f"Total: Rp {int(fmt_float(r['total_biaya'])):,}\n\n"
             f"Terima kasih telah menggunakan AeroRent! 🚗"
         ).replace(",", ".")
-
-        # Kirim teks via background task (tanpa file PDF ke WA)
         bt.add_task(fonnte_send, no_telepon, pesan)
         log.info(f"[Invoice] Teks WA dikirim untuk {r['nomor_booking']} ke {no_telepon}")
-
-        # Return PDF untuk didownload browser
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",

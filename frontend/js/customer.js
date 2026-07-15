@@ -1,26 +1,9 @@
-/**
- * ==============================================================================
- * AeroRent — Logika Dashboard Customer (pages/customer/dashboard.html)
- *
- * KETERBATASAN YANG DISADARI: backend belum punya endpoint untuk Customer
- * mengambil daftar booking miliknya sendiri. GET /transaksi yang ada saat ini
- * dikunci untuk role KASIR/OWNER saja (lihat README_STRUKTUR.md bagian
- * kontrak API). Frontend memanggil kontrak yang diharapkan, lalu fallback ke:
- *   1. Data demo statis (DEMO_BOOKINGS, meniru screenshot mockup)
- *   2. + booking apa pun yang baru saja dibuat di sewa.html pada sesi browser
- *      ini (tersimpan via addDemoBooking() di utils.js)
- * supaya alur "booking lalu lihat di dashboard" tetap terasa nyata saat demo.
- * ==============================================================================
- */
+
 
 const DEMO_BOOKINGS = [];
 
-/** Cache global untuk semua bookings yang sudah di-fetch, agar fungsi
- *  printInvoice() bisa mengakses data tanpa harus fetch ulang. */
 let _cachedBookings = [];
 
-/** Endpoint yang DIHARAPKAN ada (belum diimplementasikan backend) untuk
- *  Customer mengambil booking miliknya sendiri berdasarkan token JWT-nya. */
 async function fetchMyBookings() {
   const real = await apiJson('/transaksi/saya', {}, '../../login.html');
   const seed = Array.isArray(real) ? real : DEMO_BOOKINGS;
@@ -83,7 +66,6 @@ async function initDashboard() {
     </tr>`).join('');
 }
 
-/* ---------- RIWAYAT PEMESANAN ---------- */
 async function initRiwayat() {
   const auth = requireAuth(['CUSTOMER'], '../../login.html');
   if (!auth) return;
@@ -147,19 +129,19 @@ function setExtPaket(paket) {
   qs('btn-ext-harian').classList.toggle('btn-ghost', paket !== 'HARIAN');
   qs('btn-ext-bulanan').classList.toggle('btn-primary', paket === 'BULANAN');
   qs('btn-ext-bulanan').classList.toggle('btn-ghost', paket !== 'BULANAN');
-  
+
   qs('group-ext-harian').classList.toggle('hidden', paket === 'BULANAN');
   qs('group-ext-bulanan').classList.toggle('hidden', paket === 'HARIAN');
 }
 
 async function submitExtend() {
   if (!currentExtendId) return;
-  
+
   const btn = qs('btn-ext-submit');
   btn.disabled = true;
   btn.innerHTML = 'Memproses...';
   qs('ext-err').classList.add('hidden');
-  
+
   let tambahan_hari = parseInt(qs('ext-hari').value || '1', 10);
   if (currentExtPaket === 'BULANAN') {
     tambahan_hari = parseInt(qs('ext-bulan').value, 10);
@@ -170,12 +152,12 @@ async function submitExtend() {
       paket_sewa: currentExtPaket,
       tambahan_hari: tambahan_hari
     };
-    
+
     const res = await apiFetch(`/transaksi/${currentExtendId}/perpanjang`, {
       method: 'POST',
       body: JSON.stringify(payload)
     });
-    
+
     if (res && res.ok) {
       const data = await res.json();
       showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', data.message);
@@ -205,24 +187,24 @@ function openSupirModal(nomorBooking) {
 
 async function submitSupir() {
   if (!currentSupirId) return;
-  
+
   const btn = qs('btn-supir-submit');
   btn.disabled = true;
   btn.innerHTML = 'Memproses...';
   qs('supir-err').classList.add('hidden');
-  
+
   const durasi_hari = parseInt(qs('supir-hari').value || '1', 10);
 
   try {
     const payload = {
       durasi_hari: durasi_hari
     };
-    
+
     const res = await apiFetch(`/transaksi/${currentSupirId}/tambah-supir`, {
       method: 'POST',
       body: JSON.stringify(payload)
     });
-    
+
     if (res && res.ok) {
       const data = await res.json();
       showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', data.message);
@@ -242,10 +224,9 @@ async function submitSupir() {
   }
 }
 
-
 async function handleCancelClick(nomorBooking) {
   if (!confirm(`Apakah Anda yakin ingin membatalkan pesanan ${nomorBooking}?`)) return;
-  
+
   try {
     const res = await apiFetch(`/transaksi/${nomorBooking}/cancel`, { method: 'PUT' });
     if (res && res.ok) {
@@ -304,13 +285,13 @@ async function handlePayClick(tid, event) {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${auth.access_token}` }
     });
-    
+
     if (!res.ok) {
         const err = await res.json();
         throw new Error(err.detail || 'Gagal mendapatkan token pembayaran.');
     }
     const data = await res.json();
-    
+
     window.snap.pay(data.snap_token, {
       onSuccess: function(result) {
         showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Pembayaran Berhasil', 'Terima kasih, pembayaran Anda telah diterima.');
@@ -339,9 +320,6 @@ async function handlePayClick(tid, event) {
   }
 }
 
-
-/** Kirim invoice PDF ke WhatsApp pelanggan via backend endpoint.
- *  Menggantikan printInvoice() yang hanya window.print(). */
 async function sendInvoiceWA(nomorBooking, btnEl) {
   const originalHtml = btnEl.innerHTML;
   btnEl.disabled = true;
@@ -353,7 +331,6 @@ async function sendInvoiceWA(nomorBooking, btnEl) {
     });
 
     if (res && res.ok) {
-      // API mengembalikan file PDF
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -364,7 +341,7 @@ async function sendInvoiceWA(nomorBooking, btnEl) {
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
-      
+
       showToast('<i class="ph-fill ph-check-circle" style="color: #25D366;"></i>', 'Berhasil', 'Invoice PDF berhasil diunduh dan detail telah dikirim ke WhatsApp Anda.');
     } else {
       let msg = 'Gagal memproses invoice.';
@@ -378,10 +355,6 @@ async function sendInvoiceWA(nomorBooking, btnEl) {
     btnEl.innerHTML = originalHtml;
   }
 }
-
-/* ---------- PROFIL SAYA ---------- */
-/* DEMO_PROFILE_KEY & getDemoProfile() sekarang ada di js/utils.js (dipakai
- * bersama dengan sewa.html untuk auto-isi Data Diri). */
 
 async function initProfil() {
   const auth = requireAuth(['CUSTOMER'], '../../login.html');
@@ -455,7 +428,7 @@ async function saveProfil() {
 
     const btn = qs('pf-btn-save');
     if (btn) btn.innerHTML = '<span class="spinner"></span> Menyimpan...';
-    
+
     const res = await apiFetch('/pelanggan/saya', {
       method: 'PUT',
       body: JSON.stringify(data)
@@ -496,7 +469,7 @@ async function handleAvatarUpload(event) {
   const btnEdit = document.querySelector('.btn-edit-avatar');
   const originalHtml = btnEdit.innerHTML;
   btnEdit.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#111;"></span>';
-  
+
   const formData = new FormData();
   formData.append('foto', file);
 
@@ -514,11 +487,9 @@ async function handleAvatarUpload(event) {
       user.foto_profil_url = data.foto_profil_url;
       localStorage.setItem('aerorent_user', JSON.stringify(user));
     }
-    
+
     document.getElementById('pf-avatar').innerHTML = `<img src="${data.foto_profil_url}" style="width:100%;height:100%;object-fit:cover;">`;
     showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Berhasil', 'Foto profil berhasil diperbarui.');
-    
-    // Update sidebar & navbar if functions exist
     if (typeof renderCustomerSidebar === 'function') renderCustomerSidebar('cs-sidebar', { active: 'profil', rootPath: '../../' });
     if (typeof renderNavbar === 'function') renderNavbar('navbar', { active: 'profil', rootPath: '../../' });
   } else {
@@ -535,8 +506,6 @@ async function handleSimUploadProfil(event) {
   const originalHtml = btnUpload.innerHTML;
   btnUpload.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#111;"></span> Mengompresi...';
   btnUpload.disabled = true;
-
-  // Kompresi gambar ke bawah 1MB
   let compressedFile;
   try {
     compressedFile = await compressImageFile(file, 0.95);
@@ -544,8 +513,6 @@ async function handleSimUploadProfil(event) {
     console.error('Gagal kompresi SIM:', e);
     compressedFile = file;
   }
-
-  // Validasi ukuran setelah kompresi
   if (compressedFile.size > 1 * 1024 * 1024) {
     showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Terlalu Besar', `Foto SIM masih ${(compressedFile.size / 1024 / 1024).toFixed(1)} MB setelah kompresi. Coba ambil foto dengan resolusi lebih rendah.`);
     btnUpload.innerHTML = originalHtml;

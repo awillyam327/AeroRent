@@ -10,7 +10,6 @@ router = APIRouter(prefix="/webhook", tags=["Webhook"])
 @router.post("/midtrans", tags=["🔔 Webhook"])
 async def webhook_midtrans(request: Request, bt: BackgroundTasks, cur=Depends(get_db)):
     try:
-        # Coba parse JSON body — jika gagal, webhook tidak valid
         try:
             payload = await request.json()
         except Exception:
@@ -38,7 +37,7 @@ async def webhook_midtrans(request: Request, bt: BackgroundTasks, cur=Depends(ge
             "cancel": "BELUM_LUNAS", "expire": "BELUM_LUNAS",
         }
         status_pembayaran = STATUS_MAP.get(trx_status, "BELUM_LUNAS")
-        
+
         await cur.execute(
             "SELECT ts.status, p.nama_lengkap, p.no_telepon, p.email, ts.nomor_booking, "
             "ts.tanggal_mulai, ts.tanggal_selesai_rencana, ts.durasi_hari_rencana, ts.total_biaya, k.nama_kendaraan "
@@ -49,8 +48,6 @@ async def webhook_midtrans(request: Request, bt: BackgroundTasks, cur=Depends(ge
             {"oid": order_id}
         )
         trx = await cur.fetchone()
-
-        # Auto-confirm if paid
         set_status = ""
         if status_pembayaran == "LUNAS":
             set_status = ", status = IF(status = 'MENUNGGU', 'DIKONFIRMASI', status)"
@@ -62,8 +59,6 @@ async def webhook_midtrans(request: Request, bt: BackgroundTasks, cur=Depends(ge
             {"ms": trx_status, "mti": payload.get("transaction_id"),
              "sp": status_pembayaran, "oid": order_id},
         )
-        
-        # Send notification if it was just confirmed
         if trx and trx["status"] == "MENUNGGU" and status_pembayaran == "LUNAS":
             pesan = (
                 f"✅ *Booking AeroRent Berhasil!*\n\nHalo {trx['nama_lengkap']},\n📋 No. Booking: *{trx['nomor_booking']}*\n"

@@ -1,26 +1,10 @@
-/**
- * ==============================================================================
- * AeroRent — Komponen Bersama (Navbar, Footer, Toast)
- * Pendekatan: render via string JS, bukan fetch() partial .html, supaya halaman
- * tetap berfungsi normal walau dibuka langsung dari file system (file://)
- * tanpa server lokal — masalah umum yang sering dialami saat development.
- * ==============================================================================
- */
+
 const getBrandLogo = (rootPath = '') => `
 <img src="${rootPath}assets/logos/AERO-LOGO.png"
 alt=""
 style="width: 125px; height: 85px; object-fit:contain;">
 `;
 
-/**
- * Render navbar ke dalam elemen container.
- * @param {string} containerId - id elemen tujuan (biasanya <header id="navbar">)
- * @param {object} opts
- *   - active: 'beranda' | 'armada' | null
- *   - rootPath: prefix relatif ke root frontend/, cth. '' di root, '../../' di pages/customer/
- *   - showAuthArea: tampilkan tombol Masuk/Daftar atau info user (default true)
- *   - showNavLinks: tampilkan link Beranda, Armada dll (default true)
- */
 function renderNavbar(containerId, opts = {}) {
   const { active = null, rootPath = '', showAuthArea = true, showNavLinks = true } = opts;
   const el = qs(containerId);
@@ -45,7 +29,6 @@ function renderNavbar(containerId, opts = {}) {
       authAreaHtml = `<a href="${rootPath}login.html" class="btn btn-primary" style="padding:10px 20px;">Masuk / Daftar</a>`;
     }
   } else {
-    // Render hidden button to maintain exact same flex layout spacing as index.html
     authAreaHtml = `<div style="visibility:hidden; pointer-events:none;"><a href="#" class="btn btn-primary" style="padding:10px 20px;">Masuk / Daftar</a></div>`;
   }
 
@@ -77,27 +60,16 @@ function renderNavbar(containerId, opts = {}) {
       </button>
       ` : ''}
     </div>`;
-
-  // Efek scroll: transparan -> solid
   const onScroll = () => el.classList.toggle('navbar-scrolled', window.scrollY > 20);
   onScroll();
   window.addEventListener('scroll', onScroll);
-
-  // Toggle menu mobile (sederhana: tampilkan/sembunyikan .navbar-links)
   const burger = qs('navbar-burger-btn');
   if (burger) {
     burger.addEventListener('click', () => el.classList.toggle('navbar-mobile-open'));
   }
-
-  // Inject bottom nav jika role adalah CUSTOMER
   injectMobileBottomNav(active, rootPath);
 }
 
-/**
- * Sidebar untuk portal Customer (Dashboard, Sewa Baru, Riwayat, Profil).
- * @param {string} containerId
- * @param {object} opts - { active: 'dashboard'|'riwayat'|'profil', rootPath }
- */
 function renderCustomerSidebar(containerId, opts = {}) {
   const { active = 'dashboard', rootPath = '../../' } = opts;
   const el = qs(containerId);
@@ -140,26 +112,21 @@ function renderCustomerSidebar(containerId, opts = {}) {
 
   injectMobileBottomNav(active, rootPath);
 }
-
-// Helper untuk menginjeksi Bottom Nav khusus mobile
 function injectMobileBottomNav(active = '', rootPath = '') {
   const user = getCurrentUser();
-  // Jika Karyawan/Owner, tidak perlu bottom nav (atau bisa dibuatkan khusus nanti)
   if (user && user.role !== 'CUSTOMER') return;
-  
+
   if (active === 'armada') active = 'sewa-baru';
 
   let items = [];
 
   if (!user) {
-    // Menu untuk pengguna yang belum login (Guest)
     items = [
       { key: 'beranda', href: `${rootPath}index.html`, icon: '<i class="ph ph-house"></i>', label: 'Beranda' },
       { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '<i class="ph ph-car-profile"></i>', label: 'Armada', isCenter: true },
       { key: 'login', href: `${rootPath}login.html`, icon: '<i class="ph ph-sign-in"></i>', label: 'Masuk' }
     ];
   } else {
-    // Menu untuk Customer yang sudah login
     items = [
       { key: 'dashboard', href: `${rootPath}pages/customer/dashboard.html`, icon: '<i class="ph ph-squares-four"></i>', label: 'Dashboard' },
       { key: 'sewa-baru', href: `${rootPath}armada.html`, icon: '<i class="ph ph-car-profile"></i>', label: 'Sewa' },
@@ -171,7 +138,7 @@ function injectMobileBottomNav(active = '', rootPath = '') {
 
   let existingBn = document.getElementById('cs-bottom-nav-mobile');
   if (existingBn) existingBn.remove();
-  
+
   const bn = document.createElement('nav');
   bn.id = 'cs-bottom-nav-mobile';
   bn.className = 'cs-bottom-nav';
@@ -185,7 +152,7 @@ function injectMobileBottomNav(active = '', rootPath = '') {
   `;
   document.body.appendChild(bn);
 }
-/** Markup toast — sisipkan sekali per halaman, biasanya tepat sebelum </body> */
+
 function renderToastMarkup(containerId) {
   const el = qs(containerId);
   if (!el) return;
@@ -202,7 +169,6 @@ function renderToastMarkup(containerId) {
     </div>`;
 }
 
-/** Footer sederhana untuk halaman publik (Beranda, Armada) */
 function renderFooter(containerId, rootPath = '') {
   const el = qs(containerId);
   if (!el) return;

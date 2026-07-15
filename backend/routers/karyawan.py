@@ -29,7 +29,7 @@ async def supir_tersedia(tanggal_mulai: str, tanggal_selesai: str, cur=Depends(g
         await cur.execute("SELECT COUNT(*) AS total_supir FROM KARYAWAN WHERE role = 'SUPIR' AND is_aktif = 1")
         row_total = await cur.fetchone()
         total_supir = row_total["total_supir"] if row_total else 0
-        
+
         await cur.execute(
             "SELECT COUNT(DISTINCT id_supir) AS supir_sibuk FROM TRANSAKSI_SEWA "
             "WHERE gunakan_supir = 1 AND id_supir IS NOT NULL "
@@ -39,7 +39,7 @@ async def supir_tersedia(tanggal_mulai: str, tanggal_selesai: str, cur=Depends(g
         )
         row_sibuk = await cur.fetchone()
         supir_sibuk = row_sibuk["supir_sibuk"] if row_sibuk else 0
-        
+
         tersedia = total_supir - supir_sibuk
         return {"tersedia": max(tersedia, 0), "total": total_supir, "sibuk": supir_sibuk}
     except Exception as e:
@@ -54,12 +54,12 @@ async def list_karyawan(user=Depends(req_owner), cur=Depends(get_db)):
             "gaji_per_bulan AS gaji, tanggal_masuk, created_at FROM KARYAWAN ORDER BY tanggal_masuk DESC"
         )
         rows = await cur.fetchall()
-        
+
         for r in rows:
             r["gaji"] = fmt_float(r["gaji"])
             r["tanggal_masuk"] = fmt_date(r["tanggal_masuk"])
             r["created_at"] = fmt_date(r["created_at"])
-            
+
         return rows
     except HTTPException:
         raise
@@ -67,25 +67,18 @@ async def list_karyawan(user=Depends(req_owner), cur=Depends(get_db)):
         log.error(f"[Karyawan] Gagal memuat daftar karyawan: {e}")
         raise HTTPException(500, "Gagal memuat daftar karyawan.")
 
-
 @router.post("", status_code=201, tags=["👤 Karyawan"])
 async def tambah_karyawan(body: KaryawanIn, user=Depends(req_owner), cur=Depends(get_db)):
     try:
-        # 1. Cek apakah email sudah ada, jika diberikan
         if body.email:
             await cur.execute("SELECT COUNT(*) AS total FROM KARYAWAN WHERE email = %(e)s", {"e": body.email})
             cek = await cur.fetchone()
             if cek["total"] > 0:
                 raise HTTPException(409, f"Email '{body.email}' sudah terdaftar.")
         else:
-            # Auto-generate dummy email based on phone number if email is not provided
             body.email = f"{body.no_telepon or uuid.uuid4().hex[:6]}@supir.aerorent.id"
-            
-        # Default password if not provided (e.g. for Supir)
         if not body.password:
             body.password = "AeroRent123!"
-
-        # 2. Masukkan data ke database
         kid = f"EMP-{uuid.uuid4().hex[:6].upper()}"
         await cur.execute(
             "INSERT INTO KARYAWAN (id_karyawan, nama_lengkap, email, no_telepon, "
@@ -93,7 +86,7 @@ async def tambah_karyawan(body: KaryawanIn, user=Depends(req_owner), cur=Depends
             {"id": kid, "n": body.nama_lengkap, "e": body.email, "t": body.no_telepon,
              "h": hash_pwd(body.password), "r": body.role, "g": body.gaji_per_bulan},
         )
-        
+
         log.info(f"[Karyawan] Baru: {body.email} (role={body.role})")
         return {"message": "Karyawan berhasil ditambahkan.", "id_karyawan": kid}
     except HTTPException:
@@ -101,7 +94,6 @@ async def tambah_karyawan(body: KaryawanIn, user=Depends(req_owner), cur=Depends
     except Exception as e:
         log.error(f"[Karyawan] Gagal menambahkan karyawan {body.email}: {e}")
         raise HTTPException(500, "Gagal menambahkan karyawan. Silakan coba lagi.")
-
 
 @router.put("/{kid}", tags=["👤 Karyawan"])
 async def update_karyawan(kid: str, body: KaryawanUpd, user=Depends(req_owner), cur=Depends(get_db)):
@@ -135,11 +127,11 @@ async def hapus_karyawan(kid: str, user=Depends(req_owner), cur=Depends(get_db))
     try:
         if kid == user["id"]:
             raise HTTPException(400, "Anda tidak dapat menghapus akun Anda sendiri.")
-            
+
         await cur.execute("SELECT id_karyawan FROM KARYAWAN WHERE id_karyawan = %(id)s", {"id": kid})
         if not await cur.fetchone():
             raise HTTPException(404, "Karyawan tidak ditemukan.")
-            
+
         await cur.execute("DELETE FROM KARYAWAN WHERE id_karyawan = %(id)s", {"id": kid})
         log.info(f"[Karyawan] Dihapus: {kid} oleh {user['email']}")
         return {"message": "Karyawan berhasil dihapus."}

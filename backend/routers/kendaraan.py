@@ -40,7 +40,7 @@ async def list_kendaraan(
 
         await cur.execute(q, p)
         rows = await cur.fetchall()
-        
+
         for r in rows:
             r["harga_sewa_harian"] = fmt_float(r["harga_sewa_harian"])
             r["harga_supir_harian"] = fmt_float(r["harga_supir_harian"])
@@ -51,7 +51,6 @@ async def list_kendaraan(
     except Exception as e:
         log.error(f"[Kendaraan] Gagal memuat daftar kendaraan: {e}")
         raise HTTPException(500, "Gagal memuat daftar kendaraan.")
-
 
 @router.get("/{kid}", tags=["🚗 Kendaraan"])
 async def detail_kendaraan(kid: str, cur=Depends(get_db)):
@@ -66,7 +65,7 @@ async def detail_kendaraan(kid: str, cur=Depends(get_db)):
         )
         r = await cur.fetchone()
         if not r: raise HTTPException(404, "Kendaraan tidak ditemukan.")
-        
+
         r["harga_sewa_harian"] = fmt_float(r["harga_sewa_harian"])
         r["harga_supir_harian"] = fmt_float(r["harga_supir_harian"])
         r["created_at"] = fmt_date(r["created_at"])
@@ -76,7 +75,6 @@ async def detail_kendaraan(kid: str, cur=Depends(get_db)):
     except Exception as e:
         log.error(f"[Kendaraan] Gagal memuat detail kendaraan {kid}: {e}")
         raise HTTPException(500, "Gagal memuat detail kendaraan.")
-
 
 @router.post("", status_code=201, tags=["🚗 Kendaraan"])
 async def tambah_kendaraan(body: KendaraanIn, user=Depends(req_owner), cur=Depends(get_db)):
@@ -105,7 +103,6 @@ async def tambah_kendaraan(body: KendaraanIn, user=Depends(req_owner), cur=Depen
     except Exception as e:
         log.error(f"[Kendaraan] Gagal menambahkan kendaraan: {e}")
         raise HTTPException(500, "Gagal menambahkan kendaraan.")
-
 
 @router.put("/{kid}", tags=["🚗 Kendaraan"])
 async def update_kendaraan(kid: str, body: KendaraanUpd, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
@@ -136,7 +133,6 @@ async def update_kendaraan(kid: str, body: KendaraanUpd, user=Depends(req_kasir_
         log.error(f"[Kendaraan] Gagal update kendaraan {kid}: {e}")
         raise HTTPException(500, "Gagal memperbarui kendaraan.")
 
-
 @router.post("/{kid}/foto", tags=["🚗 Kendaraan"])
 async def upload_foto_kendaraan(kid: str, file: UploadFile = File(...), user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
     try:
@@ -154,7 +150,6 @@ async def upload_foto_kendaraan(kid: str, file: UploadFile = File(...), user=Dep
         log.error(f"[Kendaraan] Gagal upload foto kendaraan {kid}: {e}")
         raise HTTPException(500, "Gagal mengunggah foto kendaraan.")
 
-
 @router.get("/{kid}/gps", tags=["🚗 Kendaraan"])
 async def gps_kendaraan(kid: str, user=Depends(req_kasir_or_owner), cur=Depends(get_db)):
     try:
@@ -171,7 +166,6 @@ async def gps_kendaraan(kid: str, user=Depends(req_kasir_or_owner), cur=Depends(
     except Exception as e:
         log.error(f"[Kendaraan] Gagal memuat GPS kendaraan {kid}: {e}")
         raise HTTPException(500, "Gagal memuat data GPS kendaraan.")
-
 
 @router.delete("/{kid}", tags=["🚗 Kendaraan"])
 async def hapus_kendaraan(kid: str, user=Depends(req_owner), cur=Depends(get_db)):

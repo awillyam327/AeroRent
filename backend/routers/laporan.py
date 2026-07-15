@@ -84,7 +84,7 @@ async def laporan_keuangan(
 
 @router.get("/armada", tags=["📊 Laporan"])
 async def laporan_armada(user=Depends(req_owner), cur=Depends(get_db)):
-    """Statistik performa & utilisasi armada bulan berjalan."""
+
     try:
         await cur.execute("SELECT status, COUNT(*) AS total FROM KENDARAAN GROUP BY status")
         status_armada = {r["status"]: r["total"] for r in await cur.fetchall()}
@@ -100,12 +100,12 @@ async def laporan_armada(user=Depends(req_owner), cur=Depends(get_db)):
             "k.status, k.foto_url, k.harga_sewa_harian "
             "ORDER BY sewa_bulan_ini DESC, pendapatan_bulan_ini DESC"
         )
-        
+
         armada = await cur.fetchall()
         for a in armada:
             a["harga_harian"] = fmt_float(a["harga_harian"])
             a["pendapatan_bulan_ini"] = fmt_float(a["pendapatan_bulan_ini"])
-            
+
         return {"status_armada": status_armada, "total_unit": sum(status_armada.values()),
                 "armada_detail": armada}
     except HTTPException:
@@ -122,19 +122,14 @@ async def laporan_keuangan_pdf(
     cur=Depends(get_db),
 ):
     try:
-        # Get data using the existing endpoint logic
         data = await laporan_keuangan(dari, sampai, user, cur)
-        
-        # Generate PDF
         pdf_bytes = generate_laporan_keuangan_pdf(data)
-        
-        # Prepare response
         filename = f"Laporan_Keuangan_AeroRent_{date.today().strftime('%Y%m%d')}.pdf"
         headers = {
             'Content-Disposition': f'inline; filename="{filename}"'
         }
         return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
-        
+
     except HTTPException:
         raise
     except Exception as e:

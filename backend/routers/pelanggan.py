@@ -42,12 +42,12 @@ async def update_pelanggan_saya(
     try:
         if user["role"] != "CUSTOMER":
             raise HTTPException(403, "Akses ditolak. Khusus pelanggan.")
-            
+
         if body.nik and body.nik.strip():
             await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE no_ktp = %(ktp)s AND id_pelanggan != %(id)s", {"ktp": body.nik, "id": user["id"]})
             if await cur.fetchone():
                 raise HTTPException(400, "Nomor KTP ini sudah terdaftar pada akun lain.")
-            
+
         await cur.execute(
             "UPDATE PELANGGAN SET nama_lengkap = %(n)s, no_telepon = %(t)s, alamat = %(a)s, no_ktp = COALESCE(%(nik)s, no_ktp) "
             "WHERE id_pelanggan = %(id)s",
@@ -69,15 +69,15 @@ async def upload_avatar_saya(
     try:
         if user["role"] != "CUSTOMER":
             raise HTTPException(403, "Akses ditolak. Khusus pelanggan.")
-            
+
         img_bytes = await foto.read()
         if not img_bytes:
             raise HTTPException(400, "File foto kosong.")
         if len(img_bytes) > 5 * 1024 * 1024:
             raise HTTPException(400, "Ukuran file maksimal 5MB.")
-            
+
         foto_url = await imgbb_upload(img_bytes, f"avatar_{user['id']}")
-        
+
         await cur.execute(
             "UPDATE PELANGGAN SET foto_profil_url = %(f)s WHERE id_pelanggan = %(id)s",
             {"f": foto_url, "id": user["id"]}
@@ -98,15 +98,15 @@ async def upload_sim_saya(
     try:
         if user["role"] != "CUSTOMER":
             raise HTTPException(403, "Akses ditolak. Khusus pelanggan.")
-            
+
         img_bytes = await foto_sim.read()
         if not img_bytes:
             raise HTTPException(400, "File foto SIM kosong.")
         if len(img_bytes) > 5 * 1024 * 1024:
             raise HTTPException(400, "Ukuran file maksimal 5MB.")
-            
+
         foto_url = await imgbb_upload(img_bytes, f"sim_{user['id']}")
-        
+
         await cur.execute(
             "UPDATE PELANGGAN SET foto_sim_url = %(f)s WHERE id_pelanggan = %(id)s",
             {"f": foto_url, "id": user["id"]}
@@ -125,20 +125,20 @@ async def upload_sim_pelanggan(
     user=Depends(req_kasir_or_owner),
     cur=Depends(get_db)
 ):
-    """Upload foto SIM A untuk pelanggan tertentu (oleh Kasir/Owner)."""
+
     try:
         await cur.execute("SELECT id_pelanggan FROM PELANGGAN WHERE id_pelanggan = %(pid)s", {"pid": pid})
         if not await cur.fetchone():
             raise HTTPException(404, "Pelanggan tidak ditemukan.")
-            
+
         img_bytes = await foto_sim.read()
         if not img_bytes:
             raise HTTPException(400, "File foto SIM kosong.")
         if len(img_bytes) > 5 * 1024 * 1024:
             raise HTTPException(400, "Ukuran file maksimal 5MB.")
-            
+
         foto_url = await imgbb_upload(img_bytes, f"sim_{pid}")
-        
+
         await cur.execute(
             "UPDATE PELANGGAN SET foto_sim_url = %(f)s WHERE id_pelanggan = %(id)s",
             {"f": foto_url, "id": pid}
@@ -151,13 +151,12 @@ async def upload_sim_pelanggan(
         log.error(f"[Pelanggan] Gagal upload SIM pelanggan {pid}: {e}")
         raise HTTPException(500, "Gagal mengunggah foto SIM.")
 
-
 @router.get("/{pid}", tags=["👥 Pelanggan"])
 async def detail_pelanggan(pid: str, user=Depends(get_current_account), cur=Depends(get_db)):
     try:
         if user["role"] == "CUSTOMER" and user["id"] != pid:
             raise HTTPException(403, "Akses ditolak.")
-            
+
         await cur.execute(
             "SELECT id_pelanggan AS id, nama_lengkap AS nama, email, no_telepon AS telepon, alamat, "
             "no_ktp, foto_ktp_url AS foto_ktp, foto_sim_url AS foto_sim, is_verified, created_at "
@@ -167,8 +166,6 @@ async def detail_pelanggan(pid: str, user=Depends(get_current_account), cur=Depe
         r = await cur.fetchone()
         if not r: raise HTTPException(404, "Pelanggan tidak ditemukan.")
         r["created_at"] = fmt_date(r["created_at"])
-
-        # Riwayat 5 transaksi terakhir
         await cur.execute(
             "SELECT ts.nomor_booking AS booking, ts.tanggal_mulai AS tanggal, ts.total_biaya AS total, ts.status, k.nama_kendaraan AS kendaraan "
             "FROM TRANSAKSI_SEWA ts JOIN KENDARAAN k ON ts.id_kendaraan = k.id_kendaraan "
@@ -179,10 +176,8 @@ async def detail_pelanggan(pid: str, user=Depends(get_current_account), cur=Depe
         for t in txs:
             t["tanggal"] = fmt_date(t["tanggal"])
             t["total"] = fmt_float(t["total"])
-            
-        r["riwayat_transaksi"] = txs
 
-        # Statistik Loyalitas
+        r["riwayat_transaksi"] = txs
         await cur.execute(
             "SELECT COUNT(*) AS count_valid FROM TRANSAKSI_SEWA "
             "WHERE id_pelanggan = %(pid)s AND status IN ('SELESAI', 'DIKONFIRMASI', 'AKTIF')",
@@ -201,7 +196,6 @@ async def detail_pelanggan(pid: str, user=Depends(get_current_account), cur=Depe
     except Exception as e:
         log.error(f"[Pelanggan] Gagal memuat detail pelanggan {pid}: {e}")
         raise HTTPException(500, "Gagal memuat detail pelanggan.")
-
 
 @router.post("", status_code=201, tags=["👥 Pelanggan"])
 async def tambah_pelanggan(

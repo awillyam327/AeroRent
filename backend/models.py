@@ -2,15 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import date, datetime
 import re
-
-# ==============================================================================
-# REGEX: Validasi format email sederhana
-# ==============================================================================
 _EMAIL_RE = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-
-# ==============================================================================
-# ENUM CONSTANTS (didefinisikan sekali, dipakai di banyak model)
-# ==============================================================================
 VALID_ROLES       = ("OWNER", "KASIR", "SUPIR")
 VALID_TIPE_KEND   = ("5_SEATER", "7_SEATER", "MICROBUS")
 VALID_STATUS_KEND = ("TERSEDIA", "DISEWA", "PERAWATAN")
@@ -18,13 +10,11 @@ VALID_STATUS_TRX  = ("MENUNGGU", "DIKONFIRMASI", "AKTIF", "SELESAI", "DIBATALKAN
 VALID_PAKET_SEWA  = ("HARIAN", "BULANAN")
 VALID_KATEGORI_PO = ("PERAWATAN", "SERVIS", "BBM", "ASURANSI", "PAJAK", "GAJI", "OPERASIONAL", "LAINNYA")
 
-
 class TokenPair(BaseModel):
     access_token:  str
     refresh_token: str
     token_type:    str  = "bearer"
     user:          dict
-
 
 class KaryawanIn(BaseModel):
     nama_lengkap:   str   = Field(..., min_length=2, max_length=200)
@@ -52,13 +42,11 @@ class KaryawanIn(BaseModel):
             raise ValueError("Format email tidak valid.")
         return v
 
-
 class KaryawanUpd(BaseModel):
     nama_lengkap:   Optional[str]   = Field(None, min_length=2, max_length=200)
     no_telepon:     Optional[str]   = Field(None, max_length=20)
     is_aktif:       Optional[int]   = Field(None, ge=0, le=1)
     gaji_per_bulan: Optional[float] = Field(None, ge=0)
-
 
 class KendaraanIn(BaseModel):
     nama_kendaraan:       str   = Field(..., min_length=2, max_length=200)
@@ -84,7 +72,6 @@ class KendaraanIn(BaseModel):
             raise ValueError(f"tipe_kendaraan harus: {' | '.join(VALID_TIPE_KEND)}")
         return v
 
-
 class KendaraanUpd(BaseModel):
     nama_kendaraan:     Optional[str]   = Field(None, min_length=2, max_length=200)
     harga_sewa_harian:  Optional[float] = Field(None, gt=0)
@@ -105,14 +92,12 @@ class KendaraanUpd(BaseModel):
             raise ValueError(f"status harus: {' | '.join(VALID_STATUS_KEND)}")
         return v
 
-
 class PelangganIn(BaseModel):
     nama_lengkap: str = Field(..., min_length=2, max_length=200)
     no_telepon:   str = Field(..., min_length=8, max_length=20)
     email:        Optional[str] = Field(None, max_length=200)
     alamat:       Optional[str] = Field(None, max_length=500)
     no_ktp:       Optional[str] = Field(None, min_length=16, max_length=16)
-
 
 class TransaksiIn(BaseModel):
     id_pelanggan:           str = Field(..., min_length=1, max_length=100)
@@ -140,7 +125,6 @@ class TransaksiIn(BaseModel):
             raise ValueError(f"paket_sewa harus: {' | '.join(VALID_PAKET_SEWA)}")
         return v
 
-
 class SupirUpd(BaseModel):
     id_supir: str = Field(..., max_length=100)
 
@@ -158,7 +142,6 @@ class StatusUpd(BaseModel):
             raise ValueError(f"status harus: {' | '.join(VALID_STATUS_TRX)}")
         return v
 
-
 class PerpanjanganIn(BaseModel):
     paket_sewa: str = Field(..., max_length=10) # 'HARIAN' atau 'BULANAN'
     tambahan_hari: int = Field(..., gt=0)
@@ -170,7 +153,6 @@ class PerpanjanganIn(BaseModel):
         if v not in VALID_PAKET_SEWA:
             raise ValueError(f"paket_sewa harus: {' | '.join(VALID_PAKET_SEWA)}")
         return v
-
 
 class PengeluaranIn(BaseModel):
     id_kendaraan:       Optional[str]   = Field(None, max_length=100)

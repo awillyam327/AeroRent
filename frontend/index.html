@@ -122,12 +122,12 @@
 <div id="cara-sewa-modal" class="modal-overlay">
   <div class="modal-content-box glass-card">
     <button type="button" id="close-modal-btn" class="modal-close-btn" aria-label="Tutup Modal">✕</button>
-    
+
     <div class="section-header" style="margin-bottom: 0;">
       <h2 style="text-align: center; font-size: 32px;">CARA SEWA <span class="text-purple">MUDAH & CEPAT</span></h2>
     </div>
     <p class="modal-subtitle">Nikmati proses rental mobil yang tidak ribet hanya dalam 4 langkah praktis.</p>
-    
+
     <div class="steps-wrap">
       <div class="step-row">
         <div class="step-number">01</div>
@@ -160,7 +160,6 @@
     </div>
   </div>
 </div>
-
 
 <footer id="footer"></footer>
 <div id="toast-root"></div>
@@ -231,7 +230,7 @@ function renderPromo() {
 
   // Prepare next background
   nextBg.style.backgroundImage = `url('${promo.image}')`;
-  
+
   // Fade out text
   textContainer.style.opacity = '0';
 
@@ -299,7 +298,7 @@ document
     target.style.borderRight = '2px solid var(--color-amber)';
     target.style.paddingRight = '4px';
     target.style.animation = 'blinkCursor 0.75s step-end infinite';
-    
+
     // Add CSS for blinking cursor if not present
     if (!document.getElementById('cursor-style')) {
       const style = document.createElement('style');
@@ -307,10 +306,10 @@ document
       style.innerHTML = `@keyframes blinkCursor { from, to { border-color: transparent } 50% { border-color: var(--color-amber); } }`;
       document.head.appendChild(style);
     }
-    
+
     function typeEffect() {
       const currentText = heroTexts[heroIndex];
-      
+
       if (isDeleting) {
         target.textContent = currentText.substring(0, charIndex - 1);
         charIndex--;
@@ -318,9 +317,9 @@ document
         target.textContent = currentText.substring(0, charIndex + 1);
         charIndex++;
       }
-      
+
       let typeSpeed = isDeleting ? 30 : 70;
-      
+
       if (!isDeleting && charIndex === currentText.length) {
         typeSpeed = 2000; // Pause at end of word
         isDeleting = true;
@@ -329,10 +328,10 @@ document
         heroIndex = (heroIndex + 1) % heroTexts.length;
         typeSpeed = 500; // Pause before typing next word
       }
-      
+
       setTimeout(typeEffect, typeSpeed);
     }
-    
+
     typeEffect();
   }
 

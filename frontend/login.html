@@ -16,8 +16,6 @@
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
-
-<!-- Navbar (komponen bersama, di-render oleh js/components.js) -->
 <header id="navbar"></header>
 
 <main class="auth-page">
@@ -38,8 +36,6 @@
     </div>
 
     <div id="auth-error" class="auth-error hidden" role="alert"></div>
-
-    <!-- ===== FORM LOGIN ===== -->
     <form id="form-login" autocomplete="on">
       <div class="form-group">
         <label class="form-label" for="login-email">Alamat Email</label>
@@ -58,10 +54,7 @@
         Masuk Sekarang
       </button>
     </form>
-
-    <!-- ===== FORM DAFTAR ===== -->
     <form id="form-register" autocomplete="on" class="hidden">
-      <!-- 1. KTP UPLOAD (PALING ATAS) -->
       <div class="form-group" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
         <label class="form-label" for="reg-ktp">Foto KTP (Format Gambar)</label>
         <p class="text-dim" style="font-size: 12px; margin-top: -6px; margin-bottom: 8px;">Upload KTP untuk mengisi Nama, NIK, dan Alamat otomatis.</p>
@@ -75,8 +68,6 @@
         </button>
         <div id="reg-ktp-status" class="hidden mt-2 text-sm text-center"></div>
       </div>
-
-      <!-- 1.5. SIM A UPLOAD (OPSIONAL) -->
       <div class="form-group" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
         <label class="form-label" for="reg-sim">Foto SIM A (Opsional)</label>
         <p class="text-dim" style="font-size: 12px; margin-top: -6px; margin-bottom: 8px;">Wajib diunggah jika Anda berencana menyewa mobil tanpa supir (lepas kunci).</p>
@@ -86,8 +77,6 @@
           <input type="file" id="reg-sim" accept="image/*" onchange="document.getElementById('reg-sim-label').textContent = this.files[0]?.name || 'Silakan pilih foto SIM A Anda...'">
         </label>
       </div>
-
-      <!-- 2. DATA DIRI -->
       <div class="form-group">
         <label class="form-label" for="reg-nik">NIK (Nomor Induk Kependudukan)</label>
         <input type="text" id="reg-nik" class="form-input" required placeholder="16 Digit NIK">
@@ -126,8 +115,6 @@
         Daftar Akun
       </button>
     </form>
-
-
 
   </div>
 </main>

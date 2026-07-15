@@ -1,27 +1,10 @@
-/**
- * ==============================================================================
- * AeroRent — Logika Halaman Login & Daftar (login.html)
- *
- * Alur login:
- *   1. Coba /auth/login asli ke backend (berfungsi penuh untuk Owner & Kasir,
- *      karena tabel KARYAWAN sudah punya password_hash).
- *   2. Jika gagal (salah password ASLI, backend mati, atau akun Customer yang
- *      memang belum didukung backend), coba endpoint customer (akan gagal
- *      sampai backend menambahkannya).
- *   3. Jika masih gagal, fallback ke MODE DEMO lokal — supaya halaman tetap
- *      bisa didemokan end-to-end. Mode ini ditandai jelas lewat toast.
- * ==============================================================================
- */
 
-/** Akun demo — dipakai HANYA sebagai fallback saat backend tidak tersedia. */
+
 const DEMO_ACCOUNTS = {
   'owner@aerorent.id':    { role: 'OWNER',    nama: 'Bapak Owner',  id: 'k-owner-001' },
   'kasir@aerorent.id':    { role: 'KASIR',    nama: 'Admin Kasir',  id: 'k-kasir-001' },
   'customer@aerorent.id': { role: 'CUSTOMER', nama: 'Budi Santoso', id: 'plg-demo-001' },
 };
-// Catatan: mockup AI Studio memakai label "admin@aerorent.id" untuk akun Kasir,
-// tapi seed data resmi di schema.sql memakai "kasir@aerorent.id" — di sini saya
-// ikuti schema.sql supaya tombol demo tetap valid kalau dicoba ke backend asli.
 
 const REDIRECT_BY_ROLE = {
   OWNER:    'owner-dashboard.html',
@@ -29,13 +12,6 @@ const REDIRECT_BY_ROLE = {
   CUSTOMER: 'index.html', // Customer mendarat di Beranda setelah login, BUKAN langsung Dashboard
 };
 
-/**
- * Tentukan tujuan setelah login. Untuk Customer: jika sebelumnya mereka
- * diarahkan ke login.html dari proses Sewa (lihat handleSewaClick di
- * vehicle.js), lanjutkan ke situ via query param ?redirect=. Selain itu,
- * default ke Beranda — bukan Dashboard (Dashboard baru relevan SETELAH ada
- * transaksi, sesuai alur mockup).
- */
 function getPostLoginRedirect(role) {
   if (role === 'CUSTOMER') {
     const params = new URLSearchParams(location.search);
@@ -53,15 +29,11 @@ function initAuthPage() {
   qs('form-login').addEventListener('submit', handleLoginSubmit);
   const formReg = qs('form-register');
   if (formReg) formReg.addEventListener('submit', handleRegisterSubmit);
-
-  // Kalau sudah login, langsung lempar ke dashboard masing-masing.
   const auth = getAuth();
   if (auth?.user?.role) {
     location.href = getPostLoginRedirect(auth.user.role);
     return;
   }
-
-  // Cek jika ada parameter verifikasi email di URL
   const params = new URLSearchParams(window.location.search);
   const verifyToken = params.get('verify');
   if (verifyToken) {
@@ -73,7 +45,6 @@ async function handleVerifyEmail(token) {
   try {
     const result = await apiVerifyEmail(token);
     showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Verifikasi Berhasil', result.message || 'Email Anda telah diverifikasi.');
-    // Bersihkan URL dari parameter verify
     window.history.replaceState({}, document.title, window.location.pathname);
   } catch (err) {
     showError(err.message || 'Gagal memverifikasi email.');
@@ -96,12 +67,9 @@ function switchTab(tab) {
     ? 'Silakan masuk untuk menyewa armada AeroRent.'
     : 'Daftarkan identitas KTP Anda untuk memulai.';
   hideError();
-  
-  // Bersihkan form saat berpindah tab
   qs('form-login').reset();
   qs('form-register').reset();
 }
-
 
 function showError(msg) {
   const box = qs('auth-error');
@@ -110,12 +78,10 @@ function showError(msg) {
 }
 function hideError() { qs('auth-error').classList.add('hidden'); }
 
-/* ---------- LOGIN ---------- */
-
 async function handleLoginSubmit(e) {
   e.preventDefault();
   hideError();
-  
+
   const form = qs('form-login');
   if (!form.checkValidity()) {
     form.reportValidity();
@@ -129,7 +95,6 @@ async function handleLoginSubmit(e) {
   btn.innerHTML = '<span class="spinner"></span> Memproses...';
 
   try {
-    // === MODE KARYAWAN ===
     if (window.AUTH_MODE === 'KARYAWAN') {
       const result = await apiLoginStaff(email, password);
       setAuth(result);
@@ -137,8 +102,6 @@ async function handleLoginSubmit(e) {
       setTimeout(() => { location.href = getPostLoginRedirect(result.user.role); }, 600);
       return;
     }
-
-    // === MODE CUSTOMER ===
     if (window.AUTH_MODE === 'CUSTOMER') {
       try {
         const result = await apiLoginCustomer(email, password);
@@ -152,11 +115,8 @@ async function handleLoginSubmit(e) {
         if (custErr.message && custErr.message.toLowerCase().includes('diverifikasi')) {
           throw custErr;
         }
-        // Lanjut ke mode demo jika error lain
       }
     }
-
-    // === FALLBACK MODE (Jika belum diset atau error bukan jaringan/verifikasi) ===
     if (!window.AUTH_MODE) {
       try {
         const result = await apiLoginStaff(email, password);
@@ -177,10 +137,7 @@ async function handleLoginSubmit(e) {
         if (custErr.message && custErr.message.toLowerCase().includes('diverifikasi')) throw custErr;
       }
     }
-
-    // 3) Mode demo lokal (backend belum mendukung / sedang tidak tersedia).
     const demo = DEMO_ACCOUNTS[email.toLowerCase()];
-    // Cek apakah mode Karyawan tapi akun demonya bukan karyawan
     if (window.AUTH_MODE === 'KARYAWAN' && demo && demo.role === 'CUSTOMER') {
       throw new Error('Email atau password salah.');
     }
@@ -208,12 +165,10 @@ async function handleLoginSubmit(e) {
   }
 }
 
-/* ---------- DAFTAR (Customer self-registration) ---------- */
-
 async function handleRegisterSubmit(e) {
   e.preventDefault();
   hideError();
-  
+
   const form = qs('form-register');
   if (!form.checkValidity()) {
     form.reportValidity();
@@ -234,7 +189,7 @@ async function handleRegisterSubmit(e) {
     showError('Semua field wajib diisi.');
     return;
   }
-  
+
   if (password !== passwordConfirm) {
     showError('Konfirmasi password tidak cocok.');
     return;
@@ -256,8 +211,6 @@ async function handleRegisterSubmit(e) {
 
   try {
     const result = await apiRegisterCustomer(fd);
-    
-    // Jangan langsung login, tampilkan pesan sukses dan instruksi cek email
     btn.disabled = false;
     btn.textContent = 'Daftar Akun';
     qs('form-register').reset();
@@ -269,9 +222,9 @@ async function handleRegisterSubmit(e) {
       statusEl.className = 'hidden mt-2 text-sm text-center';
     }
     switchTab('login'); // Kembali ke form login
-    
+
     showToast('<i class="ph-fill ph-envelope-simple" style="color: #3B82F6;"></i>', 'Cek Email Anda', result.message || 'Registrasi berhasil. Silakan periksa email Anda untuk verifikasi.');
-    
+
     return;
   } catch (err) {
     btn.disabled = false;
@@ -286,16 +239,16 @@ async function scanRegKtp() {
     showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Peringatan', 'Pilih foto KTP terlebih dahulu.');
     return;
   }
-  
+
   let file = inp.files[0];
   const statusEl = document.getElementById('reg-ktp-status');
   const btn = document.getElementById('btn-scan-reg-ktp');
-  
+
   statusEl.classList.remove('hidden', 'text-green-400', 'text-red-400');
   statusEl.classList.add('text-gray-500');
   statusEl.innerHTML = '<div class="spin inline-block mx-auto" style="width:12px;height:12px;border-width:2px;vertical-align:-2px;margin-right:6px;"></div>Mengompresi & Memproses OCR...';
   btn.disabled = true;
-  
+
   try {
     file = await compressImageFile(file, 0.95); // Maks 950KB
   } catch (e) {
@@ -304,21 +257,20 @@ async function scanRegKtp() {
 
   const fd = new FormData();
   fd.append('file', file);
-  
+
   try {
-    // API is global from api.js (API_BASE)
     const r = await fetch(`${API_BASE}/ocr/ktp`, {
       method: 'POST',
       body: fd
     });
-    
+
     if (r.ok) {
       const res = await r.json();
       let msg = [];
       if (res.nik) { document.getElementById('reg-nik').value = res.nik; msg.push('NIK'); }
       if (res.nama) { document.getElementById('reg-nama').value = res.nama; msg.push('Nama'); }
       if (res.alamat) { document.getElementById('reg-alamat').value = res.alamat; msg.push('Alamat'); }
-      
+
       if (msg.length > 0) {
         showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'OCR Berhasil', `Berhasil mengisi: ${msg.join(', ')}`);
         statusEl.innerHTML = '<i class="ph-fill ph-check-circle" style="color: #10B981;"></i> ' + msg.join(', ') + ' berhasil diisi.';

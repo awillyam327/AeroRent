@@ -1,7 +1,4 @@
-/* ==============================================================================
-   AeroRent — Auth Page (login.html) — style spesifik halaman ini
-   Bergantung pada css/global.css untuk token & komponen dasar.
-   ============================================================================== */
+
 
 .auth-page {
   min-height: 100vh;
@@ -11,7 +8,6 @@
   overflow: hidden;
 }
 
-/* Glow dekoratif latar belakang */
 .auth-page::before, .auth-page::after {
   content: ''; position: absolute; border-radius: 50%; pointer-events: none; filter: blur(90px);
 }
@@ -33,7 +29,6 @@
 .auth-header h2 { font-size: 28px; }
 .auth-header p { color: var(--color-text-dim); font-size: 13px; margin-top: 6px; }
 
-/* Tab switcher */
 .tab-switcher {
   display: flex; background: var(--color-darker); padding: 6px; border-radius: var(--radius-md);
   margin-bottom: 26px; border: 1px solid rgba(255,255,255,.05);
@@ -46,7 +41,6 @@
 .tab-btn.tab-active { background: var(--color-purple); color: #fff; }
 .tab-btn:hover:not(.tab-active) { color: #fff; }
 
-/* Error banner */
 .auth-error {
   background: rgba(239,68,68,.1); border-left: 3px solid var(--color-red);
   color: #FCA5A5; font-size: 13px; padding: 12px 14px; border-radius: var(--radius-sm);
@@ -54,7 +48,6 @@
 }
 @keyframes error-pulse { 0%,100% { opacity: 1; } 50% { opacity: .75; } }
 
-/* File input styling */
 .file-input-wrap {
   position: relative; border: 1px dashed rgba(255,255,255,.18); border-radius: var(--radius-md);
   padding: 12px 14px; font-size: 13px; color: var(--color-text-dim);
@@ -63,7 +56,6 @@
 .file-input-wrap input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .file-input-wrap .browse-label { color: var(--color-purple-light); font-weight: 600; flex-shrink: 0; }
 
-/* Demo accounts */
 .demo-section { border-top: 1px solid rgba(255,255,255,.08); margin-top: 24px; padding-top: 20px; text-align: center; }
 .demo-label { font-size: 10px; color: var(--color-text-faint); letter-spacing: 1.2px; margin-bottom: 12px; }
 .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
