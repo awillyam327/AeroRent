@@ -490,6 +490,9 @@ function openKendaraanModal(id = null) {
       el('mkend-tahun').value = k.tahun || new Date().getFullYear();
       el('mkend-plat').value = k.nomor_plat || k.plat_nomor || '';
       el('mkend-tipe').value = k.tipe_kendaraan || '5_SEATER';
+      el('mkend-transmisi').value = k.transmisi || 'AT';
+      el('mkend-bahan').value = k.bahan_bakar || 'Bensin';
+      el('mkend-kapasitas').value = k.kapasitas_penumpang || '';
       el('mkend-status').value = k.status || 'TERSEDIA';
       el('mkend-sewa').value = k.harga_sewa_harian || 0;
       el('mkend-supir').value = k.harga_supir_harian || 0;
@@ -504,7 +507,8 @@ function openKendaraanModal(id = null) {
   } else {
     el('mkend-nama').value = ''; el('mkend-merk').value = ''; el('mkend-model').value = '';
     el('mkend-tahun').value = new Date().getFullYear(); el('mkend-plat').value = '';
-    el('mkend-tipe').value = '5_SEATER'; el('mkend-status').value = 'TERSEDIA';
+    el('mkend-tipe').value = '5_SEATER'; el('mkend-transmisi').value = 'AT'; el('mkend-bahan').value = 'Bensin'; el('mkend-kapasitas').value = ''; 
+    el('mkend-status').value = 'TERSEDIA';
     el('mkend-sewa').value = ''; el('mkend-supir').value = ''; el('mkend-traccar').value = '';
   }
   el('modal-kendaraan').classList.remove('hidden');
@@ -519,6 +523,7 @@ async function saveKendaraan() {
   const strTahun = el('mkend-tahun').value.trim();
   const strSewa = el('mkend-sewa').value.trim();
   const strSupir = el('mkend-supir').value.trim();
+  const strKapasitas = el('mkend-kapasitas').value.trim();
 
   const payload = {
     nama_kendaraan: el('mkend-nama').value.trim(),
@@ -527,6 +532,9 @@ async function saveKendaraan() {
     tahun: parseInt(strTahun) || 0,
     nomor_plat: el('mkend-plat').value.trim(),
     tipe_kendaraan: el('mkend-tipe').value,
+    transmisi: el('mkend-transmisi').value,
+    bahan_bakar: el('mkend-bahan').value,
+    kapasitas_penumpang: parseInt(strKapasitas) || null,
     status: el('mkend-status').value,
     harga_sewa_harian: parseFloat(strSewa) || 0,
     harga_supir_harian: parseFloat(strSupir) || 0,
