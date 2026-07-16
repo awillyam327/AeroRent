@@ -483,6 +483,8 @@ function openKendaraanModal(id = null) {
   const kapasitasContainer = el('mkend-kapasitas-container');
   const transmisiContainer = el('mkend-transmisi-container');
 
+  const elsToDisable = ['mkend-nama', 'mkend-merk', 'mkend-model', 'mkend-tahun', 'mkend-plat'];
+
   if(ph) ph.classList.remove('hidden');
   if(prev) { prev.classList.add('hidden'); prev.src = ''; }
 
@@ -491,6 +493,15 @@ function openKendaraanModal(id = null) {
     if(tipeContainer) tipeContainer.classList.add('hidden');
     if(kapasitasContainer) kapasitasContainer.classList.add('hidden');
     if(transmisiContainer) transmisiContainer.classList.add('hidden');
+    
+    elsToDisable.forEach(elId => {
+      const elem = el(elId);
+      if (elem) {
+        elem.disabled = true;
+        elem.classList.add('opacity-50', 'cursor-not-allowed', 'bg-black/20');
+      }
+    });
+
     const k = S.kendaraan.find(x => x.id_kendaraan === id);
     if (k) {
       el('mkend-nama').value = k.nama_kendaraan;
@@ -517,6 +528,15 @@ function openKendaraanModal(id = null) {
     if(tipeContainer) tipeContainer.classList.remove('hidden');
     if(kapasitasContainer) kapasitasContainer.classList.remove('hidden');
     if(transmisiContainer) transmisiContainer.classList.remove('hidden');
+    
+    elsToDisable.forEach(elId => {
+      const elem = el(elId);
+      if (elem) {
+        elem.disabled = false;
+        elem.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-black/20');
+      }
+    });
+
     el('mkend-nama').value = ''; el('mkend-merk').value = ''; el('mkend-model').value = '';
     el('mkend-tahun').value = new Date().getFullYear(); el('mkend-plat').value = '';
     el('mkend-tipe').value = 'SUV'; el('mkend-transmisi').value = 'AT'; el('mkend-bahan').value = 'Bensin'; el('mkend-kapasitas').value = ''; 
