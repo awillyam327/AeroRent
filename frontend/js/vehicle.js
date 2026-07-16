@@ -46,7 +46,7 @@ async function fetchVehicleById(id) {
   return DEMO_VEHICLES.find((v) => v.id_kendaraan === id) || null;
 }
 
-const TIPE_LABEL = { 'SUV': 'SUV', 'MPV': 'MPV', 'CITY_CAR': 'City Car', 'SEDAN': 'Sedan', 'MINIVAN': 'Minivan', 'MICROBUS': 'Microbus' };
+const TIPE_LABEL = { 'SUV': 'SUV', 'MPV': 'MPV', 'CITY_CAR': 'City Car', 'SEDAN': 'Sedan', 'MINIVAN': 'Minivan', 'MICROBUS': 'Microbus', '5_SEATER': 'City Car', '7_SEATER': 'MPV' };
 
 function renderVehicleCard(v, rootPath = '') {
   const tersedia = v.status === 'TERSEDIA';
@@ -65,6 +65,14 @@ function renderVehicleCard(v, rootPath = '') {
     ? `<img src="${imgSrc}" alt="${v.nama_kendaraan}" loading="lazy" onerror="this.outerHTML='<div class=\\'vehicle-photo-placeholder\\'><i class=\\'ph ph-car\\'></i></div>'">`
     : `<div class="vehicle-photo-placeholder"><i class="ph ph-car"></i></div>`;
     
+  let seatCount = v.kapasitas_penumpang;
+  if (!seatCount) {
+    if (v.tipe_kendaraan === '5_SEATER' || v.tipe_kendaraan === 'CITY_CAR' || v.tipe_kendaraan === 'SEDAN') seatCount = 5;
+    else if (v.tipe_kendaraan === '7_SEATER' || v.tipe_kendaraan === 'SUV' || v.tipe_kendaraan === 'MPV' || v.tipe_kendaraan === 'MINIVAN') seatCount = 7;
+    else if (v.tipe_kendaraan === 'MICROBUS') seatCount = 16;
+    else seatCount = '-';
+  }
+
   return `
     <div class="vehicle-card glass-card">
       <div class="vehicle-photo">
@@ -76,7 +84,7 @@ function renderVehicleCard(v, rootPath = '') {
         <div class="vehicle-name">${v.nama_kendaraan}</div>
         <div class="vehicle-sub text-dim">${v.merk} • ${TIPE_LABEL[v.tipe_kendaraan] || v.tipe_kendaraan}</div>
         <div class="vehicle-specs">
-          <span class="spec-pill"><i class="ph ph-user"></i> ${v.kapasitas_penumpang || '-'} Kursi</span>
+          <span class="spec-pill"><i class="ph ph-user"></i> ${seatCount} Kursi</span>
           <span class="spec-pill"><i class="ph ph-gear"></i> ${v.transmisi === 'AT' ? 'Otomatis' : 'Manual'}</span>
           <span class="spec-pill"><i class="ph ph-gas-pump"></i> ${v.bahan_bakar}</span>
         </div>
