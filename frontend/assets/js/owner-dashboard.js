@@ -478,10 +478,13 @@ function openKendaraanModal(id = null) {
 
   const ph = el('mkend-foto-placeholder');
   const prev = el('mkend-foto-preview');
+  const bahanContainer = el('mkend-bahan-container');
+
   if(ph) ph.classList.remove('hidden');
   if(prev) { prev.classList.add('hidden'); prev.src = ''; }
 
   if (id) {
+    if(bahanContainer) bahanContainer.classList.add('hidden');
     const k = S.kendaraan.find(x => x.id_kendaraan === id);
     if (k) {
       el('mkend-nama').value = k.nama_kendaraan;
@@ -504,9 +507,10 @@ function openKendaraanModal(id = null) {
       }
     }
   } else {
+    if(bahanContainer) bahanContainer.classList.remove('hidden');
     el('mkend-nama').value = ''; el('mkend-merk').value = ''; el('mkend-model').value = '';
     el('mkend-tahun').value = new Date().getFullYear(); el('mkend-plat').value = '';
-    el('mkend-tipe').value = 'SUV'; el('mkend-transmisi').value = 'AT'; el('mkend-kapasitas').value = ''; 
+    el('mkend-tipe').value = 'SUV'; el('mkend-transmisi').value = 'AT'; el('mkend-bahan').value = 'Bensin'; el('mkend-kapasitas').value = ''; 
     el('mkend-status').value = 'TERSEDIA';
     el('mkend-sewa').value = ''; el('mkend-supir').value = ''; el('mkend-traccar').value = '';
   }
@@ -528,6 +532,8 @@ async function saveKendaraan() {
   if (S.editKendId) {
     const existingK = S.kendaraan.find(x => x.id_kendaraan === S.editKendId);
     if (existingK && existingK.bahan_bakar) bahanBakarStr = existingK.bahan_bakar;
+  } else {
+    bahanBakarStr = el('mkend-bahan').value;
   }
 
   const payload = {
