@@ -54,11 +54,6 @@ function renderNavbar(containerId, opts = {}) {
       </nav>
       ` : ''}
       <div class="navbar-auth">${authAreaHtml}</div>
-      ${showNavLinks ? `
-      <button class="navbar-burger" id="navbar-burger-btn" aria-label="Buka menu">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-      ` : ''}
     </div>`;
   const onScroll = () => el.classList.toggle('navbar-scrolled', window.scrollY > 20);
   onScroll();

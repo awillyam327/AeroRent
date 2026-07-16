@@ -347,7 +347,7 @@
 
             <div class="glass p-3 rounded-xl mb-1 border border-white/5">
                <div class="text-xs text-gray-400 mb-2">Punya KTP? Scan agar form otomatis terisi.</div>
-               <input type="file" id="bt-np-ktp" accept="image/*" capture="environment" class="hidden" onchange="btScanKtp(this)">
+               <input type="file" id="bt-np-ktp" accept="image/*" class="hidden" onchange="btScanKtp(this)">
                <button onclick="document.getElementById('bt-np-ktp').click()" class="w-full btn-o py-2 rounded-lg text-xs flex items-center justify-center gap-2">
                  <i class="ph ph-camera"></i> Ambil / Pilih Foto KTP
                </button>
@@ -447,7 +447,7 @@
               <div class="text-xs text-gray-500">Wajib untuk sewa lepas kunci (tanpa supir)</div>
             </div>
           </div>
-          <input type="file" id="bt-sim-file" accept="image/*" capture="environment" class="hidden" onchange="btPreviewSim(this)">
+          <input type="file" id="bt-sim-file" accept="image/*" class="hidden" onchange="btPreviewSim(this)">
           <div id="bt-sim-preview" class="hidden mb-2 rounded-lg overflow-hidden border border-white/10" style="max-height:120px;">
             <img id="bt-sim-img" src="" alt="Preview SIM" class="w-full object-cover" style="max-height:120px;">
           </div>
@@ -515,31 +515,31 @@
         <div id="zone-d" class="up-zone p-3 text-center" onclick="pickFile('inp-d')">
           <div id="zone-d-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl"><i class="ph ph-camera"></i></span><span class="text-xs">Depan</span></div>
           <div id="zone-d-p" class="hidden"><img id="img-d" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Depan</div></div>
-          <input type="file" id="inp-d" accept="image/*" capture="environment" class="hidden" onchange="onFile('d',this)">
+          <input type="file" id="inp-d" accept="image/*" class="hidden" onchange="onFile('d',this)">
         </div>
         <div id="zone-sk" class="up-zone p-3 text-center" onclick="pickFile('inp-sk')">
           <div id="zone-sk-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl"><i class="ph ph-camera"></i></span><span class="text-xs">Kanan</span></div>
           <div id="zone-sk-p" class="hidden"><img id="img-sk" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Kanan</div></div>
-          <input type="file" id="inp-sk" accept="image/*" capture="environment" class="hidden" onchange="onFile('sk',this)">
+          <input type="file" id="inp-sk" accept="image/*" class="hidden" onchange="onFile('sk',this)">
         </div>
         <div id="zone-ski" class="up-zone p-3 text-center" onclick="pickFile('inp-ski')">
           <div id="zone-ski-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl"><i class="ph ph-camera"></i></span><span class="text-xs">Kiri</span></div>
           <div id="zone-ski-p" class="hidden"><img id="img-ski" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Kiri</div></div>
-          <input type="file" id="inp-ski" accept="image/*" capture="environment" class="hidden" onchange="onFile('ski',this)">
+          <input type="file" id="inp-ski" accept="image/*" class="hidden" onchange="onFile('ski',this)">
         </div>
         <div id="zone-b" class="up-zone p-3 text-center" onclick="pickFile('inp-b')">
           <div id="zone-b-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl"><i class="ph ph-camera"></i></span><span class="text-xs">Belakang</span></div>
           <div id="zone-b-p" class="hidden"><img id="img-b" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Belakang</div></div>
-          <input type="file" id="inp-b" accept="image/*" capture="environment" class="hidden" onchange="onFile('b',this)">
+          <input type="file" id="inp-b" accept="image/*" class="hidden" onchange="onFile('b',this)">
         </div>
         <div id="zone-dlm" class="up-zone p-3 text-center" onclick="pickFile('inp-dlm')">
           <div id="zone-dlm-e" class="flex flex-col items-center gap-1 text-gray-600"><span class="text-2xl"><i class="ph ph-camera"></i></span><span class="text-xs">Dalam</span></div>
           <div id="zone-dlm-p" class="hidden"><img id="img-dlm" src="" alt="" class="w-full h-14 object-cover rounded-lg"><div class="text-xs text-green-400 mt-1">✓ Dalam</div></div>
-          <input type="file" id="inp-dlm" accept="image/*" capture="environment" class="hidden" onchange="onFile('dlm',this)">
+          <input type="file" id="inp-dlm" accept="image/*" class="hidden" onchange="onFile('dlm',this)">
         </div>
         <div class="up-zone p-3 text-center border-dashed border-2 flex flex-col items-center justify-center cursor-pointer" style="border-color:rgba(255,255,255,.1);" onclick="pickFile('inp-tambahan')">
            <span class="text-2xl text-gray-500">+</span><span class="text-xs text-gray-500">Foto Lainnya</span>
-           <input type="file" id="inp-tambahan" accept="image/*" capture="environment" multiple class="hidden" onchange="onFileTambahan(this)">
+           <input type="file" id="inp-tambahan" accept="image/*" multiple class="hidden" onchange="onFileTambahan(this)">
         </div>
       </div>
       <div id="tambahan-preview" class="grid grid-cols-4 gap-2 mb-4 hidden"></div>
