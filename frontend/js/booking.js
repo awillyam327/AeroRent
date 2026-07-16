@@ -368,7 +368,7 @@ async function uploadSewaSim() {
           if (statusEl) { statusEl.innerHTML = `<i class="ph-fill ph-x-circle" style="color:#EF4444;"></i> ${errMsg}`; }
       }
   } catch(e) {
-      showToast('<i class="ph-fill ph-wifi-slash" style="color:#EF4444;"></i>', 'Gagal', 'Terjadi kesalahan jaringan.');
+      showToast('<i class="ph-fill ph-wifi-slash" style="color:#EF4444;"></i>', 'Gagal', 'Terjadi kesalahan jaringan: ' + e.message);
       if (statusEl) { statusEl.innerHTML = '<i class="ph-fill ph-wifi-slash" style="color:#EF4444;"></i> Kesalahan jaringan.'; }
   } finally {
       if (btn.style.display !== 'none') {
@@ -446,7 +446,7 @@ async function captureLiveness() {
       } catch (e) {
         qs('liveness-status-text').innerHTML = '<span style="color:#EF4444;"><i class="ph-fill ph-wifi-slash"></i> Koneksi Error</span>';
         qs('btn-retake-camera').disabled = false;
-        if (typeof showToast === 'function') showToast('<i class="ph-fill ph-wifi-slash"></i>', 'Koneksi Error', 'Terjadi kesalahan jaringan.');
+        if (typeof showToast === 'function') showToast('<i class="ph-fill ph-wifi-slash"></i>', 'Koneksi Error', 'Terjadi kesalahan jaringan: ' + e.message);
         return;
       }
     }
