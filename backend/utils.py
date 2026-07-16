@@ -55,7 +55,7 @@ async def imgbb_upload(file_bytes: bytes, filename: str) -> str:
         log.warning(f"[Cloudinary] API Key kosong, foto disimpan lokal: {local_path}")
         return f"http://localhost:8000/uploads/{filename}"
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=6.0) as client:
         resp = await client.post(
             f"https://api.cloudinary.com/v1_1/{cfg.CLOUDINARY_CLOUD_NAME}/image/upload",
             data={"upload_preset": cfg.CLOUDINARY_UPLOAD_PRESET},
@@ -90,7 +90,7 @@ async def midtrans_snap(order_id: str, amount: float, nama: str, email: str) -> 
         "expiry":              {"unit": "hours", "duration": 24},
         "credit_card":         {"secure": True},
     }
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=6.0) as client:
         resp = await client.post(
             f"{base}/snap/v1/transactions",
             json=payload,
@@ -144,7 +144,7 @@ async def fonnte_send_file(nomor: str, pesan: str, file_bytes: bytes, filename: 
 
     nomor_bersih = nomor.replace("+", "").replace("-", "").replace(" ", "")
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=6.0) as client:
             resp = await client.post(
                 "https://api.fonnte.com/send",
                 headers={"Authorization": cfg.FONNTE_TOKEN},

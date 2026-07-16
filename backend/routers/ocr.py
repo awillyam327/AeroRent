@@ -48,7 +48,7 @@ async def perform_ocr(content: bytes) -> str:
 
     async with httpx.AsyncClient() as client:
         try:
-            r = await client.post("https://api.ocr.space/parse/image", data=data, files=files, timeout=30.0)
+            r = await client.post("https://api.ocr.space/parse/image", data=data, files=files, timeout=6.0)
             r.raise_for_status()
             res = r.json()
             if res.get("IsErroredOnProcessing"):
@@ -109,7 +109,7 @@ async def face_match_liveness(
     if not selfie_bytes:
         raise HTTPException(400, "Selfie kosong.")
     if cfg.FACEPP_API_KEY and cfg.FACEPP_API_SECRET:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=6.0) as client:
             try:
                 ktp_resp = await client.get(plg["foto_ktp_url"])
                 ktp_resp.raise_for_status()
@@ -197,7 +197,7 @@ async def validate_and_upload_sim(
 
     if cfg.OCR_SPACE_API_KEY:
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=6.0) as client:
                 ocr_resp = await client.post(
                     "https://api.ocr.space/parse/image",
                     data={
