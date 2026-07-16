@@ -489,7 +489,7 @@ function openKendaraanModal(id = null) {
       el('mkend-model').value = k.model || '';
       el('mkend-tahun').value = k.tahun || new Date().getFullYear();
       el('mkend-plat').value = k.nomor_plat || k.plat_nomor || '';
-      el('mkend-tipe').value = k.tipe_kendaraan || '5_SEATER';
+      el('mkend-tipe').value = k.tipe_kendaraan || 'SUV';
       el('mkend-transmisi').value = k.transmisi || 'AT';
       el('mkend-bahan').value = k.bahan_bakar || 'Bensin';
       el('mkend-kapasitas').value = k.kapasitas_penumpang || '';
@@ -507,7 +507,7 @@ function openKendaraanModal(id = null) {
   } else {
     el('mkend-nama').value = ''; el('mkend-merk').value = ''; el('mkend-model').value = '';
     el('mkend-tahun').value = new Date().getFullYear(); el('mkend-plat').value = '';
-    el('mkend-tipe').value = '5_SEATER'; el('mkend-transmisi').value = 'AT'; el('mkend-bahan').value = 'Bensin'; el('mkend-kapasitas').value = ''; 
+    el('mkend-tipe').value = 'SUV'; el('mkend-transmisi').value = 'AT'; el('mkend-bahan').value = 'Bensin'; el('mkend-kapasitas').value = ''; 
     el('mkend-status').value = 'TERSEDIA';
     el('mkend-sewa').value = ''; el('mkend-supir').value = ''; el('mkend-traccar').value = '';
   }

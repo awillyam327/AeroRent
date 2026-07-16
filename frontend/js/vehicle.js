@@ -1,12 +1,11 @@
 
 
 const DEMO_VEHICLES = [
-  { id_kendaraan: 'kend-001', nama_kendaraan: 'Honda Brio RS 2023', merk: 'Honda', tipe_kendaraan: '5_SEATER', transmisi: 'AT', bahan_bakar: 'Bensin', kapasitas_penumpang: 5, harga_sewa_harian: 300000, harga_supir_harian: 150000, status: 'TERSEDIA', is_featured: 1, foto_url: 'assets/images/brio.jpeg' },
-  { id_kendaraan: 'kend-002', nama_kendaraan: 'Honda CR-V 2022', merk: 'Honda', tipe_kendaraan: '5_SEATER', transmisi: 'AT', bahan_bakar: 'Bensin', kapasitas_penumpang: 5, harga_sewa_harian: 650000, harga_supir_harian: 150000, status: 'TERSEDIA', is_featured: 0, foto_url: 'assets/images/honda cr-v 2022.jpg' },
-  { id_kendaraan: 'kend-003', nama_kendaraan: 'Toyota Avanza 2022', merk: 'Toyota', tipe_kendaraan: '7_SEATER', transmisi: 'MT', bahan_bakar: 'Bensin', kapasitas_penumpang: 7, harga_sewa_harian: 350000, harga_supir_harian: 150000, status: 'TERSEDIA', is_featured: 0, foto_url: 'assets/images/Avanza 2022.jpg' },
-  { id_kendaraan: 'kend-004', nama_kendaraan: 'Toyota Innova Reborn 2023', merk: 'Toyota', tipe_kendaraan: '7_SEATER', transmisi: 'AT', bahan_bakar: 'Bensin', kapasitas_penumpang: 7, harga_sewa_harian: 750000, harga_supir_harian: 150000, status: 'DISEWA', is_featured: 1, foto_url: 'assets/images/innova reborn 2023.jpg' },
-
-  { id_kendaraan: 'kend-005', nama_kendaraan: 'Mitsubishi Pajero Sport 2022', merk: 'Mitsubishi', tipe_kendaraan: '7_SEATER', transmisi: 'AT', bahan_bakar: 'Solar', kapasitas_penumpang: 7, harga_sewa_harian: 950000, harga_supir_harian: 150000, status: 'TERSEDIA', is_featured: 1, foto_url: 'assets/images/pajero sport 2022.jpg' },
+  { id_kendaraan: 'kend-001', nama_kendaraan: 'Honda Brio RS 2023', merk: 'Honda', tipe_kendaraan: 'CITY_CAR', transmisi: 'AT', bahan_bakar: 'Bensin', kapasitas_penumpang: 5, harga_sewa_harian: 300000, harga_supir_harian: 150000, status: 'TERSEDIA', is_featured: 1, foto_url: 'assets/images/brio.jpeg' },
+  { id_kendaraan: 'kend-002', nama_kendaraan: 'Honda CR-V 2022', merk: 'Honda', tipe_kendaraan: 'SUV', transmisi: 'AT', bahan_bakar: 'Bensin', kapasitas_penumpang: 5, harga_sewa_harian: 650000, harga_supir_harian: 150000, status: 'TERSEDIA', is_featured: 0, foto_url: 'assets/images/honda cr-v 2022.jpg' },
+  { id_kendaraan: 'kend-003', nama_kendaraan: 'Toyota Avanza 2022', merk: 'Toyota', tipe_kendaraan: 'MPV', transmisi: 'MT', bahan_bakar: 'Bensin', kapasitas_penumpang: 7, harga_sewa_harian: 350000, harga_supir_harian: 150000, status: 'TERSEDIA', is_featured: 0, foto_url: 'assets/images/Avanza 2022.jpg' },
+  { id_kendaraan: 'kend-004', nama_kendaraan: 'Toyota Innova Reborn 2023', merk: 'Toyota', tipe_kendaraan: 'MPV', transmisi: 'AT', bahan_bakar: 'Bensin', kapasitas_penumpang: 7, harga_sewa_harian: 750000, harga_supir_harian: 150000, status: 'DISEWA', is_featured: 1, foto_url: 'assets/images/innova reborn 2023.jpg' },
+  { id_kendaraan: 'kend-005', nama_kendaraan: 'Mitsubishi Pajero Sport 2022', merk: 'Mitsubishi', tipe_kendaraan: 'SUV', transmisi: 'AT', bahan_bakar: 'Solar', kapasitas_penumpang: 7, harga_sewa_harian: 950000, harga_supir_harian: 150000, status: 'TERSEDIA', is_featured: 1, foto_url: 'assets/images/pajero sport 2022.jpg' },
 
   { id_kendaraan: 'kend-006', nama_kendaraan: 'Toyota Hiace Commuter 2023', merk: 'Toyota', tipe_kendaraan: 'MICROBUS', transmisi: 'MT', bahan_bakar: 'Solar', kapasitas_penumpang: 14, harga_sewa_harian: 1200000, harga_supir_harian: 200000, status: 'TERSEDIA', is_featured: 0, foto_url: 'assets/images/Hiace 2023.jpg' },
 
@@ -47,7 +46,7 @@ async function fetchVehicleById(id) {
   return DEMO_VEHICLES.find((v) => v.id_kendaraan === id) || null;
 }
 
-const TIPE_LABEL = { '5_SEATER': '5 Seater', '7_SEATER': '7 Seater', 'MICROBUS': 'Microbus' };
+const TIPE_LABEL = { 'SUV': 'SUV', 'MPV': 'MPV', 'CITY_CAR': 'City Car', 'SEDAN': 'Sedan', 'MINIVAN': 'Minivan', 'MICROBUS': 'Microbus' };
 
 function renderVehicleCard(v, rootPath = '') {
   const tersedia = v.status === 'TERSEDIA';

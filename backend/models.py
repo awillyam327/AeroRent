@@ -4,7 +4,7 @@ from datetime import date, datetime
 import re
 _EMAIL_RE = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 VALID_ROLES       = ("OWNER", "KASIR", "SUPIR")
-VALID_TIPE_KEND   = ("5_SEATER", "7_SEATER", "MICROBUS")
+VALID_TIPE_KEND   = ("SUV", "MPV", "CITY_CAR", "SEDAN", "MINIVAN", "MICROBUS")
 VALID_STATUS_KEND = ("TERSEDIA", "DISEWA", "PERAWATAN")
 VALID_STATUS_TRX  = ("MENUNGGU", "DIKONFIRMASI", "AKTIF", "SELESAI", "DIBATALKAN")
 VALID_PAKET_SEWA  = ("HARIAN", "BULANAN")
