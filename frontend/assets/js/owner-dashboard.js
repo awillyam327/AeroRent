@@ -491,7 +491,6 @@ function openKendaraanModal(id = null) {
       el('mkend-plat').value = k.nomor_plat || k.plat_nomor || '';
       el('mkend-tipe').value = k.tipe_kendaraan || 'SUV';
       el('mkend-transmisi').value = k.transmisi || 'AT';
-      el('mkend-bahan').value = k.bahan_bakar || 'Bensin';
       el('mkend-kapasitas').value = k.kapasitas_penumpang || '';
       el('mkend-status').value = k.status || 'TERSEDIA';
       el('mkend-sewa').value = k.harga_sewa_harian || 0;
@@ -507,7 +506,7 @@ function openKendaraanModal(id = null) {
   } else {
     el('mkend-nama').value = ''; el('mkend-merk').value = ''; el('mkend-model').value = '';
     el('mkend-tahun').value = new Date().getFullYear(); el('mkend-plat').value = '';
-    el('mkend-tipe').value = 'SUV'; el('mkend-transmisi').value = 'AT'; el('mkend-bahan').value = 'Bensin'; el('mkend-kapasitas').value = ''; 
+    el('mkend-tipe').value = 'SUV'; el('mkend-transmisi').value = 'AT'; el('mkend-kapasitas').value = ''; 
     el('mkend-status').value = 'TERSEDIA';
     el('mkend-sewa').value = ''; el('mkend-supir').value = ''; el('mkend-traccar').value = '';
   }
@@ -525,6 +524,12 @@ async function saveKendaraan() {
   const strSupir = el('mkend-supir').value.trim();
   const strKapasitas = el('mkend-kapasitas').value.trim();
 
+  let bahanBakarStr = 'Bensin';
+  if (S.editKendId) {
+    const existingK = S.kendaraan.find(x => x.id_kendaraan === S.editKendId);
+    if (existingK && existingK.bahan_bakar) bahanBakarStr = existingK.bahan_bakar;
+  }
+
   const payload = {
     nama_kendaraan: el('mkend-nama').value.trim(),
     merk: el('mkend-merk').value.trim(),
@@ -533,7 +538,7 @@ async function saveKendaraan() {
     nomor_plat: el('mkend-plat').value.trim(),
     tipe_kendaraan: el('mkend-tipe').value,
     transmisi: el('mkend-transmisi').value,
-    bahan_bakar: el('mkend-bahan').value,
+    bahan_bakar: bahanBakarStr,
     kapasitas_penumpang: parseInt(strKapasitas) || null,
     status: el('mkend-status').value,
     harga_sewa_harian: parseFloat(strSewa) || 0,
