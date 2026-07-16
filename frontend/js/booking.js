@@ -565,8 +565,8 @@ async function submitBooking() {
     console.warn("Gagal update profil pelanggan sebelum checkout:", e);
   }
 
-  const tglMulai = S.startDate + ':00'; // ensure format YYYY-MM-DDTHH:mm:00
-  const tglSelesai = addDays(S.startDate, S.duration);
+  const tglMulai = S.startDate.includes('T') ? S.startDate + ':00' : S.startDate + 'T00:00:00';
+  const tglSelesai = addDays(S.startDate, S.duration) + 'T00:00:00';
 
   const payload = {
     id_pelanggan: auth.user.sub || auth.user.id,
@@ -589,7 +589,7 @@ async function submitBooking() {
     });
     if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.detail || 'Terjadi kesalahan pada sistem.');
+        throw new Error(typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail) || 'Terjadi kesalahan pada sistem.');
     }
     const result = await res.json();
     S.bookingResult = { nomorBooking: result.nomor_booking, total: result.total_biaya, demo: false, id_transaksi: result.id_transaksi };
