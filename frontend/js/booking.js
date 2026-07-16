@@ -642,10 +642,11 @@ async function processMidtransPayment(tid, token) {
     const data = await res.json();
 
     window.snap.pay(data.snap_token, {
-      onSuccess: function(result) {
-        showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Pembayaran Berhasil', 'Terima kasih, pembayaran Anda telah diterima.');
-        goToStep3();
-      },
+      onSuccess: async function(result) {
+          showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Pembayaran Berhasil', 'Terima kasih, pembayaran Anda telah diterima.');
+          try { await fetch(`${API_BASE}/transaksi/${S.bookingResult.id_transaksi}/midtrans-sync`, { headers: { 'Authorization': `Bearer ${token}` }}); } catch(e){}
+          goToStep3();
+        },
       onPending: function(result) {
         showToast('<i class="ph-fill ph-hourglass-high" style="color: #3B82F6;"></i>', 'Menunggu Pembayaran', 'Silakan selesaikan pembayaran Anda.');
         goToStep3('PENDING');

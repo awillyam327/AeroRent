@@ -293,10 +293,11 @@ async function handlePayClick(tid, event) {
     const data = await res.json();
 
     window.snap.pay(data.snap_token, {
-      onSuccess: function(result) {
-        showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Pembayaran Berhasil', 'Terima kasih, pembayaran Anda telah diterima.');
-        setTimeout(() => window.location.reload(), 1500);
-      },
+      onSuccess: async function(result) {
+          showToast('<i class="ph-fill ph-check-circle" style="color: #10B981;"></i>', 'Pembayaran Berhasil', 'Terima kasih, pembayaran Anda telah diterima.');
+          try { await fetch(`${API_BASE}/transaksi/${tid}/midtrans-sync`, { headers: { 'Authorization': `Bearer ${token}` }}); } catch(e){}
+          setTimeout(() => window.location.reload(), 1500);
+        },
       onPending: function(result) {
         showToast('<i class="ph-fill ph-hourglass-high" style="color: #3B82F6;"></i>', 'Menunggu Pembayaran', 'Silakan selesaikan pembayaran Anda.');
         btn.innerHTML = originalHtml;

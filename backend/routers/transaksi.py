@@ -731,3 +731,38 @@ async def kirim_invoice_wa(
     except Exception as e:
         log.error(f"[Invoice] Gagal kirim invoice WA {tid}: {e}")
         raise HTTPException(500, "Gagal mengirim invoice ke WhatsApp.")
+
+@router.get("/{tid}/midtrans-sync", tags=["Transaksi"])
+async def sync_midtrans(tid: str, user=Depends(get_current_account), cur=Depends(get_db)):
+    try:
+        await cur.execute("SELECT * FROM TRANSAKSI_SEWA WHERE id_transaksi = %(id)s OR nomor_booking = %(nb)s", {"id": tid, "nb": tid.upper()})
+        trx = await cur.fetchone()
+        if not trx:
+            raise HTTPException(404, "Transaksi tidak ditemukan")
+        if trx["status_pembayaran"] == "LUNAS":
+            return {"status": "success", "message": "Sudah lunas"}
+        if not trx["midtrans_order_id"]:
+            return {"status": "skip", "message": "Bukan transaksi midtrans"}
+
+        import base64
+        import httpx
+        auth_string = base64.b64encode(f"{cfg.MIDTRANS_SERVER_KEY}:".encode()).decode()
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"https://api.sandbox.midtrans.com/v2/{trx['midtrans_order_id']}/status",
+                headers={"Authorization": f"Basic {auth_string}", "Accept": "application/json"}
+            )
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            st = data.get("transaction_status")
+            if st in ["settlement", "capture"]:
+                await cur.execute(
+                    "UPDATE TRANSAKSI_SEWA SET status_pembayaran = 'LUNAS', status = IF(status = 'MENUNGGU', 'DIKONFIRMASI', status) WHERE id_transaksi = %(id)s",
+                    {"id": trx["id_transaksi"]}
+                )
+                return {"status": "success", "message": "Berhasil sinkronisasi Midtrans menjadi LUNAS"}
+        return {"status": "pending", "message": "Belum LUNAS di Midtrans"}
+    except Exception as e:
+        log.error(f"[Midtrans Sync] Error {tid}: {e}")
+        raise HTTPException(500, "Gagal sinkronisasi midtrans")
