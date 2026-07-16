@@ -587,7 +587,10 @@ async function submitBooking() {
       },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error('Backend menolak permintaan (kemungkinan id_pelanggan demo tidak terdaftar di database asli).');
+    if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || 'Terjadi kesalahan pada sistem.');
+    }
     const result = await res.json();
     S.bookingResult = { nomorBooking: result.nomor_booking, total: result.total_biaya, demo: false, id_transaksi: result.id_transaksi };
 
@@ -599,34 +602,12 @@ async function submitBooking() {
   } catch (err) {
     if (err.name === 'TypeError' || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('fetch')) {
       showToast('<i class="ph-fill ph-wifi-slash"></i>', 'Koneksi Error', 'Terjadi kesalahan jaringan. Gagal memproses transaksi.');
-      btn.disabled = false;
-      btn.innerHTML = 'Konfirmasi & Sewa →';
-      return;
+    } else {
+      showToast('<i class="ph-fill ph-x-circle" style="color: #EF4444;"></i>', 'Pemesanan Gagal', err.message);
     }
-    const fakeSeq = Math.floor(1000 + Math.random() * 8999);
-    S.bookingResult = {
-      nomorBooking: `AR-${new Date().getFullYear()}${fakeSeq}`,
-      total: calcTotal(),
-      demo: true,
-      id_transaksi: 'demo-' + Date.now()
-    };
-    addDemoBooking({
-      id: S.bookingResult.id_transaksi,
-      booking: S.bookingResult.nomorBooking,
-      kendaraan: S.vehicle.nama_kendaraan,
-      foto_kendaraan: S.vehicle.foto_url || '',
-      mulai: tglMulai,
-      selesai_rencana: tglSelesai,
-      durasi: S.duration,
-      total: S.bookingResult.total,
-      status: 'MENUNGGU',
-      status_bayar: 'BELUM_LUNAS',
-      created_at: new Date().toISOString(),
-    });
-
-    if (S.metodeBayar === 'MIDTRANS') {
-        showToast('<i class="ph-fill ph-warning-circle" style="color: #F59E0B;"></i>', 'Mode Demo', 'Pembayaran Midtrans tidak dapat disimulasikan dalam mode offline/demo.');
-    }
+    btn.disabled = false;
+    btn.innerHTML = 'Konfirmasi & Sewa →';
+    return;
   }
 
   goToStep3();
