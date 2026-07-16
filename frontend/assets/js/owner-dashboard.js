@@ -481,6 +481,7 @@ function openKendaraanModal(id = null) {
   const bahanContainer = el('mkend-bahan-container');
   const tipeContainer = el('mkend-tipe-container');
   const kapasitasContainer = el('mkend-kapasitas-container');
+  const transmisiContainer = el('mkend-transmisi-container');
 
   if(ph) ph.classList.remove('hidden');
   if(prev) { prev.classList.add('hidden'); prev.src = ''; }
@@ -489,6 +490,7 @@ function openKendaraanModal(id = null) {
     if(bahanContainer) bahanContainer.classList.add('hidden');
     if(tipeContainer) tipeContainer.classList.add('hidden');
     if(kapasitasContainer) kapasitasContainer.classList.add('hidden');
+    if(transmisiContainer) transmisiContainer.classList.add('hidden');
     const k = S.kendaraan.find(x => x.id_kendaraan === id);
     if (k) {
       el('mkend-nama').value = k.nama_kendaraan;
@@ -514,6 +516,7 @@ function openKendaraanModal(id = null) {
     if(bahanContainer) bahanContainer.classList.remove('hidden');
     if(tipeContainer) tipeContainer.classList.remove('hidden');
     if(kapasitasContainer) kapasitasContainer.classList.remove('hidden');
+    if(transmisiContainer) transmisiContainer.classList.remove('hidden');
     el('mkend-nama').value = ''; el('mkend-merk').value = ''; el('mkend-model').value = '';
     el('mkend-tahun').value = new Date().getFullYear(); el('mkend-plat').value = '';
     el('mkend-tipe').value = 'SUV'; el('mkend-transmisi').value = 'AT'; el('mkend-bahan').value = 'Bensin'; el('mkend-kapasitas').value = ''; 
@@ -537,6 +540,7 @@ async function saveKendaraan() {
   let bahanBakarStr = 'Bensin';
   let tipeKendaraanStr = el('mkend-tipe').value;
   let kapasitasStr = parseInt(el('mkend-kapasitas').value.trim()) || null;
+  let transmisiStr = el('mkend-transmisi').value;
 
   if (S.editKendId) {
     const existingK = S.kendaraan.find(x => x.id_kendaraan === S.editKendId);
@@ -544,6 +548,7 @@ async function saveKendaraan() {
       if (existingK.bahan_bakar) bahanBakarStr = existingK.bahan_bakar;
       if (existingK.tipe_kendaraan) tipeKendaraanStr = existingK.tipe_kendaraan;
       if (existingK.kapasitas_penumpang) kapasitasStr = existingK.kapasitas_penumpang;
+      if (existingK.transmisi) transmisiStr = existingK.transmisi;
     }
   } else {
     bahanBakarStr = el('mkend-bahan').value;
@@ -556,7 +561,7 @@ async function saveKendaraan() {
     tahun: parseInt(strTahun) || 0,
     nomor_plat: el('mkend-plat').value.trim(),
     tipe_kendaraan: tipeKendaraanStr,
-    transmisi: el('mkend-transmisi').value,
+    transmisi: transmisiStr,
     bahan_bakar: bahanBakarStr,
     kapasitas_penumpang: kapasitasStr,
     status: el('mkend-status').value,
